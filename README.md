@@ -16,6 +16,7 @@ JDCloud **RE-CS-02（京东云雅典娜，IPQ6010 / qualcommax-ipq60xx）** 长�
 | 文件 | 说明 |
 |---|---|
 | `ARCHIVE.md` | **逐文件归档说明**（每个固件的字节/SHA256/用途/可刷性/风险），先读这个 |
+| `VERIFICATION.md` | **实机验证步骤 + 判定标准 + 后续 v0.2/v0.3/v1.0 路线**，现在按这个做 |
 | `libwrt-...-initramfs-uImage.itb` | 本阶段验证镜像，仅经 U-Boot 临时加载到内存运行，**禁止写 eMMC** |
 | `libwrt-...-squashfs-factory.bin` | 首刷镜像，自动附带生成，本阶段**禁止刷写** |
 | `libwrt-...-squashfs-sysupgrade.bin` | 升级镜像，本阶段**禁止刷写** |
