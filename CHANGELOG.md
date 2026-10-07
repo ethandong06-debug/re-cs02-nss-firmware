@@ -10,7 +10,7 @@
   - initramfs `ebb1bb7156556b1f042ec3975897c5795a3ee919a7ad2d469f08fc2a0a16f019`
   - factory `b9fd46a72182f4def7293ab021dae7672fb55937093465b7b7d1eaecb22d9836`
   - sysupgrade `0284ff193f6b8f4b741b8b0134de2b8570f8facd104943a82895e62e763aee42`
-- **验证状态**：硬件验证基于 192.168.1.1 版完成（2.5G/NSS/三频 WiFi 全过）；LAN IP 变更版需在 v0.2 刷写后复验管理入口
+- **验证状态**：硬件验证基于 192.168.1.1 版完成（2.5G/NSS/三频 WiFi 全过）；**v0.1-lan10 已于同日复验通过**——br-lan=192.168.10.1/24 生效，2.5G/三频/NSS 无回归（见 `VERIFICATION_RESULT_v0.1.md` ②）
 - **构建备注**：增量重编译期间修复环境问题两处——tmp 符号链接失效重建、busybox 构建产物损坏（clean 后重编）
 
 ## v0.1（2026-10-01，初版）
