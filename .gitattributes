@@ -1,0 +1,2 @@
+v0.5/*.itb filter=lfs diff=lfs merge=lfs -text
+v0.5/*.bin filter=lfs diff=lfs merge=lfs -text
