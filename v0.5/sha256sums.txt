@@ -1,0 +1,3 @@
+5e5787f0b4253891d19c273a1752fd8bd3bdec4b6da83f523b09b722eda6d97a  immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-initramfs-uImage.itb
+2e4f940e4e2e356cc49913cbba6ce1e3df650c550872965ad1dd7b0b0b5b425f  immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+38a4ae7d5a145f7d7899122e145f13e5c8b753f41a1807e268d5006659e02a95  immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
