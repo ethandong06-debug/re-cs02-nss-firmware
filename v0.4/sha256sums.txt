@@ -1,0 +1,4 @@
+1a51b635d2cbf46b880bd3b171815a9a7384205c00e038d9735afe066fc2d199  libwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-initramfs-uImage.itb
+bd23a6d0edc828e94db41c524c29f4053fc71b61d0a911b253700d61803e67ad  libwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+c93271c28506ece94a0a66ddd0128d1708d98366f3d96fbdcac32ef4480bdff5  libwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+671577cc55de81f9dcd5cd59bfebcdd0dcd632e1bb0b7b5f9a6ec3f53c7e4835  libwrt-qualcommax-ipq60xx-jdcloud_re-cs-02.manifest
