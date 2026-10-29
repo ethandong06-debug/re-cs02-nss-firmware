@@ -1,0 +1,18 @@
+{
+	"admin/athena": {
+		"title": "AthenaWrt",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "athena/index"
+		}
+	},
+	"admin/athena/advanced": {
+		"title": "高级模式（LuCI）",
+		"order": 90,
+		"action": {
+			"type": "alias",
+			"target": "admin/status"
+		}
+	}
+}

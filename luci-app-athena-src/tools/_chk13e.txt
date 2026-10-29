@@ -1,0 +1,10 @@
+=== 具体编译命令 ===
+NT= ALL_VARIANTS= host-compile
+vboxuser 1301339  0.0  0.1  10072  9208 ?        S    16:06   0:00 make -w -r -C package/feeds/packages/node BUILD_SUBDIR=package/feeds/packages/node BUILD_VARIANT= ALL_VARIANTS= host-compile
+vboxuser 1301351  0.0  0.0   2648   956 ?        S    16:06   0:00 flock /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2-linux-x64.tar.gz.flock -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1301352  0.0  0.0   2896   988 ?        S    16:06   0:00 /bin/sh -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1301353  0.0  0.1  13080 10376 ?        S    16:06   0:00 perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl node-v22.23.2-linux-x64.tar.gz b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a  https://nodejs.org/download/release/v22.23.2/
+vboxuser 1301507  0.0  0.1  94776 13008 ?        S    16:39   0:01 /usr/bin/curl.real -f --connect-timeout 5 --retry 3 --location https://sources.openwrt.org/node-v22.23.2-linux-x64.tar.gz
+vboxuser 1301508  0.0  0.0   2896   988 ?        S    16:39   0:00 sh -c /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/host/bin/mkhash sha256 > '/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2-linux-x64.tar.gz.hash'
+vboxuser 1302016  0.0  0.0   7372  3428 ?        Ss   17:00   0:00 bash -c cd ~/jdc-build/immortalwrt_ipq-main && make -j6 V=s 2>&1 | tail -120
+vboxuser 1302017  0.0  0.0   6136  2648 ?        S    17:00   0:00 make -j6 V=s

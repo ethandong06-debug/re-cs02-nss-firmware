@@ -1,0 +1,8 @@
+== 本地 output 固件 vs 官方校验 ==
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin 1c3cb988ba37cd8f  MATCH
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin a1b3f3c8f3b824fe  MATCH
+== 固件内（staging rootfs）哈希 ==
+84938e32ab964f6fda23171ec372d497c8c59219aa1dbef025e4386a0f27e42a  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/www/luci-static/resources/view/athena/index.html
+9e6e486b59f2a391cfedc1087f88c5f0e262000748f4fc0fbdc1367ef301c30a  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/usr/libexec/athena-status.sh
+c17f3927a32062da4f685704c5433375f0ffceecff7c4f78011b9b22c5fa1c73  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/usr/libexec/athena-mode.sh
+9025602e773057e0d3fdf7b3499c1fb3faf9d4341860b938ecc44e4898c53229  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/usr/libexec/athena-resources.sh

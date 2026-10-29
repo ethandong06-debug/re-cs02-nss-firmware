@@ -1,0 +1,2 @@
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin | 27607313 字节 | MATCH | sha256:8c40dca55d034da2
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin | 27998598 字节 | MATCH | sha256:6e050859842dfcc3

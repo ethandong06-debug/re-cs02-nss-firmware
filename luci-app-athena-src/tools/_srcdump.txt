@@ -1,0 +1,190 @@
+==== athena-wireless.sh (9385 bytes) ====
+#!/bin/sh
+# AthenaWrt 无线三频配置
+# 用法:
+#   athena-wireless.sh get                        读取三频配置（JSON）
+#   athena-wireless.sh enable all|b24|b52|b58     开启全部/单频
+#   athena-wireless.sh disable all|b24|b52|b58    关闭全部/单频
+#   athena-wireless.sh set <band> <ssid> <pwd> <channel> <bw> <enc>  更新单频配置
+# 三频 radio 映射（已按真机 `uci show wireless` 校准）：
+#   radio0 = 板载 IPQ6018 5.8G  (band 5g, path platform/soc@0/c000000.wifi)
+#   radio1 = 板载 IPQ6018 2.4G  (band 2g, path .../c000000.wifi+1)
+#   radio2 = PCIe QCN9074 5.2G 游戏频段 (path ...pcie.../0000:01:00.0)
+#   b24 -> radio1   b52 -> radio2   b58 -> radio0
+
+CMD="${1:-get}"
+json_str() { sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g; s/\r//g'; }
+
+GUEST_IFACE="athena_guest"
+GUEST_SSID="Athena-Guest"
+GUEST_IP="192.168.30.1"
+
+band_radio() { case "$1" in b24) echo 1;; b52) echo 2;; b58) echo 0;; esac; }
+
+# 找到 radio 对应的默认 wifi-iface
+find_iface() {
+	local radio="$1"
+	uci -q show wireless 2>/dev/null | grep -E "wireless\.[A-Za-z0-9_]+\.device='$radio'$" | grep -v "wireless\.$GUEST_IFACE\." | head -1 | cut -d. -f2 | cut -d= -f1
+}
+
+# encryption: uci -> 前端
+uci2enc() {
+	case "$1" in
+		none) echo "开放（无加密）" ;;
+		sae-mixed) echo "WPA2/WPA3-PSK" ;;
+		sae) echo "WPA3-SAE" ;;
+		psk2|psk-mixed|psk) echo "WPA2-PSK" ;;
+		*) echo "WPA2/WPA3-PSK" ;;
+	esac
+}
+# encryption: 前端 -> uci
+enc2uci() {
+	case "$1" in
+		"开放（无加密）") echo "none" ;;
+		"WPA3-SAE") echo "sae" ;;
+		"WPA2/WPA3-PSK") echo "sae-mixed" ;;
+		*) echo "psk2" ;;
+	esac
+}
+# htmode: uci -> 前端
+htmode2bw() {
+	case "$1" in
+		HT40|VHT40|HE40) echo "40MHz" ;;
+		HT80|VHT80|HE80) echo "80MHz" ;;
+		HT160|VHT160|HE160) echo "160MHz" ;;
+		*) echo "20MHz" ;;
+	esac
+}
+# bw: 前端 -> uci（按 band 区分 2.4G HT / 5G VHT）
+bw2htmode() {
+	local band="$1" bw="$2"
+	case "$bw" in
+		40MHz) [ "$band" = "2g" ] && echo "HT40" || echo "VHT40" ;;
+		80MHz) echo "VHT80" ;;
+		160MHz) echo "VHT160" ;;
+		*) [ "$band" = "2g" ] && echo "HT20" || echo "VHT20" ;;
+	esac
+}
+
+emit_band() {
+	local id="$1" idx="$2"
+	local radio="radio$idx"
+	[ "$(uci -q get "wirele
+
+==== athena-speedtest.sh (2088 bytes) ====
+#!/bin/sh
+# AthenaWrt 网络测速（下载实测，上传需 iperf3 服务端）
+# 用法: athena-speedtest.sh [node_id]
+#   node_id: auto | caict-bj-edu | ct-bj | ... （前端 SPEED_NODES，脚本主要用 auto 选最优）
+# 输出单行 JSON: {"ok":true,"download_mbps":..,"upload_mbps":..,"ping_ms":..,"jitter_ms":..,"node":".."}
+
+json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
+NODE="${1:-auto}"
+
+# ---- 时延 / 抖动（ping 阿里 DNS，取 avg + mdev）----
+PING_HOST="223.5.5.5"
+PING_RAW=$(ping -c 5 -q "$PING_HOST" 2>/dev/null | grep -E 'rtt|min/avg/max')
+AVG_MS=$(echo "$PING_RAW" | grep -oE '[0-9]+\.[0-9]+/[0-9]+\.[0-9]+/[0-9]+\.[0-9]+/[0-9]+\.[0-9]+' | cut -d/ -f2)
+JITTER_MS=$(echo "$PING_RAW" | grep -oE '[0-9]+\.[0-9]+/[0-9]+\.[0-9]+/[0-9]+\.[0-9]+/[0-9]+\.[0-9]+' | cut -d/ -f4)
+[ -z "$AVG_MS" ] && AVG_MS=$(ping -c 3 "$PING_HOST" 2>/dev/null | grep -oE 'time=[0-9.]+' | tail -1 | cut -d= -f2)
+[ -z "$AVG_MS" ] && AVG_MS=0
+[ -z "$JITTER_MS" ] && JITTER_MS=0
+
+# ---- 下载测速（curl 实测，按序尝试公共测速文件）----
+DL_URLS="
+https://speed.cloudflare.com/__down?bytes=20000000
+https://mirrors.tuna.tsinghua.edu.cn/speedtest/100MB.bin
+http://speedtest1.online.sh.cn/speedtest/random2000x2000k.txt
+"
+DL_MBPS=0; DL_NODE=""
+for url in $DL_URLS; do
+	[ -z "$url" ] && continue
+	speed_bps=$(curl -L -s -o /dev/null --max-time 20 -w "%{speed_download}" "$url" 2>/dev/null)
+	speed_bps=$(echo "$speed_bps" | grep -oE '^[0-9]+' | head -1)
+	[ -n "$speed_bps" ] && [ "$speed_bps" -gt 1000 ] 2>/dev/null || continue
+	DL_MBPS=$(awk -v s="$speed_bps" 'BEGIN{printf "%.1f", s*8/1000000}')
+	DL_NODE="$url"
+	break
+done
+
+# ---- 上传测速（优先 iperf3，需服务端；否则返回 0 表示不支持）----
+UP_MBPS=0
+if command -v iperf3 >/dev/null 2>&1 && [ -n "$IPERF3_SERVER" ]; then
+	up_bps=$(iperf3 -c "$IPERF3_SERVER" -t 6 -J 2>/dev/null | grep -oE '"bits_per_second":[0-9.]+' | tail -1 | cut -d: -f2)
+	[ -n "$up_bps" ] && UP_MBPS=$(awk -v s="$up_bps" 'BEGIN{printf "%.1f", s/1000000}')
+fi
+
+NODE_NAME="自动选择"
+[ "$NODE" != "auto" ] && NODE_NAME="$NODE"
+
+printf '{"ok":true,"download_mbps":%s,"upload_mbps":%s,"ping_ms":%s,"jitter_ms":%s,"node":"%s"}' \
+
+==== athena-resources.sh (3256 bytes) ====
+#!/bin/sh
+# AthenaWrt 资源监控聚合脚本
+# 输出单行 JSON：
+#   {"cpu":{"total":0-100,"temp":c},"memory":{"total_mb":n,"used_mb":n,"pct":0-100},
+#    "procs":[{"pid":p,"name":"x","cpu":x.x,"mem":x.x}]}
+# - cpu.total / memory.pct：真实采样计算
+# - procs：按内存占用取前 8，进程 CPU% 通过两次 /proc 采样（间隔 1s）计算
+# 注意：首次运行时无上次采样，进程 CPU% 会偏高，第二次起恢复准确。
+
+CACHE=/tmp/athena-res-cache
+HZ=$(getconf CLK_TCK 2>/dev/null)
+[ -z "$HZ" ] || [ "$HZ" -le 0 ] 2>/dev/null && HZ=100
+NCPU=$(grep -c '^processor' /proc/cpuinfo 2>/dev/null)
+[ -z "$NCPU" ] || [ "$NCPU" -le 0 ] 2>/dev/null && NCPU=4
+
+json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
+
+# ---- CPU 总量（/proc/stat 的 cpu 行）----
+read_cpu() {
+	awk '/^cpu /{printf "%d %d", $2+$3+$4+$5+$6+$7+$8, $5}' /proc/stat
+}
+
+# ---- 遍历进程：输出 "pid|name|ticks|rss_kb" ----
+# stat 字段：去掉 "pid (comm) " 后 utime/stime 为第 12/13 字段（累计 CPU tick）
+list_procs() {
+	for p in /proc/[0-9]*; do
+		[ -d "$p" ] || continue
+		pid=${p##*/}
+		name=$(tr -d '\0' < "$p/comm" 2>/dev/null)
+		[ -n "$name" ] || continue
+		ticks=$(sed 's/.*) //' "$p/stat" 2>/dev/null | awk '{print $12+$13}')
+		[ -n "$ticks" ] || continue
+		rss=$(awk '/^VmRSS:/{print $2}' "$p/status" 2>/dev/null)
+		[ -z "$rss" ] && rss=0
+		echo "$pid|$name|$ticks|$rss"
+	done
+}
+
+set -- $(read_cpu)
+T1_TOTAL=$1; T1_IDLE=$2
+
+list_procs > "$CACHE.now"
+
+sleep 1
+
+set -- $(read_cpu)
+T2_TOTAL=$1; T2_IDLE=$2
+
+# ---- CPU 总占用 ----
+CPU_TOTAL=0
+DT=$((T2_TOTAL - T1_TOTAL))
+DI=$((T2_IDLE - T1_IDLE))
+[ "$DT" -gt 0 ] 2>/dev/null && CPU_TOTAL=$(awk -v d="$DT" -v i="$DI" 'BEGIN{printf "%.0f", (d-i)/d*100}')
+[ "$CPU_TOTAL" -gt 100 ] 2>/dev/null && CPU_TOTAL=100
+
+# ---- 温度（取所有 thermal zone 最高值）----
+TEMP=0
+for f in /sys/class/thermal/thermal_zone*/temp; do
+	[ -r "$f" ] || continue
+	t=$(cat "$f" 2>/dev/null)
+	[ -n "$t" ] && [ "$t" -gt "$TEMP" ] 2>/dev/null && TEMP=$t
+done
+TEMP=$((TEMP/1000))
+
+# ---- 内存 ----
+MEMTOTAL_KB=$(awk '/^MemTotal:/{print $2}' /proc/meminfo)
+MEMAVAIL_KB=$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)
+[ -z "$MEMTOTAL_KB" ] || [ "$MEMTOTAL_KB" -le 0 ] 2>/dev/nul

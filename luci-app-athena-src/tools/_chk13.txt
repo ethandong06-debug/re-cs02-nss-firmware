@@ -1,0 +1,15 @@
+=== make 进程 ===
+vboxuser 1283278  0.0  0.0   7372  3528 ?        Ss   16:02   0:00 bash -c cd ~/jdc-build/immortalwrt_ipq-main && make -j6 V=s 2>&1 | tail -120
+vboxuser 1283279  0.0  0.0   6136  2692 ?        S    16:02   0:00 make -j6 V=s
+vboxuser 1283715  0.1  0.4  36976 36216 ?        S    16:03   0:01 make package/compile
+vboxuser 1301337  0.0  0.0   4364  3124 ?        S    16:06   0:00 bash -c /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/time.pl "time: package/feeds/packages/node/host-compile" make -w  -r -C package/feeds/packages/node BUILD_SUBDIR="package/feeds/packages/node" BUILD_VARIANT="" ALL_VARIANTS="" host-compile  || ?(    printf "%s\n" "    ERROR: package/feeds/packages/node [host] failed to build.";   exit 1;)
+vboxuser 1301338  0.0  0.0   8488  5868 ?        S    16:06   0:00 perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/time.pl time: package/feeds/packages/node/host-compile make -w -r -C package/feeds/packages/node BUILD_SUBDIR=package/feeds/packages/node BUILD_VARIANT= ALL_VARIANTS= host-compile
+=== filebrowser 目录 ===
+(空)
+=== 固件输出 ===
+total 54364
+-rw-r--r-- 1 vboxuser vboxuser     7041 Oct 24 16:03 config.buildinfo
+-rw-r--r-- 1 vboxuser vboxuser      708 Oct 24 15:15 sha256sums
+-rw-r--r-- 1 vboxuser vboxuser     2513 Oct 24 15:15 profiles.json
+-rw-r--r-- 1 vboxuser vboxuser    11829 Oct 24 15:15 immortalwrt-qualcommax-ipq60xx.manifest
+-rw-r--r-- 1 vboxuser vboxuser 27607313 Oct 24 15:15 immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin

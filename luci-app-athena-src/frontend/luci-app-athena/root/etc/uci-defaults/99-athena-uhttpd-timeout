@@ -1,0 +1,29 @@
+#!/bin/sh
+# AthenaWrt — 固化 uhttpd 上传超时（首次启动执行一次）
+# 背景：uhttpd 出厂 script_timeout 默认 30 秒、network_timeout 60 秒。
+#      40MB 固件在本网络约 0.4MB/s，上传需 ~100 秒，CGI 会被 30 秒超时杀掉 -> 浏览器收到 502。
+# 做法：只升不降（幂等）。用户手动调过更大的值时不覆盖。
+[ -f /etc/config/uhttpd ] || exit 0
+
+need=0
+st=$(uci -q get uhttpd.main.script_timeout)
+[ -z "$st" ] && st=30
+if [ "$st" -lt 600 ] 2>/dev/null; then
+	uci -q set uhttpd.main.script_timeout='600'
+	need=1
+fi
+
+nt=$(uci -q get uhttpd.main.network_timeout)
+[ -z "$nt" ] && nt=60
+if [ "$nt" -lt 120 ] 2>/dev/null; then
+	uci -q set uhttpd.main.network_timeout='120'
+	need=1
+fi
+
+if [ "$need" = "1" ]; then
+	uci -q commit uhttpd
+	/etc/init.d/uhttpd reload >/dev/null 2>&1
+	logger -t athena "uhttpd 上传超时已固化为 script_timeout=600 network_timeout=120"
+fi
+
+exit 0

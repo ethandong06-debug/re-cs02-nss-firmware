@@ -1,0 +1,4 @@
+# AthenaWrt 构建专用 git 配置 (自建, 加速 GitHub 拉取)
+# 经 ghfast.top 公共加速通道访问 GitHub
+[url "https://ghfast.top/https://github.com/"]
+    insteadOf = https://github.com/

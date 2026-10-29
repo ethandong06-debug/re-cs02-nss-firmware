@@ -1,0 +1,26 @@
+=== make world 进程树 ===
+:01  |           |       \_ make -w -r world
+vboxuser 1302452 1302287  0 17:00 ?        00:00:01  |           |           \_ make package/compile
+vboxuser 1309040 1302452  0 17:00 ?        00:00:00  |           |               \_ bash -c /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/time.pl "time: package/feeds/packages/node/host-compile" make -w  -r -C package/feeds/packages/node BUILD_SUBDIR="package/feeds/packages/node" BUILD_VARIANT="" ALL_VARIANTS="" host-compile  || ?(    printf "%s\n" "    ERROR: package/feeds/packages/node [host] failed to build.";   exit 1;)
+vboxuser 1309042 1309040  0 17:00 ?        00:00:00  |           |                   \_ perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/time.pl time: package/feeds/packages/node/host-compile make -w -r -C package/feeds/packages/node BUILD_SUBDIR=package/feeds/packages/node BUILD_VARIANT= ALL_VARIANTS= host-compile
+vboxuser 1309049 1309042  0 17:00 ?        00:00:00  |           |                       \_ make -w -r -C package/feeds/packages/node BUILD_SUBDIR=package/feeds/packages/node BUILD_VARIANT= ALL_VARIANTS= host-compile
+vboxuser 1309135 1309049  0 17:00 ?        00:00:00  |           |                           \_ flock /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2-linux-x64.tar.gz.flock -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1302018 1302016  0 17:00 ?        00:00:00  |           \_ tail -120
+--
+vboxuser 1319875 1319874  0 17:33 ?        00:00:00          \_ bash -c ps -ef --forest | grep -A6 'make -w -r world' | head -20
+vboxuser 1319876 1319875  0 17:33 ?        00:00:00              \_ ps -ef --forest
+vboxuser 1319877 1319875  0 17:33 ?        00:00:00              \_ grep -A6 make -w -r world
+vboxuser 1319878 1319875  0 17:33 ?        00:00:00              \_ head -20
+root         770       1  0 Oct23 ?        00:00:00 /usr/sbin/ModemManager
+root      125075       1  0 Oct23 ?        00:00:01 /usr/libexec/packagekitd
+root      491488       1  0 Oct23 ?        00:00:00 /usr/libexec/upowerd
+vboxuser 1282991       1  0 16:02 ?        00:00:00 /lib/systemd/systemd --user
+vboxuser 1282992 1282991  0 16:02 ?        00:00:00  \_ (sd-pam)
+--
+vboxuser 1283550       1  0 16:03 ?        00:00:01 make -w -r world
+=== 残留下载进程 ===
+vboxuser 1301351  0.0  0.0   2648   956 ?        S    16:06   0:00 flock /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2-linux-x64.tar.gz.flock -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1301352  0.0  0.0   2896   988 ?        S    16:06   0:00 /bin/sh -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1301353  0.0  0.1  13080 10376 ?        S    16:06   0:00 perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl node-v22.23.2-linux-x64.tar.gz b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a  https://nodejs.org/download/release/v22.23.2/
+vboxuser 1301507  0.0  0.1  94776 13008 ?        S    16:39   0:01 /usr/bin/curl.real -f --connect-timeout 5 --retry 3 --location https://sources.openwrt.org/node-v22.23.2-linux-x64.tar.gz
+vboxuser 1309135  0.0  0.0   2648   948 ?        S    17:00   0:00 flock /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2-linux-x64.tar.gz.flock -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"

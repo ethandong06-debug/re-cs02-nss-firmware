@@ -1,0 +1,4 @@
+=== VM 内校验 node 包 ===
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2-linux-x64.tar.gz: OK
+=== 清理半成品+确认无残留进程 ===
+0

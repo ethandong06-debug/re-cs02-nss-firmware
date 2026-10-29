@@ -1,0 +1,4 @@
+LOCAL_SHA=c70d6b5436392be35b402cb32fc2117bef71574d5b21d7b698b622d86a91dd6b
+VM_SHA=c70d6b5436392be35b402cb32fc2117bef71574d5b21d7b698b622d86a91dd6b  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/www/luci-static/resources/view/athena/index.html
+c70d6b5436392be35b402cb32fc2117bef71574d5b21d7b698b622d86a91dd6b  /home/vboxuser/jdc-build/immortalwrt_ipq-main/package/luci-app-athena/htdocs/luci-static/resources/view/athena/index.html
+IPK=

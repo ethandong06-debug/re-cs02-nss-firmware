@@ -1,0 +1,19 @@
+config system 'system'
+	option mode 'router'
+
+config client 'client'
+	list blocked ''
+
+config theme 'theme'
+	option palette 'aurora'
+	option blob '100'
+	option glass '58'
+	option blur '20'
+	option iri '55'
+	option hi '70'
+
+config single 'single'
+	option wan_vlan '2044'
+	option ret_vlan '1'
+	option iptv_vlan ''
+	option iptv_port 'lan4'

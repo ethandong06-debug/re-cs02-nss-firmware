@@ -1,0 +1,5 @@
+00:54:28
+0
+0.78 0.82 0.36 1/177 30347
+-rw-r--r-- 1 vboxuser vboxuser 40359898 00:52:56 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+-rw-r--r-- 1 vboxuser vboxuser 39926033 00:52:58 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin

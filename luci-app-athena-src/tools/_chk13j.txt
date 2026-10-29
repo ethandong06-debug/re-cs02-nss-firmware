@@ -1,0 +1,16 @@
+=== node 编译进程树 ===
+    \_ /bin/sh -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2.tar.gz" "cdaed46fcd8923a55974b7bbc7caaadeaaf7aed60cc137e59837b72f575ef641" "" "https://mirrors.tencent.com/nodejs-release/v22.23.2" "https://nodejs.org/dist/v22.23.2"    
+vboxuser 1328916 1328914  0 17:38 ?        00:00:00  |           |                                   \_ perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl node-v22.23.2.tar.gz cdaed46fcd8923a55974b7bbc7caaadeaaf7aed60cc137e59837b72f575ef641  https://mirrors.tencent.com/nodejs-release/v22.23.2 https://nodejs.org/dist/v22.23.2
+vboxuser 1329053 1328916  0 17:38 ?        00:00:00  |           |                                       \_ /usr/bin/curl.real -f --connect-timeout 5 --retry 3 --location https://sources.openwrt.org/node-v22.23.2.tar.gz
+--
+vboxuser 1335354 1335353  0 18:09 ?        00:00:00          \_ bash -c ps -ef --forest | grep -A4 'package/feeds/packages/node' | head -14
+vboxuser 1335355 1335354  0 18:09 ?        00:00:00              \_ ps -ef --forest
+vboxuser 1335356 1335354  0 18:09 ?        00:00:00              \_ grep -A4 package/feeds/packages/node
+vboxuser 1335357 1335354  0 18:09 ?        00:00:00              \_ head -14
+root         770       1  0 Oct23 ?        00:00:00 /usr/sbin/ModemManager
+root      125075       1  0 Oct23 ?        00:00:01 /usr/libexec/packagekitd
+=== node host 构建目录状态 ===
+(空)
+=== node 锁 ===
+-rw-r--r-- 1 vboxuser vboxuser 0 Oct 24 16:06 /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2-linux-x64.tar.gz.flock
+-rw-r--r-- 1 vboxuser vboxuser 0 Oct 24 17:38 /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2.tar.gz.flock

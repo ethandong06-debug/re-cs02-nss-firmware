@@ -1,0 +1,17 @@
+DL immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin 39926033
+DL immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin 40359898
+DL sha256sums 708
+MARKER:
+1
+VLANPRE:
+1
+NETCHECK:
+1
+MODE_PROTECT:
+1
+CORE_WPAD:
+1
+
+HASHES:
+34aec273a7bd5924b64bf7b830100102594227829e4978a3cbc005c83283c613
+93135fde3a758a83618b6b68c9f24d2eeb469bb63544c530421d83388cd6cea9

@@ -1,0 +1,5 @@
+=== 各镜像 /@latest 测试 ===
+https://mirrors.aliyun.com/goproxy/github.com/gin-gonic/gin/@latest -> 404 146
+https://goproxy.cn/github.com/gin-gonic/gin/@latest -> 404 146
+https://goproxy.io/github.com/gin-gonic/gin/@latest -> 404 146
+https://proxy.golang.com.cn/github.com/gin-gonic/gin/@latest -> 404 146

@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+# ============================================================
+#  AthenaWrt — filebrowser 网页文件共享（预编译二进制，编入固件）
+#  首次启动自动初始化数据库：账号 root / 密码 admin
+#  （登录后请在 filebrowser 设置里立即修改密码）
+#  监听 0.0.0.0:8081，根目录 /
+# ============================================================
+START=98
+USE_PROCD=1
+
+FB_BIN=/usr/bin/filebrowser
+FB_DB=/etc/filebrowser.db
+FB_PORT=8081
+
+start_service() {
+	# 首次启动：初始化数据库并添加管理员 root/admin
+	if [ ! -f "$FB_DB" ]; then
+		"$FB_BIN" -c "$FB_DB" config init >/dev/null 2>&1
+		"$FB_BIN" -c "$FB_DB" users add root admin --perm.admin 2>/dev/null || \
+			"$FB_BIN" -c "$FB_DB" users add root admin >/dev/null 2>&1
+	fi
+	procd_open_instance
+	procd_set_param command "$FB_BIN" -c "$FB_DB" -a 0.0.0.0 -p "$FB_PORT" -r /
+	procd_set_param respawn 3600 5 5
+	procd_close_instance
+}
+
+stop_service() {
+	procd_kill "$FB_BIN"
+}

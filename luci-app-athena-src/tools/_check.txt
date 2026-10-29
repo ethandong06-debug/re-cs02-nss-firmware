@@ -1,0 +1,2 @@
+inline JS length: 132126
+node --check: PASS

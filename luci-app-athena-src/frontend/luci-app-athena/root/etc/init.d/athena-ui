@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+# AthenaWrt — 开机按「界面模式」重新生成 /www/index.html
+# （默认入口跟随 last：管理台 ⇄ 原生界面；uci-defaults 首启也生成一次，
+#   此处保证每次开机按最新配置生效，含用户改过默认界面的场景）
+
+START=80
+STOP=15
+
+start() {
+	[ -x /usr/libexec/athena-ui.sh ] && /usr/libexec/athena-ui.sh sync >/dev/null 2>&1
+}

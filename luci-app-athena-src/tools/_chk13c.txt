@@ -1,0 +1,17 @@
+=== 当前编译任务 ===
+D_SUBDIR=package/feeds/packages/node BUILD_VARIANT= ALL_VARIANTS= host-compile
+vboxuser 1301351  0.0  0.0   2648   956 ?        S    16:06   0:00 flock /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.node-v22.23.2-linux-x64.tar.gz.flock -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1301352  0.0  0.0   2896   988 ?        S    16:06   0:00 /bin/sh -c   ?/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl "/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl" "node-v22.23.2-linux-x64.tar.gz" "b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a" "" "https://nodejs.org/download/release/v22.23.2/"    
+vboxuser 1301353  0.0  0.1  13080 10376 ?        S    16:06   0:00 perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/download.pl /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl node-v22.23.2-linux-x64.tar.gz b294a556e639d64338823920e5866c21c02741742d2e1529ee1a225c1ec9252a  https://nodejs.org/download/release/v22.23.2/
+=== 最新编译目录 ===
+luci
+luci-app-ddns
+luci-light
+luci-app-fullconenat-sonic
+luci-app-firewall
+ddns-scripts-2.8.4
+firewall4-2025.03.17~b6e51575
+u-boot-2026.07
+=== 固件时间 ===
+-rw-r--r-- 1 vboxuser vboxuser 27607313 Oct 24 15:15 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+-rw-r--r-- 1 vboxuser vboxuser 27996686 Oct 24 15:15 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin

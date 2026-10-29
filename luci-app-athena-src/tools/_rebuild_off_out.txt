@@ -1,0 +1,26 @@
+=== 日志尾部 ===
+-eslint-parser
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-final-modal
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-i18n
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-lazyload
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-reader
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-router
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-toastification
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-tsc
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/yaml-eslint-parser
+github.com/asdine/storm/v3@v3.2.1 requires
+	golang.org/x/net@v0.0.0-20191105084925-a882066a44e0: module lookup disabled by GOPROXY=off
+
+Building targets
+no Go files in /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/.go_work/build
+
+make[3]: *** [Makefile:76: /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/.built] Error 1
+make[3]: Leaving directory '/home/vboxuser/jdc-build/feeds/packages/utils/filebrowser'
+time: package/feeds/packages/filebrowser/compile#87.71#5.13#42.43
+    ERROR: package/feeds/packages/filebrowser failed to build.
+make[2]: *** [package/Makefile:255: package/feeds/packages/filebrowser/compile] Error 1
+make[2]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+make[1]: *** [package/Makefile:251: /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/stamp/.package_compile] Error 2
+make[1]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+make: *** [/home/vboxuser/jdc-build/immortalwrt_ipq-main/include/toplevel.mk:268: world] Error 2
+

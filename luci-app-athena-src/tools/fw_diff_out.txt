@@ -1,0 +1,13 @@
+Files /tmp/xv15/lib64/apk/db/installed and /tmp/xv16/lib64/apk/db/installed differ
+Files /tmp/xv15/lib64/apk/db/scripts.tar.gz and /tmp/xv16/lib64/apk/db/scripts.tar.gz differ
+Files /tmp/xv15/lib/apk/db/installed and /tmp/xv16/lib/apk/db/installed differ
+Files /tmp/xv15/lib/apk/db/scripts.tar.gz and /tmp/xv16/lib/apk/db/scripts.tar.gz differ
+Files /tmp/xv15/usr/libexec/athena-backup.sh and /tmp/xv16/usr/libexec/athena-backup.sh differ
+Files /tmp/xv15/usr/libexec/athena-resources.sh and /tmp/xv16/usr/libexec/athena-resources.sh differ
+Files /tmp/xv15/usr/libexec/athena-services.sh and /tmp/xv16/usr/libexec/athena-services.sh differ
+Files /tmp/xv15/usr/libexec/athena-status.sh and /tmp/xv16/usr/libexec/athena-status.sh differ
+Files /tmp/xv15/usr/libexec/athena-upgrade.sh and /tmp/xv16/usr/libexec/athena-upgrade.sh differ
+Files /tmp/xv15/usr/share/rpcd/acl.d/luci-app-athena.json and /tmp/xv16/usr/share/rpcd/acl.d/luci-app-athena.json differ
+Files /tmp/xv15/usr/share/ucode/luci/template/header.ut and /tmp/xv16/usr/share/ucode/luci/template/header.ut differ
+Files /tmp/xv15/usr/share/ucode/luci/version.uc and /tmp/xv16/usr/share/ucode/luci/version.uc differ
+Files /tmp/xv15/www/luci-static/resources/view/athena/index.html and /tmp/xv16/www/luci-static/resources/view/athena/index.html differ

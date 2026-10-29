@@ -1,0 +1,29 @@
+#!/bin/sh
+# ============================================================
+#  AthenaWrt — 首页直达定制登录界面 (uci-defaults，首启执行一次)
+#  luci-base 的 /www/index.html 会把「/」重定向到 cgi-bin/luci/，
+#  导致先弹 LuCI 默认主题登录页、登录后再弹定制 SPA 自己的登录（两次密码）。
+#  这里覆写 /www/index.html，让「/」直接跳到定制 SPA，
+#  使 AthenaWrt 自带的登录页成为唯一一次登录。
+#  （/www 在 squashfs 上，首启写入 overlay，持久生效；用 uci-defaults 而非
+#   包内 INSTALL 是为了避免与 luci-base 的 /www/index.html 文件冲突。）
+# ============================================================
+
+WWW_INDEX=/www/index.html
+
+cat > "$WWW_INDEX" <<'EOF'
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
+		<meta http-equiv="refresh" content="0; URL=luci-static/resources/view/athena/index.html" />
+	</head>
+	<body>
+		<a href="luci-static/resources/view/athena/index.html">AthenaWrt</a>
+	</body>
+</html>
+EOF
+
+exit 0

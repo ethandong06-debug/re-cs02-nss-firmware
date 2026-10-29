@@ -1,0 +1,12 @@
+=== athena 前端安装时间 ===
+-rw-r--r-- 1 vboxuser vboxuser 143944 Oct 24 16:03 /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/www/luci-static/resources/view/athena/index.html
+-rw-r--r-- 1 vboxuser vboxuser    427 Oct 24 16:03 /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/www/luci-static/resources/view/athena/index.js
+=== 新脚本安装时间 ===
+-rwxr-xr-x 1 vboxuser vboxuser  402 Oct 24 16:03 /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/etc/init.d/athena-ui
+-rwxr-xr-x 1 vboxuser vboxuser 4861 Oct 24 16:03 /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/usr/libexec/athena-parent.sh
+-rwxr-xr-x 1 vboxuser vboxuser 2431 Oct 24 16:03 /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/usr/libexec/athena-ui.sh
+=== 编译临时产物最新 ===
+total 196
+drwxrwxr-x 2 vboxuser vboxuser  12288 Oct 24 17:00 dl-verified
+drwxrwxr-x 2 vboxuser vboxuser 176128 Oct 24 17:00 info
+-rw-r--r-- 1 vboxuser vboxuser   5613 Oct 24 15:15 apk_install_list

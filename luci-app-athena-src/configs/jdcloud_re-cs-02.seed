@@ -1,0 +1,28 @@
+# ============================================================
+#  京东云雅典娜 AX6600 (JDCloud RE-CS-02) 定制固件 — 种子配置
+#  SoC: Qualcomm IPQ6010 | Target: qualcommax/ipq60xx
+#  Base: ImmortalWrt master (snapshot)
+# ============================================================
+
+# ---- 目标平台 ----
+CONFIG_TARGET_qualcommax=y
+CONFIG_TARGET_qualcommax_ipq60xx=y
+CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-02=y
+
+# ---- 固件品牌定制 (写入 /etc/openwrt_release) ----
+CONFIG_VERSION_DIST="AthenaWrt"
+CONFIG_VERSION_NUMBER="v1.2.29"
+CONFIG_VERSION_REPO="https://github.com/immortalwrt/immortalwrt"
+CONFIG_VERSION_MANUFACTURER="JDCloud"
+CONFIG_VERSION_PRODUCT="Athena"
+CONFIG_VERSION_HOME_URL=""
+CONFIG_VERSION_BUG_URL=""
+CONFIG_VERSION_SUPPORT_URL=""
+CONFIG_VERSION_DESCRIPTION="AthenaWrt v1.2.29 for JDCloud RE-CS-02 (IPQ6010)"
+
+# ---- 基础构建选项 ----
+CONFIG_TARGET_ROOTFS_SQUASHFS=y
+CONFIG_PACKAGE_luci=y
+
+# ---- 中文界面 (ImmortalWrt 用 BCP47 语言标签, 简体中文 = zh_Hans) ----
+CONFIG_LUCI_LANG_zh_Hans=y

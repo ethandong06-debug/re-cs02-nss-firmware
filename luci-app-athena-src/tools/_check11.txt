@@ -1,0 +1,5 @@
+node --check: PASS
+系统设置界面模式行: PASS
+switchNativeUI 函数: PASS
+同页跳转确认: PASS
+原生菜单 AthenaWrt 入口(menu.d): PASS

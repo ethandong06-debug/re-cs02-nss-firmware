@@ -1,0 +1,5 @@
+node --check: PASS
+初始 enc 对齐 psk2: PASS
+loaded 标记: PASS
+未加载禁止保存: PASS
+loadWireless 失败可见: PASS

@@ -1,0 +1,8 @@
+﻿dir	/etc/athena_led	0
+dir	/etc/athena_led/anim	0
+file	/etc/athena_led/anim/bad-apple.bin	88749
+file	/etc/config/athena_led	2535
+file	/etc/init.d/athena_led	6453
+sym	/etc/rc.d/K99athena_led	0
+sym	/etc/rc.d/S99athena_led	0
+file	/usr/bin/athena-led	3266172

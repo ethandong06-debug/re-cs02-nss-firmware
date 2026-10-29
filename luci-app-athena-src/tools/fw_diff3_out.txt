@@ -1,0 +1,90 @@
+=== scripts.tar.gz 包脚本清单差异 ===
+592,593c592,593
+< luci-app-athena-1.0.0-r1.X1bb31bc2c8e0d92a41b445dd802d8bbba0f054e62.pre-deinstall
+< luci-app-athena-1.0.0-r1.X1bb31bc2c8e0d92a41b445dd802d8bbba0f054e62.post-upgrade
+---
+> luci-app-athena-1.0.0-r1.X18ad029d702fbd661e60dc23bfcc663a12fd5be16.pre-deinstall
+> luci-app-athena-1.0.0-r1.X18ad029d702fbd661e60dc23bfcc663a12fd5be16.post-upgrade
+606,607c606,607
+< luci-base-0.261025.62204.X154d147596393fb346a70e9fa15f0785341b083d0.pre-deinstall
+< luci-base-0.261025.62204.X154d147596393fb346a70e9fa15f0785341b083d0.post-upgrade
+---
+> luci-base-0.261025.84783.X158bb02900c983fd056d07e25230a5e795a5e5003.pre-deinstall
+> luci-base-0.261025.84783.X158bb02900c983fd056d07e25230a5e795a5e5003.post-upgrade
+612,613c612,613
+< luci-i18n-athena-zh-cn-0.261025.62169.X1ac0bb2c7f595d39050da2d3ac0b7d4fe44ef48ee.pre-deinstall
+< luci-i18n-athena-zh-cn-0.261025.62169.X1ac0bb2c7f595d39050da2d3ac0b7d4fe44ef48ee.post-upgrade
+---
+> luci-i18n-athena-zh-cn-0.261025.84742.X18fd5c661d9e4a2abf280ccdebf54c0065cae408f.pre-deinstall
+> luci-i18n-athena-zh-cn-0.261025.84742.X18fd5c661d9e4a2abf280ccdebf54c0065cae408f.post-upgrade
+=== installed 完整包版本 diff（所有行）===
+10466c10466
+< C:Q1uzG8LI4NkqQbRF3YAti7ug8FTmI=
+---
+> C:Q1itAp1wL71mHmDcI7/MZjoS/VvhY=
+10470,10471c10470,10471
+< S:14586973
+< I:34763045
+---
+> S:14589214
+> I:34769347
+10524c10524
+< Z:Q1k6WekqegWFwXwTGQfB0199MsgSU=
+---
+> Z:Q181DiT8Dy9cE3MoYSrgFlSK8qCNg=
+10563c10563
+< Z:Q1/kR8fy3dUtS0WGxaTeLrRxpVGFY=
+---
+> Z:Q1KXHif3fu/qGsaTe2aHFr8cfAaY0=
+10569c10569
+< Z:Q1FZltfZ48GqaeyBF8a1SD9LD/Css=
+---
+> Z:Q1gM1g3WUMyNrEyMV57s9U902C4Ns=
+10575c10575
+< Z:Q1nmSbI7tG7VE+DvyjOVhue7Bp+K8=
+---
+> Z:Q1lE5TOnFKSaQzu0LXh1c6G/qSojE=
+10584c10584
+< Z:Q1vd8SmSQjbHAn8r+QoG+UhGB/T4w=
+---
+> Z:Q1EPd9hfCxEiB07W5jL9Wrc97InFo=
+10596c10596
+< Z:Q1KJAFFIUIDRNPYW1w5XXBv/zL60U=
+---
+> Z:Q1DM08v/NGXpXXjZKAVp+tf2KXWhs=
+10603c10603
+< Z:Q1YCv2MOlBkaJ5J5Pdok0GCRNf5ww=
+---
+> Z:Q1UZYPZS/C36/HRz+SHKgYxul+k/k=
+10945c10945
+< C:Q1VNFHWWOT+zRqcOn6FfB4U0Gwg9A=
+---
+> C:Q1WLsCkAyYP9BW0H4lIwpeeVpeUAM=
+10947c10947
+< V:0.261025.62204
+---
+> V:0.261025.84783
+10949c10949
+< S:163467
+---
+> S:163468
+11046c11046
+< Z:Q1sI8XXG2We8M/iYST2cMd4FxCqA0=
+---
+> Z:Q1eFWg2gG+Zrg041O8HuvvNspULfw=
+11071c11071
+< Z:Q1QYDjEHCvifSRtWQ39tkw1FQx/60=
+---
+> Z:Q1F8HArL7b1C/wfZH7QGcJP7SrpRw=
+11538c11538
+< C:Q1rAuyx/WV05BQ2i06wLfU/kTvSO4=
+---
+> C:Q1j9XGYdnkoqvygMzev1TABlyuQI8=
+11540c11540
+< V:0.261025.62169
+---
+> V:0.261025.84742
+11542c11542
+< S:967
+---
+> S:968

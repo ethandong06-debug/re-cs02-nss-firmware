@@ -1,0 +1,7 @@
+=== make 进程数 ===
+2
+=== 固件时间 ===
+-rw-r--r-- 1 vboxuser vboxuser 27607313 Oct 24 15:15 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+-rw-r--r-- 1 vboxuser vboxuser 27996686 Oct 24 15:15 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+=== 当前时间 ===
+17:32:01

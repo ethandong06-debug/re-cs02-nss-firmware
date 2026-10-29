@@ -1,0 +1,3 @@
+LOCAL=72e1fd24f42c1572d07e189fbb2f0f3825cac50e28ba59749ec4fd0debbced55
+72e1fd24f42c1572d07e189fbb2f0f3825cac50e28ba59749ec4fd0debbced55  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/www/luci-static/resources/view/athena/index.html
+150d3190fd1e20c804c31cd90c8896db35c48f8067df2cdf231a348988a15e60  /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/root-qualcommax/usr/libexec/athena-services.sh

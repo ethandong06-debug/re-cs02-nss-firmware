@@ -1,0 +1,16 @@
+=== 包版本差异（P 行相同但 V 不同/增删）===
+302c302
+< P:luci-base V:0.261025.62204
+---
+> P:luci-base V:0.261025.84783
+305c305
+< P:luci-i18n-athena-zh-cn V:0.261025.62169
+---
+> P:luci-i18n-athena-zh-cn V:0.261025.84742
+=== header.ut diff ===
+Binary files /tmp/xv15/usr/share/ucode/luci/template/header.ut and /tmp/xv16/usr/share/ucode/luci/template/header.ut differ
+=== version.uc diff ===
+1c1
+< export const revision = '0.261025.62204', branch = 'LuCI';
+---
+> export const revision = '0.261025.84783', branch = 'LuCI';

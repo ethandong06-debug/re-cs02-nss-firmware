@@ -1,0 +1,2 @@
+LOCAL=84938e32ab964f6fda23171ec372d497c8c59219aa1dbef025e4386a0f27e42a
+c70d6b5436392be35b402cb32fc2117bef71574d5b21d7b698b622d86a91dd6b  /home/vboxuser/jdc-build/immortalwrt_ipq-main/package/luci-app-athena/htdocs/luci-static/resources/view/athena/index.html

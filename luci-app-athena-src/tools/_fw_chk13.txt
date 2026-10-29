@@ -1,0 +1,8 @@
+=== 固件文件 ===
+-rw-r--r-- 1 vboxuser vboxuser 27607313 Oct 24 19:41 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+-rw-r--r-- 1 vboxuser vboxuser 27989154 Oct 24 19:41 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+=== sha256sums ===
+6ac56092010156ac44edb9bc8711223a33c16f1c65c2f692be7f13c403854426 *immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+7e6e7b26630f038469cf760959141d30b1e4588878affeaa1c229b7ffe473c99 *immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+=== 当前时间 ===
+19:42:24

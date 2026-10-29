@@ -1,0 +1,7 @@
+=== host node 是否已编译 ===
+(空)
+=== 新 make 的子进程 ===
+PID     ELAPSED CMD
+1302285       32:11 /bin/sh -c _limit=`ulimit -n`; [ "$_limit" = "unlimited" -o "$_limit" -ge 1024 ] || ulimit -n 1024; umask 022; make -w -r world
+=== node 下载与 stamp ===
+(空)

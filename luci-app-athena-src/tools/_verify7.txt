@@ -1,0 +1,2 @@
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin | f8cbfd03abf0ae01 | MATCH
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin | 041927d1f5015c4e | MATCH

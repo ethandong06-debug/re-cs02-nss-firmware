@@ -1,0 +1,12 @@
+=== filebrowser-go DEPENDS ===
+LUCI_DEPENDS:=+filebrowser
+=== filebrowser(旧) DEPENDS ===
+(空)
+=== node 下载进度 ===
+-rw-r--r-- 1 vboxuser vboxuser 13631488 Oct 24 16:59 /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2-linux-x64.tar.gz.dl
+-rw-r--r-- 1 vboxuser vboxuser        0 Oct 24 16:39 /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2-linux-x64.tar.gz.hash
+---
+-rw-r--r--  1 vboxuser vboxuser  13631488 Oct 24 16:59 node-v22.23.2-linux-x64.tar.gz.dl
+-rw-r--r--  1 vboxuser vboxuser         0 Oct 24 16:39 node-v22.23.2-linux-x64.tar.gz.hash
+=== node 是否已选 ===
+node 未选中

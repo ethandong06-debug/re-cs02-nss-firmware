@@ -1,0 +1,122 @@
+Enabling network
+Enabling nss_freq
+Enabling odhcpd
+Enabling openssl
+Enabling packet_steering
+Enabling qca-nss-drv
+Enabling qca-nss-ecm
+Enabling qca-nss-netlink
+Enabling qca-nss-pbuf
+Enabling radius
+Enabling rpcd
+Enabling set-irq-affinity
+Enabling skb_recycler
+Enabling smp_affinity
+Enabling sysctl
+Enabling sysfixtime
+Enabling sysntpd
+Enabling system
+Enabling ttyd
+Enabling ubihealthd
+Enabling ucitrack
+Enabling uhttpd
+Enabling umount
+Enabling urandom_seed
+Enabling urngd
+Enabling wpad
+rm -rf /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/boot /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/tmp/* /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/lib/apk/db/*.post-install* /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/usr/lib/opkg/info/*.postinst* /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/usr/lib/opkg/lists/* /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/var/lock/*.lock
+find /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/ -mindepth 1 -execdir touch -hcd "@1792071676" "{}" +
+touch -hcd "@1792071676" /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/host/bin/mksquashfs4 /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53 /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/root.squashfs+pkg=c4e4fd53 -nopad -noappend -root-owned -comp xz -Xpreset 9 -Xe -Xlc 0 -Xlp 2 -Xpb 2  -b 256k -p '/dev d 755 0 0' -p '/dev/console c 600 0 0 5 1' -no-xattrs -block-readers 4 -small-readers 4
+Pseudo file "dev" exists in source filesystem "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/target-dir-c4e4fd53/dev".
+Ignoring, exclude it (-e/-ef) to override.
+Parallel mksquashfs: Using 6 processors
+Creating 4.0 filesystem on /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/root.squashfs+pkg=c4e4fd53, block size 262144.
+
+[|                                                             ]    0/2160   0%
+[=============================================================-] 2273/2273 100%
+
+Exportable Squashfs 4.0 filesystem, xz compressed, data block size 262144
+	compressed data, compressed metadata, compressed fragments,
+	no xattrs, compressed ids
+	duplicates are removed
+Filesystem size 21196.25 Kbytes (20.70 Mbytes)
+	32.36% of uncompressed filesystem size (65506.51 Kbytes)
+Inode table size 21084 bytes (20.59 Kbytes)
+	22.89% of uncompressed inode table size (92128 bytes)
+Directory table size 28124 bytes (27.46 Kbytes)
+	47.08% of uncompressed directory table size (59739 bytes)
+Number of duplicate files found 34
+Number of inodes 2680
+Number of files 2021
+Number of fragments 89
+Number of symbolic links 469
+Number of device nodes 1
+Number of fifo nodes 0
+Number of socket nodes 0
+Number of directories 189
+Number of hard-links 0
+Number of ids (unique uids + gids) 1
+Number of uids 1
+	root (0)
+Number of gids 1
+	root (0)
+[ -f /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/jdcloud_re-cs-02-uImage.itb -a -f /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/root.squashfs+pkg=c4e4fd53 ]
+[ -f /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/jdcloud_re-cs-02-uImage.itb -a -f /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/root.squashfs+pkg=c4e4fd53 ]
+dd if=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/root.squashfs+pkg=c4e4fd53 >> /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+dd if=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/jdcloud_re-cs-02-uImage.itb >> /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+11399+1 records in
+11399+1 records out
+5836616 bytes (5.8 MB, 5.6 MiB) copied, 0.0210955 s, 277 MB/s
+dd if=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin of=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.new bs=6144k conv=sync
+0+1 records in
+1+0 records out
+6291456 bytes (6.3 MB, 6.0 MiB) copied, 0.00621872 s, 1.0 GB/s
+mv /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.new /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+42392+1 records in
+42392+1 records out
+21704957 bytes (22 MB, 21 MiB) copied, 0.0807142 s, 269 MB/s
+dd if=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin of=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.new bs=64k conv=sync
+dd if=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/root.squashfs+pkg=c4e4fd53 >> /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+331+1 records in
+332+0 records out
+21757952 bytes (22 MB, 21 MiB) copied, 0.020255 s, 1.1 GB/s
+mv /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.new /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+42392+1 records in
+42392+1 records out
+21704957 bytes (22 MB, 21 MiB) copied, 0.0806071 s, 269 MB/s
+echo '{  "metadata_version": "1.1", "compat_version": "1.0",   "supported_devices":["jdcloud,re-cs-02"], "version": { "dist": "ImmortalWRT", "version": "SNAPSHOT", "revision": "r1-20261017", "target": "qualcommax/ipq60xx", "board": "jdcloud_re-cs-02" } }' | fwtool -I - /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+sha256sum "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin" | cut -d" " -f1 > "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.sha256sum"
+sh /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/sysupgrade-tar.sh --board jdcloud_re-cs-02 --kernel /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/jdcloud_re-cs-02-uImage.itb --rootfs /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin  /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+[ ! -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build" -o ! -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build.ucert" -o ! -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin" ] || { cp "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build.ucert" "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.ucert" ; usign -S -m "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin" -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build" -x "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.sig" ; ucert -A -c "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.ucert" -x "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.sig" ; fwtool -S "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.ucert" "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin" ; }
+cp /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+21248+0 records in
+21248+0 records out
+21757952 bytes (22 MB, 21 MiB) copied, 0.0460894 s, 472 MB/s
+tar: Option --mtime: Treating date '@1792071676' as 2026-10-15 13:41:16
+sysupgrade-jdcloud_re-cs-02/
+sysupgrade-jdcloud_re-cs-02/CONTROL
+sysupgrade-jdcloud_re-cs-02/kernel
+sysupgrade-jdcloud_re-cs-02/root
+echo '{  "metadata_version": "1.1", "compat_version": "1.0",   "supported_devices":["jdcloud,re-cs-02"], "version": { "dist": "ImmortalWRT", "version": "SNAPSHOT", "revision": "r1-20261017", "target": "qualcommax/ipq60xx", "board": "jdcloud_re-cs-02" } }' | fwtool -I - /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+sha256sum "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin" | cut -d" " -f1 > "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.sha256sum"
+DEVICE_ID="jdcloud_re-cs-02" SOURCE_DATE_EPOCH=1792071676 FILE_NAME="immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin" FILE_DIR="/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp" FILE_TYPE=factory FILE_FILESYSTEM="squashfs" DEVICE_IMG_PREFIX="immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02" DEVICE_VENDOR="JDCloud" DEVICE_MODEL="RE-CS-02" DEVICE_VARIANT="" DEVICE_ALT0_VENDOR="" DEVICE_ALT0_MODEL="" DEVICE_ALT0_VARIANT="" DEVICE_ALT1_VENDOR="" DEVICE_ALT1_MODEL="" DEVICE_ALT1_VARIANT="" DEVICE_ALT2_VENDOR="" DEVICE_ALT2_MODEL="" DEVICE_ALT2_VARIANT="" DEVICE_ALT3_VENDOR="" DEVICE_ALT3_MODEL="" DEVICE_ALT3_VARIANT="" DEVICE_ALT4_VENDOR="" DEVICE_ALT4_MODEL="" DEVICE_ALT4_VARIANT="" DEVICE_ALT5_VENDOR="" DEVICE_ALT5_MODEL="" DEVICE_ALT5_VARIANT="" DEVICE_TITLE="JDCloud RE-CS-02" DEVICE_PACKAGES="ipq-wifi-jdcloud_re-cs-02 ath11k-firmware-qcn9074-ddwrt luci-app-athena-led luci-i18n-athena-led-zh-cn" TARGET="qualcommax" SUBTARGET="ipq60xx" VERSION_NUMBER="SNAPSHOT" VERSION_CODE="r1-20261017" SUPPORTED_DEVICES="jdcloud,re-cs-02" KERNEL_SIZE="6144k" IMAGE_SIZE="" /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/json_add_image_info.py /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/json_info_files/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin.json
+[ ! -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build" -o ! -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build.ucert" -o ! -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin" ] || { cp "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build.ucert" "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.ucert" ; usign -S -m "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin" -s "/home/vboxuser/jdc-build/immortalwrt_ipq-main/key-build" -x "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.sig" ; ucert -A -c "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.ucert" -x "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.sig" ; fwtool -S "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.ucert" "/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin" ; }
+cp /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+DEVICE_ID="jdcloud_re-cs-02" SOURCE_DATE_EPOCH=1792071676 FILE_NAME="immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin" FILE_DIR="/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/linux-qualcommax_ipq60xx/tmp" FILE_TYPE=sysupgrade FILE_FILESYSTEM="squashfs" DEVICE_IMG_PREFIX="immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02" DEVICE_VENDOR="JDCloud" DEVICE_MODEL="RE-CS-02" DEVICE_VARIANT="" DEVICE_ALT0_VENDOR="" DEVICE_ALT0_MODEL="" DEVICE_ALT0_VARIANT="" DEVICE_ALT1_VENDOR="" DEVICE_ALT1_MODEL="" DEVICE_ALT1_VARIANT="" DEVICE_ALT2_VENDOR="" DEVICE_ALT2_MODEL="" DEVICE_ALT2_VARIANT="" DEVICE_ALT3_VENDOR="" DEVICE_ALT3_MODEL="" DEVICE_ALT3_VARIANT="" DEVICE_ALT4_VENDOR="" DEVICE_ALT4_MODEL="" DEVICE_ALT4_VARIANT="" DEVICE_ALT5_VENDOR="" DEVICE_ALT5_MODEL="" DEVICE_ALT5_VARIANT="" DEVICE_TITLE="JDCloud RE-CS-02" DEVICE_PACKAGES="ipq-wifi-jdcloud_re-cs-02 ath11k-firmware-qcn9074-ddwrt luci-app-athena-led luci-i18n-athena-led-zh-cn" TARGET="qualcommax" SUBTARGET="ipq60xx" VERSION_NUMBER="SNAPSHOT" VERSION_CODE="r1-20261017" SUPPORTED_DEVICES="jdcloud,re-cs-02" KERNEL_SIZE="6144k" IMAGE_SIZE="" /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/json_add_image_info.py /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/json_info_files/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin.json
+IPKG_INSTROOT=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/root.orig-qualcommax /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/host/bin/fakeroot /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/host/bin/apk --root /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/root.orig-qualcommax --keys-dir /home/vboxuser/jdc-build/immortalwrt_ipq-main --no-logfile --preserve-env list --quiet --manifest --no-network --repositories-file /dev/null | sort | sed 's/ / - /'  > /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx.manifest
+make[5]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main/target/linux/qualcommax/image'
+make[4]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main/target/linux/qualcommax'
+make[3]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main/target/linux'
+time: target/linux/install#45.39#3.72#15.69
+make[2]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+export MAKEFLAGS= ;make -w -r package/index json_overview_image_info checksum
+make[2]: Entering directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+Generating package index...
+Index has 135 packages (of which 135 are new)
+Index has 45 packages (of which 45 are new)
+mkdir -p /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp; WORK_DIR=/home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/json_info_files /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/json_overview_image_info.py /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.profiles.json && 	{ cmp -s /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.profiles.json /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/profiles.json || cp /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.profiles.json /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/profiles.json; } 
+make[2]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+make[1]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+
+=== EXIT CODE: 0 ===

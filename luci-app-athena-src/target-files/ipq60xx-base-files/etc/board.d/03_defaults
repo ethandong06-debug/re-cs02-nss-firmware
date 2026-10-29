@@ -1,0 +1,23 @@
+#!/bin/sh
+# AthenaWrt 默认无线 / root 密码 / 国家码（写入 board.json，由 config_generate 消费）
+. /lib/functions/uci-defaults.sh
+. /lib/functions/system.sh
+
+board=$(board_name)
+
+board_config_update
+
+case "$board" in
+jdcloud,re-cs-02)
+	# WiFi 默认：SSID=AthenaWrt，WPA2，密码 12345678，全频段启用
+	ucidef_set_wireless "all" "AthenaWrt" "psk2" "12345678"
+	# 国家码 CN（不设则 5G 频段会被 mac80211 强制禁用）
+	ucidef_set_country "CN"
+	# root 密码 = password（sha256crypt，由系统 50-root-passwd 写入 shadow）
+	ucidef_set_root_password_hash '$5$athenawrt$zBOAF7lT5ZPxHioUYwrQanY5oboWPaX4f05gHNjqMT7'
+	;;
+esac
+
+board_config_flush
+
+exit 0

@@ -1,0 +1,11 @@
+=== 杀掉全部残留编译/下载进程 ===
+(空)
+=== 谁依赖 node host ===
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/feeds/packages/net/smartdns/Makefile
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/feeds/packages/net/sub-web/Makefile
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/feeds/packages/net/frp/Makefile
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/feeds/packages/net/cloudreve/Makefile
+=== feeds symlink 现状 ===
+kadnode
+node
+node-actions-on-google

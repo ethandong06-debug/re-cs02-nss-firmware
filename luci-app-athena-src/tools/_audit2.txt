@@ -1,0 +1,145 @@
+== 顶层 let/const 声明及初始值 ==
+ICONS                  = {
+DEV_ICONS              = {
+NAV                    = [
+down                   = 852, up = 118, online = 12, temp = 52, cpu = 23, mem = 45;
+_MEM_TOTAL             = 1024, _MEM_USED = 460;   // 内存总量/已用（MB）
+_STORE_TOTAL           = 128000, _STORE_USED = 44800;   // 首页存储卡容量/已用（MB，取最大盘）
+_STORE_NAME            = 'mmcblk0', _STORE_IS_EXT = false;  // 首页存储卡盘名 / 是否外挂盘
+_PORTS                 = [];   // 端口状态矩阵（status.sh ports）
+SPEED_UNIT             = sGet('athena_speed_unit') || 'Mbps';
+SPEED_UNITS            = ['Mbps','MB/s','KB/s'];
+hasExternalDisk        = false;
+EXT_DISKS              = [];
+EMMC_DISK              = {name:'mmcblk0', size_mb:122880, mount:'/overlay', fs:'ext4'};
+devTab                 = 'all';
+DEVS                   = [];   // 真实设备列表由 athena-status.sh clients 填充（loadClients），不再内置假设备
+WIFI_ON                = true;
+WIFI_BANDS             = [
+WIFI_BW                = ['20MHz','40MHz','80MHz','160MHz'];
+WIFI_ENC               = ['WPA2-PSK','WPA3-SAE','WPA2/WPA3-PSK','开放（无加密）'];
+NET_MODES              = [
+curMode                = 'router';
+WAN_PROTO              = 'pppoe';
+WAN_USER               = '';
+WAN_STATIC             = { ip:'', mask:'255.255.255.0', gw:'', dns:'223.5.5.5' };
+WAN_PWD                = '';
+WAN_PROTOS             = [
+AP_LINK                = 'wireless';       // AP 桥接方式：wireless 无线桥接 / wired 有线桥接
+AP_SSID                = 'MainRouter-5G';
+AP_PWD                 = '12345678';
+AP_IP                  = '192.168.10.2';
+VLAN_LAN               = '2044';   // 单臂路由：上网 VLAN（光猫 Internet 业务 VLAN，真机=2044），tagged 透传拨号
+IPTV_VLAN              = '';      // 留空 = 不启用 IPTV；填写 VLAN ID 即启用（不确定先留空）
+IPTV_PORT              = 'lan4';  // IPTV 透传端口（预留功能口，默认 lan4，机顶盒接入口）
+SINGLE_NSS             = 'on';   // 单臂 NSS：on=硬件加速（默认）/ off=兼容模式（hairpin 不稳时全 CPU 软转）
+RETURN_VLAN            = '1';   // 回传 VLAN（光猫默认 LAN VLAN，真机=1），让光猫其他 LAN 口接入内网
+BYPASS_IP              = '192.168.10.2';
+BYPASS_GW              = '192.168.10.1';
+BYPASS_DNS             = '192.168.10.1';
+BYPASS_DHCP            = false;
+SPEED_NODES            = [
+SPEED_NODE             = 'auto';
+AUTO_BACKUP            = true;
+BACKUP_KEEP            = 3;
+BACKUP_FREQ            = 'daily';
+BACKUP_TIME            = '02:00';
+BACKUPS                = [];   // 真实备份由 athena-backup.sh list 填充（openBackupList）
+FIRMWARE_VER           = '', KERNEL_VER = '', UPTIME_S = 0, SYS_MODEL = '';
+MATRIX                 = { enabled:true, light_level:5, night:false, night_start:'22:00', night_end:'07:00', nig...
+LED                    = { breathing:false, red:false, green:false, blue:false };
+GUEST                  = { enabled:false, ssid:'Athena-Guest' };
+METRIC_ORDER           = (function(){ try{ var o=JSON.parse(sGet('athena_metric_order')||'null'); return o||['de...
+VIEWS                  = {
+athenaRPC              = {
+_STATUS                = null;      // 最近一次 athena-status.sh 完整结果缓存
+currentView            = 'overview';
+athenaData             = {
+resTab                 = 'cpu';
+RES_PROCS              = [];   // 由 athena-resources.sh 真实进程数据填充（无数据时显示空态，不用假进程）
+SERVICES               = [
+GLASS_PALETTES         = {
+GLASS_PRESETS          = [
+GLASS_DEFAULT          = GLASS_PRESETS[0].cfg;
+GLASS_THEME            = loadGlassTheme();
+notifs                 = [];
+_selStyle              = 'width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;backgrou...
+MNAV_IDS               = ['overview','clients','wireless','network','system'];
+MNAV_SHORT             = {overview:'首页',clients:'设备',wireless:'无线',network:'组网',system:'系统'};
+trendRange             = 'day';
+MODE_ACTS              = {
+LOGS                   = [];   // 真实日志由 athena-log.sh list 填充（loadLogs）
+LOG_FILTER             = 'all', LOG_QUERY='';
+LOG_LEVELS             = ['all','debug','info','warn','err'];
+PKGS                   = [];   // 真实软件包由 athena-packages.sh 填充（loadPackages）
+PKG_TAB                = 'installed', PKG_QUERY='';
+PKG_TABS               = [['installed','已安装'],['available','可用']];
+sparkData              = [];   // 实时速率曲线：由真实采样累积（登录后每 2 秒一个点），不再预填随机点
+TREND_HOUR             = [], TREND_DAY=[];  // 1 小时均值桶（cap 720=30 天）/ 1 天均值桶（cap 90 天）
+wizStep                = 0, wizMode = 'router', wizProto = 'pppoe';
+WIZ_META               = [
+WIZ_MODES              = NET_MODES;
+
+== !athenaRPC.live 演示分支（真机不执行，但列出确认）==
+--- toast(s.on? s.name+' 已启动' : s.name+' 已停止'); return; ---
+--- toast('正在格式化 '+name+' …'); setTimeout(function(){ toast(name+' 格式化完成，已重新挂载'); ---
+--- toast('已将「'+d.name+'」拉黑'); return; ---
+--- toast('本地原型：呼吸灯状态已切换'); return; ---
+--- toast(target?'访客网络已开启':'访客网络已关闭'); return; ---
+--- toast('上网设置已保存，正在拨号连接…'); setTimeout(function(){ toast('已成功连接互联网（'+WAN_PROTOS.find(function(x){return x.id===WAN_PROTO; ---
+--- toast('AP 桥接设置已保存，正在接入上级网络…'); setTimeout(function(){ toast('已以 AP 模式接入'+(AP_LINK==='wireless'?'（无线桥接 '+AP_SSID+'）':'（有线桥接）')+'，管理地址 '+AP_IP); ---
+--- toast('单臂路由设置已保存，正在配置 VLAN trunk…'); setTimeout(function(){ toast('已启用单臂路由（上网 VLAN '+VLAN_LAN+retTxt+iptvTxt+'）'); ---
+--- toast('旁路由设置已保存，正在切换网关…'); setTimeout(function(){ toast('已切换为旁路由（网关 '+BYPASS_GW+'，管理地址 '+BYPASS_IP+'）'); ---
+--- var items=[['网络连通性','正常'],['DNS 解析','正常'],['无线三频','全部在线'],['存储挂载','正常'],['CPU 温度','52°C 正常']];     var i=0;     var t=setInterval(function(){       if(i>=items.length){clearInterval(t);renderReport(it ---
+--- setTimeout(function(){ toast('已恢复出厂，请重新登录（默认 192.168.10.1 / root）'); ---
+--- closeModal(); toast('已设置每天 '+v+' 自动重启'); return; ---
+--- toast('正在备份配置…');     setTimeout(function(){       var t=new Date();       var pad=function(n){return (n<10?'0':'')+n; ---
+--- toast(AUTO_BACKUP?'已开启自动备份':'已关闭自动备份'); return; ---
+--- closeModal(); AUTO_BACKUP=true; toast('自动备份已设置'); return; ---
+--- toast('正在恢复配置，路由器将重启…'); return; ---
+--- toast('正在从 '+b.time+' 恢复配置，路由器将重启…'); setTimeout(function(){ toast('恢复完成，请使用备份时的账号登录'); ---
+--- LOGS=[]; var _l=document.getElementById('logList'); if(_l) _l.innerHTML='<div class="log-empty">日志已清空</div>'; toast('系统日志已清空'); return; ---
+--- toast('日志已导出：'+fn); return; ---
+--- if(cur.value!=='admin'){ toast('当前密码错误'); cur.value=''; return; ---
+--- var p0=PKGS.find(function(x){return x.name===name; ---
+--- var p0=PKGS.find(function(x){return x.name===name; ---
+--- var p0=PKGS.find(function(x){return x.name===name; ---
+--- var n0=PKGS.filter(function(p){return p.update; ---
+
+== 硬编码时间/状态文本 ==
+AthenaWrt v: 1 处 -> ['AthenaWrt v']
+
+== 视图模板中可疑字面量（温度/速度/百分比数字）==
+°C: 4 处
+    @28587: ... class="pill">CPU <b id="cpuTemp">52</b>°C</div>         <di...
+    @39643: ...temp:{label:'CPU 温度', value:temp, unit:'°C', delta:'被动散热 · 正...
+    @59957: ...e:32px">${temp}<span class="speed-unit">°C</span></div>     ...
+    @127764: ...线三频','全部在线'],['存储挂载','正常'],['CPU 温度','52°C 正常']];     var i=...
+Mbps: 25 处
+    @28721: ...ll" onclick="cycleUnit()" title="切换网速单位（Mbps / MB/s / KB/s）"...
+    @28765: ... / MB/s / KB/s）" style="cursor:pointer">Mbps</div>         <...
+    @33234: ...   // 端口状态矩阵（status.sh ports） /* 全局网速单位：Mbps / MB/s / KB/s（存...
+    @33324: ...ED_UNIT = sGet('athena_speed_unit') || 'Mbps'; const SPEED_U...
+    @33353: ...unit') || 'Mbps'; const SPEED_UNITS = ['Mbps','MB/s','KB/s']...
+    @33409: .../s']; function fmtSpeed(mbps){ // 输入始终为 Mbps 数值，按当前单位换算   if...
+    @33598: ...B/s'};   return {n:Math.round(mbps), u:'Mbps'}; } /* 磁盘状态：ha...
+    @34327: ...345678', ch:'11', bw:'20MHz', rate:'574 Mbps', enc:'WPA2/WPA...
+GB: 3 处
+    @34001: ...mb>=1024) return (mb/1024).toFixed(1)+' GB';   return mb+' M...
+    @164407: ...600</div><div class="o-desc">IPQ6010 · 1GB 内存 · 128GB eMMC</...
+    @164418: ...iv class="o-desc">IPQ6010 · 1GB 内存 · 128GB eMMC</div></div><...
+MB: 15 处
+    @28728: ...lick="cycleUnit()" title="切换网速单位（Mbps / MB/s / KB/s）" style=...
+    @33029: ...L = 1024, _MEM_USED = 460;   // 内存总量/已用（MB） let _STORE_TOTAL...
+    @33097: ...0, _STORE_USED = 44800;   // 首页存储卡容量/已用（MB，取最大盘） let _STORE_...
+    @33241: ...口状态矩阵（status.sh ports） /* 全局网速单位：Mbps / MB/s / KB/s（存 localS...
+    @33360: ...|| 'Mbps'; const SPEED_UNITS = ['Mbps','MB/s','KB/s']; funct...
+    @33444: ...入始终为 Mbps 数值，按当前单位换算   if(SPEED_UNIT==='MB/s') return {n:(mb...
+    @33485: ...B/s') return {n:(mbps/8).toFixed(1), u:'MB/s'};   if(SPEED_U...
+    @34020: ...b/1024).toFixed(1)+' GB';   return mb+' MB'; } /* 设备列表（含离线设备...
+在线设备: 5 处
+    @38962: ..._NAME) : '';   return {     dev:{label:'在线设备', value:online,...
+    @45081: ...tchDevTab('online')"><div class="label">在线设备</div><div class...
+    @108381: ...'}[type]||'📶'; } // 家庭网络拓扑：光猫 → 雅典娜 → 真实在线设备（最多 4 个） functio...
+    @108896: ...有线'), emoji: topoEmoji(t) };   });   // 在线设备节点位置（最多4个，2×2 布局...
+    @110590: ...middle" font-size="12" fill="#9aa0a6">暂无在线设备</text>';   }   ...

@@ -1,0 +1,10 @@
+#!/bin/sh /etc/rc.common
+# AthenaWrt 开机自恢复：呼吸灯状态 + 设备拉黑规则（nft 重启不保留，需从 uci 恢复）
+# 读取持久化的 athena.led.breathing，若为 1 则把绿色 LED 设为 heartbeat 呼吸
+START=99
+STOP=10
+
+start() {
+	[ -x /usr/libexec/athena-led.sh ] && /usr/libexec/athena-led.sh boot
+	[ -x /usr/libexec/athena-client.sh ] && /usr/libexec/athena-client.sh restore
+}

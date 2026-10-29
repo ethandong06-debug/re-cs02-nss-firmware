@@ -1,0 +1,16 @@
+node --check: PASS
+applyStatus 函数: PASS
+syncStatus 用 applyStatus: PASS
+ensureFreshStatus: PASS
+saveWan 前置回读: PASS
+saveSingle 前置回读: PASS
+saveAp 前置回读: PASS
+保存拦截提示: PASS
+账号空值保护: FAIL
+MATRIX.loaded 定义: PASS
+setMatrix 校验: PASS
+toggleGuest 校验: PASS
+toggleBreath 校验: PASS
+saveGlassTheme 校验: PASS
+toggleAutoBackup 校验: PASS
+loadAutoBackup 回填标记: PASS

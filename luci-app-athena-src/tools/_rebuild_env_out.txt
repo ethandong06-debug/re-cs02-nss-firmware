@@ -1,0 +1,27 @@
+=== 日志尾部 ===
+talwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vite-plugin-compression2
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-eslint-parser
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-final-modal
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-i18n
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-lazyload
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-reader
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-router
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-toastification
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/vue-tsc
+warning: ignoring symlink /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/frontend/node_modules/yaml-eslint-parser
+go.uber.org/multierr@v1.11.0: unrecognized import path "go.uber.org/multierr": https fetch: Get "https://go.uber.org/multierr?go-get=1": dial tcp 173.194.43.121:443: connect: connection refused
+
+Building targets
+no Go files in /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/.go_work/build
+
+make[3]: *** [Makefile:76: /home/vboxuser/jdc-build/immortalwrt_ipq-main/build_dir/target-aarch64_cortex-a53_musl/filebrowser-2.43.0/.built] Error 1
+make[3]: Leaving directory '/home/vboxuser/jdc-build/feeds/packages/utils/filebrowser'
+time: package/feeds/packages/filebrowser/compile#115.72#14.08#152.36
+    ERROR: package/feeds/packages/filebrowser failed to build.
+make[2]: *** [package/Makefile:255: package/feeds/packages/filebrowser/compile] Error 1
+make[2]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+make[1]: *** [package/Makefile:251: /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/target-aarch64_cortex-a53_musl/stamp/.package_compile] Error 2
+make[1]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+make: *** [/home/vboxuser/jdc-build/immortalwrt_ipq-main/include/toplevel.mk:268: world] Error 2
+

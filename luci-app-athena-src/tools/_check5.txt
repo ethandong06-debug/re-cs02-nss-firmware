@@ -1,0 +1,11 @@
+node --check: PASS
+down/up/online/temp/cpu/mem 初始 0: PASS
+_MEM_USED=0: PASS
+_STORE 初始 0: PASS
+cpuTemp 初始 0: PASS
+MATRIX.enabled=false: PASS
+旧值[852]残留: 否(PASS)
+旧值[online = 12]残留: 否(PASS)
+旧值[128000]残留: 是(FAIL)
+旧值[44800]残留: 否(PASS)
+旧值[let _MEM_USED = 460]残留: 否(PASS)

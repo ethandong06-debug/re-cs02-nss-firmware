@@ -1,0 +1,9 @@
+=== 杀掉卡住的编译 ===
+(空)
+=== config 还原 ===
+5747:# CONFIG_PACKAGE_luci-app-filebrowser-go is not set
+=== defconfig ===
+# configuration written to .config
+#
+=== 清理残留+确认 athena 选中 ===
+1

@@ -1,0 +1,3 @@
+type8 ino=1242 at 70979 ic=1237 idx_count=1 next_p=71047 next_type=59252
+STOP badtype=59252 at 71047 after 1984 inodes
+END count=1984 p=71047

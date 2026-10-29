@@ -1,0 +1,8 @@
+=== .config 里 filebrowser 相关 ===
+5746:# CONFIG_PACKAGE_luci-app-filebrowser is not set
+5747:# CONFIG_PACKAGE_luci-app-filebrowser-go is not set
+8068:CONFIG_PACKAGE_filebrowser=y
+=== .config 里 node 相关 ===
+(空)
+=== feeds symlink ===
+(空)

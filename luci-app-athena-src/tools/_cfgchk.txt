@@ -1,0 +1,15 @@
+=== 残留进程 ===
+rtalwrt_ipq-main/scripts/time.pl "time: package/feeds/packages/filebrowser/compile" make -w  -r -C package/feeds/packages/filebrowser BUILD_SUBDIR="package/feeds/packages/filebrowser" BUILD_VARIANT="" ALL_VARIANTS="" compile  || ?(    printf "%s\n" "    ERROR: package/feeds/packages/filebrowser failed to build.";   exit 1;)
+vboxuser 1486429  0.0  0.0   8484  5840 ?        S    19:39   0:00 perl /home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/time.pl time: package/feeds/packages/filebrowser/compile make -w -r -C package/feeds/packages/filebrowser BUILD_SUBDIR=package/feeds/packages/filebrowser BUILD_VARIANT= ALL_VARIANTS= compile
+vboxuser 1486430  0.1  0.1  10040  9224 ?        S    19:39   0:00 make -w -r -C package/feeds/packages/filebrowser BUILD_SUBDIR=package/feeds/packages/filebrowser BUILD_VARIANT= ALL_VARIANTS= compile
+vboxuser 1486493  4.0  1.9 11779804 161844 ?     Sl   19:39   0:00 node /home/vboxuser/jdc-build/immortalwrt_ipq-main/staging_dir/hostpkg/bin/pnpm run build
+=== tmp config 状态 ===
+-rw-rw-r-- 1 vboxuser vboxuser 0 Oct 24 19:39 /home/vboxuser/jdc-build/immortalwrt_ipq-main/tmp/.config-check
+apk_install_list
+core-js-banners
+dl-verified
+go-build
+info
+node-compile-cache
+=== 清理 config-check ===
+cleaned

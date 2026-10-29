@@ -1,0 +1,6 @@
+=== GO_MOD_CACHE_DIR 定义 ===
+342:GO_MOD_CACHE_DIR:=$(DL_DIR)/go-mod-cache
+350:	GO_MOD_CACHE_DIR="$(GO_MOD_CACHE_DIR)" \
+=== 已有 cache 目录 ===
+
+=== 已下载模块样例 ===

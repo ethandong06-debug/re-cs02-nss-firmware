@@ -1,0 +1,17 @@
+=== libexec 脚本数 ===
+20
+=== 新脚本存在性 ===
+OK athena-wireless.sh
+OK athena-speedtest.sh
+OK athena-matrix.sh
+OK athena-theme.sh
+OK athena-led.sh
+=== 固件清单 ===
+-rw-r--r-- 1 vboxuser vboxuser 27996686 Oct 24 15:15 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin
+-rw-r--r-- 1 vboxuser vboxuser 27607313 Oct 24 15:15 /home/vboxuser/jdc-build/immortalwrt_ipq-main/bin/targets/qualcommax/ipq60xx/immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin
+
+OK  immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin  (27607313 bytes)
+OK  immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin  (27996686 bytes)
+OK  sha256sums  (708 bytes)
+OK  immortalwrt-qualcommax-ipq60xx.manifest  (11829 bytes)
+下载完成 -> C:/Users/Administrator/WorkBuddy/2026-10-22-23-23-11/athena-openwrt/output

@@ -1,0 +1,59 @@
+# ============================================================
+#  京东云雅典娜 定制固件 — 精选包清单 (每行一个包名)
+#  # 开头为注释; 空行忽略
+#  make defconfig 会自动解析依赖, 不存在的包名会被安全丢弃
+#  本清单已同步精简后的 .config（2026-10-24）
+# ============================================================
+
+# ---- AthenaWrt 定制界面（本固件核心，液态玻璃产品级 UI）----
+luci-app-athena
+
+# ---- LuCI 界面 + 中文语言包 + 主题 ----
+luci
+# 兼容层三件套：让老 Lua 应用（daed/passwall 等）在 LuCI 2.x 有菜单入口
+luci-compat
+luci-lua-runtime
+luci-lib-ipkg
+luci-i18n-base-zh-cn
+luci-theme-argon
+luci-theme-bootstrap
+
+# ---- 基础管理 ----
+luci-app-firewall
+luci-i18n-firewall-zh-cn
+
+# ---- 网络服务 ----
+luci-app-ddns
+luci-i18n-ddns-zh-cn
+ddns-scripts
+ddns-scripts-aliyun
+ddns-scripts-services
+dnsmasq-full
+firewall4
+fullconenat-sonic
+luci-app-fullconenat-sonic
+luci-i18n-fullconenat-sonic-zh-cn
+
+# ---- 网页终端 ----
+luci-app-ttyd
+luci-i18n-ttyd-zh-cn
+
+# ---- 点阵屏 ----
+luci-app-athena-led
+
+# ---- 系统工具 / 调试 ----
+bash
+curl
+wget-ssl
+ca-certificates
+ca-bundle
+htop
+iperf3
+ethtool
+lsblk
+usbutils
+dmesg
+gzip
+unzip
+dbus
+ip-full

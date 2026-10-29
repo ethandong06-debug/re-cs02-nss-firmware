@@ -1,0 +1,7 @@
+config agent 'main'
+	option endpoint 'https://op.gwrt.uk'
+	option report_interval '30'
+	option device_id ''
+	option pair_token ''
+	option local_token ''
+	option lan_ifname 'br-lan'

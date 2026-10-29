@@ -1,0 +1,39 @@
+#!/bin/sh /etc/rc.common
+# AthenaWrt 单臂路由冷启动修复：预创建 VLAN 子接口
+# 问题：br-lan 桥直接包含 wan.X（8021q VLAN 子接口），netifd 冷启动时
+#       若 wan.X 尚未就绪，桥构建失败 → LAN/WiFi 全灭。
+# 修复：在 netifd 启动前（network START=50 之前），按 uci network 的
+#       device 段手动预创建所有 wan.X 8021q 子接口，保证桥端口就绪。
+# START=40 < network(50)
+
+START=40
+
+boot() {
+	local mode
+	mode=$(uci -q get athena.system.mode 2>/dev/null)
+	# 仅单臂模式需要预创建（主路由/AP/旁路由无 VLAN 子接口）
+	[ "$mode" = "single" ] || return 0
+
+	# 父口 wan 必须存在（DSA 端口，内核启动即就绪）
+	[ -d /sys/class/net/wan ] || return 0
+
+	local sec devname ifname vid stype
+	# 遍历所有 device 段（匿名 @device[N] 与具名段都匹配）：name='wan.<vid>' type=8021q ifname=wan
+	uci -q show network 2>/dev/null | sed -n "s/^network\.\([^.]*\)\.name='wan\.[0-9]*'$/\1/p" | while read -r sec; do
+		[ -n "$sec" ] || continue
+		stype=$(uci -q get "$sec.type" 2>/dev/null)
+		[ "$stype" = "8021q" ] || continue
+		devname=$(uci -q get "$sec.name" 2>/dev/null)
+		ifname=$(uci -q get "$sec.ifname" 2>/dev/null)
+		vid=$(uci -q get "$sec.vid" 2>/dev/null)
+		[ -n "$devname" ] || continue
+		[ "$ifname" = "wan" ] || continue
+		case "$vid" in ''|*[!0-9]*) continue ;; esac
+		# 已存在则跳过，否则创建
+		if [ ! -d "/sys/class/net/$devname" ]; then
+			ip link add link wan name "$devname" type vlan id "$vid" 2>/dev/null
+			[ -d "/sys/class/net/$devname" ] && logger -t athena-vlan-pre "预创建 $devname (vid $vid)"
+		fi
+	done
+	return 0
+}

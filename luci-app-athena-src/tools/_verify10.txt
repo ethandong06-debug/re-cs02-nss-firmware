@@ -1,0 +1,2 @@
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-sysupgrade.bin | 27607313 bytes | MATCH | sha256:4ce5d67c37e6f388
+immortalwrt-qualcommax-ipq60xx-jdcloud_re-cs-02-squashfs-factory.bin | 27997314 bytes | MATCH | sha256:fac2a837a691a719

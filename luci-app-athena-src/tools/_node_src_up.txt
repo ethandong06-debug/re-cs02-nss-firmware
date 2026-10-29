@@ -1,0 +1,9 @@
+=== 杀掉卡住的 make ===
+(空)
+=== 上传 ===
+=== 源码包大小 ===
+-rw-rw-r-- 1 vboxuser vboxuser 107414813 Oct 24 18:10 /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2.tar.gz
+=== 校验 ===
+/home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2.tar.gz: OK
+=== 清理残留 ===
+10

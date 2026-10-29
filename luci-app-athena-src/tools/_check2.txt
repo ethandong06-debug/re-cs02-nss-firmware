@@ -1,0 +1,3 @@
+inline JS length: 132201
+node --check: PASS
+iframe in openService: PASS

@@ -1,0 +1,54 @@
+{
+	"luci-app-athena": {
+		"description": "Grant UCI and ubus access to AthenaWrt",
+		"read": {
+			"ubus": {
+				"athena": [ "status" ],
+				"system": [ "board", "info" ],
+				"network.device": [ "status" ],
+				"network.wireless": [ "status" ]
+			},
+			"uci": [ "athena", "network", "wireless", "dhcp", "system", "ddns", "ttyd" ]
+		},
+		"write": {
+			"ubus": {
+				"file": [ "exec", "write" ]
+			},
+			"uci": [ "athena", "network", "wireless", "dhcp", "system", "ddns", "ttyd" ],
+			"file": {
+				"/usr/libexec/athena-status.sh": [ "exec" ],
+				"/usr/libexec/athena-mode.sh": [ "exec" ],
+				"/usr/libexec/athena-client.sh": [ "exec" ],
+				"/usr/libexec/athena-services.sh": [ "exec" ],
+				"/usr/libexec/athena-resources.sh": [ "exec" ],
+				"/usr/libexec/athena-diag.sh": [ "exec" ],
+				"/usr/libexec/athena-log.sh": [ "exec" ],
+				"/usr/libexec/athena-passwd.sh": [ "exec" ],
+				"/usr/libexec/athena-packages.sh": [ "exec" ],
+				"/usr/libexec/athena-backup.sh": [ "exec" ],
+				"/usr/libexec/athena-reset.sh": [ "exec" ],
+				"/usr/libexec/athena-scan.sh": [ "exec" ],
+				"/usr/libexec/athena-reboot.sh": [ "exec" ],
+				"/usr/libexec/athena-upgrade.sh": [ "exec" ],
+				"/usr/libexec/athena-disk.sh": [ "exec" ],
+				"/usr/libexec/athena-theme.sh": [ "exec" ],
+				"/usr/libexec/athena-matrix.sh": [ "exec" ],
+				"/usr/libexec/athena-led.sh": [ "exec" ],
+				"/usr/libexec/athena-wireless.sh": [ "exec" ],
+				"/usr/libexec/athena-speedtest.sh": [ "exec" ],
+				"/usr/libexec/athena-ui.sh": [ "exec" ],
+				"/usr/libexec/athena-parent.sh": [ "exec" ],
+				"/usr/libexec/athena-apps.sh": [ "exec" ],
+				"/usr/libexec/athena-prefs.sh": [ "exec" ],
+				"/etc/init.d/network": [ "exec" ],
+				"/bin/ping": [ "exec" ],
+				"/usr/bin/nslookup": [ "exec" ],
+				"/usr/bin/ubus": [ "exec" ],
+				"/bin/ubus": [ "exec" ],
+				"/tmp/athena-restore.b64": [ "write" ],
+				"/tmp/athena-fw.b64": [ "write" ],
+				"/tmp/athena-fw-upload.bin": [ "write", "read" ]
+			}
+		}
+	}
+}

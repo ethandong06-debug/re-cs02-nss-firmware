@@ -1,0 +1,3 @@
+残留进程数: 0
+-rw-rw-r-- 1 vboxuser vboxuser  56851233 Oct 24 17:38 /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2-linux-x64.tar.gz
+-rw-rw-r-- 1 vboxuser vboxuser 107414813 Oct 24 18:10 /home/vboxuser/jdc-build/immortalwrt_ipq-main/dl/node-v22.23.2.tar.gz

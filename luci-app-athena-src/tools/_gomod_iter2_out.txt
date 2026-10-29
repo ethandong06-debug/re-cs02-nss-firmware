@@ -1,0 +1,182 @@
+=== 当前 go.mod x/net ===
+72:	golang.org/x/net v0.42.0 // indirect
+already v0.42.0
+28:	golang.org/x/crypto v0.40.0
+29:	golang.org/x/image v0.29.0
+30:	golang.org/x/text v0.27.0
+72:	golang.org/x/net v0.42.0 // indirect
+=== attempt 1 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 2 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 3 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 4 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 5 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 6 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 7 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 8 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 9 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 10 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 11 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 12 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 13 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 14 ===
+missing: {('golang.org/x/net', '0.0.0-20191105084925-a882066a44e0')}
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20191105084925-a882066a44e0 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20191105084925-a882066a44e0
+=== attempt 15 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 16 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 17 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 18 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 19 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 20 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 21 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 22 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 23 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 24 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 25 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 26 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 27 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 28 ===
+missing: {('golang.org/x/net', '0.0.0-20200904194848-62affa334b73')}
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .info HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .mod HTTP Error 404: Not Found
+  fail golang.org/x/net 0.0.0-20200904194848-62affa334b73 .zip HTTP Error 404: Not Found
+  !! cannot obtain golang.org/x/net 0.0.0-20200904194848-62affa334b73
+=== attempt 29 ===
+UNKNOWN: make[2]: Entering directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/config'
+make[2]: 'conf' is up to date.
+make[2]: Leaving directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main/scripts/config'
+make[1]: Entering directory '/home/vboxuser/jdc-build/immortalwrt_ipq-main'
+
+=== done ===

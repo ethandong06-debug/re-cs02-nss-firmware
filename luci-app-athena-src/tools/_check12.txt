@@ -1,0 +1,7 @@
+node --check: PASS
+后端 emit_band 返回 key: PASS
+前端初始 pwd 置空: PASS
+加载回填真机密码: PASS
+弹窗密码框回显: PASS
+未加载占位提示: PASS
+界面切换入口: PASS

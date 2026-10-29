@@ -1,0 +1,33 @@
+#!/bin/sh /etc/rc.common
+# AthenaWrt 单臂冷启动自检与自动回退
+# 开机后检查单臂模式下的 br-lan 是否健康（有管理 IP 192.168.10.1）。
+# 若异常（桥未建起来，LAN/WiFi 全灭），自动备份异常配置并回退主路由，
+# 保证设备永远可访问，杜绝"失联"。
+# START=98（network 50 之后延迟执行）
+
+START=98
+
+boot() {
+	(
+		sleep 45
+		[ -x /usr/libexec/athena-mode.sh ] || exit 0
+		local mode
+		mode=$(uci -q get athena.system.mode 2>/dev/null)
+		# 仅单臂模式启用自检（主路由/AP/旁路由不干预）
+		[ "$mode" = "single" ] || exit 0
+		# br-lan 有管理 IP 视为健康（按 uci 动态判断，支持用户修改管理 IP）
+		local want
+		want=$(uci -q get network.lan.ipaddr 2>/dev/null)
+		[ -z "$want" ] && want="192.168.10.1"
+		ip -4 -o addr show br-lan 2>/dev/null | awk '{split($4,a,"/"); print a[1]}' | grep -qx "$want" && exit 0
+		logger -t athena-netcheck "单臂冷启动异常：br-lan 无管理 IP，自动回退主路由"
+		# 备份异常配置留痕
+		mkdir -p /etc/athena-backup
+		uci export network > "/etc/athena-backup/network.broken.$(date +%Y%m%d%H%M%S).uci" 2>/dev/null
+		# 回退主路由：清单臂残留，保留 PPPoE 账号密码（不传 user/pass）
+		/usr/libexec/athena-mode.sh router pppoe >/dev/null 2>&1
+		uci commit network 2>/dev/null
+		/etc/init.d/network restart >/dev/null 2>&1
+	) &
+	return 0
+}

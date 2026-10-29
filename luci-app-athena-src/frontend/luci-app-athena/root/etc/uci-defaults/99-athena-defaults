@@ -1,0 +1,11 @@
+#!/bin/sh
+# AthenaWrt 默认 LAN IP = 192.168.10.1
+# 注：WiFi（SSID/密码）见 99-zz-athena-wifi.sh，root 密码见 99-athena-custom.sh；
+#     此处仅保留 LAN IP（config_generate 硬编码 192.168.1.1，需运行时覆盖）。
+
+# LAN IP 必须是标量 option + 独立 netmask，不能用 add_list 或 CIDR（netifd 会误解析）
+uci -q set network.lan.ipaddr='192.168.10.1'
+uci -q set network.lan.netmask='255.255.255.0'
+uci -q commit network
+
+exit 0
