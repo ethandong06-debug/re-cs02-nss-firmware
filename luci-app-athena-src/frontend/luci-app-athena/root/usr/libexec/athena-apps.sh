@@ -26,7 +26,7 @@ TAB=$(printf '\t')
 DNS_RULES="
 YouTube|3049|youtube,googlevideo,ytimg,youtu.be
 Netflix|3043|netflix,nflxvideo,nflximg
-TikTok|3001|tiktok,douyin,byteimg,bytecdn,ibyteimg,pstatp,douyinvod
+TikTok|3001|tiktok.com,tiktokv.com,tiktokcdn.com,tiktokcdn-us.com,tiktokcdn-eu.com,byteoversea.com,ibytedtos.com,byteintl.com,muscdn.com,douyin.com,douyincdn.com,douyinpic.com,douyinvod.com,iesdouyin.com
 哔哩哔哩|3014|bilibili,hdslb,bilivideo,biliapi,acgvideo
 Spotify||spotify,scdn.co,spotifycdn
 Twitch||twitch,ttvnw,jtvnw
@@ -154,7 +154,12 @@ emit() {
 			d=$1; if (d == "") next
 			b=0; be=2; bl=-1; bp=99
 			for (i=1; i<=n; i++) {
-				if (!index(d, k[i])) continue
+				if (nm[i] == "TikTok") {
+					# TikTok fingerprints must match a complete DNS suffix, not an
+					# arbitrary substring (e.g. "not-tiktok.com" or lookalike hosts).
+					lk = length(k[i]); ld = length(d)
+					if (d != k[i] && !(ld > lk && substr(d, ld-lk+1) == k[i] && substr(d, ld-lk, 1) == ".")) continue
+				} else if (!index(d, k[i])) continue
 				e = (id[i] == "" ? 1 : 0)
 				if (e < be || (e == be && (length(k[i]) > bl || (length(k[i]) == bl && pr[i] < bp)))) {
 					be=e; bl=length(k[i]); bp=pr[i]; b=i
