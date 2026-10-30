@@ -83,7 +83,7 @@ warm_background() {
 		rm -rf "$AV_LOCK"
 	) >/dev/null 2>&1 &
 	WORKER_PID=$!
-	printf '%s\\n' "$WORKER_PID" > "$AV_LOCK/pid"
+	printf '%s\n' "$WORKER_PID" > "$AV_LOCK/pid"
 }
 
 case "$CMD" in
