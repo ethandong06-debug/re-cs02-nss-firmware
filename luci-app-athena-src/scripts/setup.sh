@@ -90,11 +90,11 @@ cat >> .config <<'EOF'
 CONFIG_LOCALMIRROR="https://sources.openwrt.org;https://mirror2.openwrt.org/sources"
 CONFIG_LUCI_LANG_zh_Hans=y
 CONFIG_VERSION_DIST="AthenaWrt"
-CONFIG_VERSION_NUMBER="v1.0.0"
+CONFIG_VERSION_NUMBER="v1.2.60"
 CONFIG_VERSION_REPO="https://github.com/immortalwrt/immortalwrt"
 CONFIG_VERSION_MANUFACTURER="JDCloud"
 CONFIG_VERSION_PRODUCT="Athena"
-CONFIG_VERSION_DESCRIPTION="AthenaWrt v1.0.0 for JDCloud RE-CS-02 (IPQ6010)"
+CONFIG_VERSION_DESCRIPTION="AthenaWrt v1.2.60 for JDCloud RE-CS-02 (IPQ6010)"
 EOF
 
 echo "=== 初始化完成 $(date '+%F %T'), 可开始 make ==="
