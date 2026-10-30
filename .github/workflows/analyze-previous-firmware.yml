@@ -25,7 +25,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p work/report work/extracted
+          mkdir -p work/report work/extracted work/tar-container
           curl --fail --location --retry 3 \
             "https://github.com/ethandong06-debug/re-cs02-nss-firmware/releases/download/firmware-analysis/AthenaWrt-v1.2.39-sysupgrade.bin" \
             --output work/AthenaWrt-v1.2.39-sysupgrade.bin
@@ -41,31 +41,41 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y binwalk squashfs-tools file jq
 
-      - name: Identify and extract firmware
+      - name: Identify container and extract firmware
         shell: bash
         run: |
-          set +e
-          binwalk work/AthenaWrt-v1.2.39-sysupgrade.bin | tee work/report/binwalk-signatures.txt
-          binwalk -eM --run-as=root work/AthenaWrt-v1.2.39-sysupgrade.bin --directory work/extracted 2>&1 | tee work/report/binwalk-extract.log
-          find work/extracted -maxdepth 5 -type f \( -name "openwrt_release" -o -name "openwrt_version" -o -name "board.json" -o -name "manifest" -o -name "repositories" -o -name "feeds.conf*" -o -name "config" \) -print > work/report/discovered-files.txt
-          set -e
+          set -euo pipefail
+          IMAGE=work/AthenaWrt-v1.2.39-sysupgrade.bin
+          file "$IMAGE" | tee work/report/file-type.txt
+          tar -tvf "$IMAGE" > work/report/sysupgrade-tar-list.txt
+          tar -xf "$IMAGE" -C work/tar-container
+          binwalk "$IMAGE" | tee work/report/binwalk-signatures.txt
+          sudo binwalk -eM --run-as=root --directory work/extracted "$IMAGE" 2>&1 | tee work/report/binwalk-extract.log
+          find work/tar-container work/extracted -type f > work/report/all-extracted-files.txt
+          find work/tar-container work/extracted -type f \( -name "openwrt_release" -o -name "openwrt_version" -o -name "board.json" -o -name "manifest" -o -name "repositories" -o -name "feeds.conf*" -o -name "config" \) -print > work/report/discovered-files.txt
+          if [ ! -s work/report/all-extracted-files.txt ]; then
+            echo "No files were extracted from the sysupgrade container or Binwalk." >&2
+            exit 1
+          fi
 
       - name: Collect OS, package, kernel and NSS evidence
         shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           import pathlib, re
-          root = pathlib.Path("work/extracted")
+          roots = [pathlib.Path("work/tar-container"), pathlib.Path("work/extracted")]
           out = pathlib.Path("work/report/firmware-metadata.txt")
           names = {"openwrt_release", "openwrt_version", "board.json", "manifest", "repositories", "feeds.conf", "feeds.conf.default", "config", "os-release", "version"}
           files = []
-          for p in root.rglob("*"):
-              if p.is_file() and (p.name in names or any(x in str(p).lower() for x in ("nss", "ecm", "athena"))):
-                  files.append(p)
+          for root in roots:
+              for p in root.rglob("*"):
+                  if p.is_file() and (p.name in names or any(x in str(p).lower() for x in ("nss", "ecm", "athena"))):
+                      files.append(p)
           with out.open("w", encoding="utf-8", errors="replace") as f:
               f.write("AthenaWrt v1.2.39 firmware evidence\n===================================\n")
               if not files:
-                  f.write("No extracted filesystem files found. Review binwalk-extract.log and signatures.\n")
+                  f.write("No selected metadata files found. Review the tar listing and extraction logs.\n")
               for p in sorted(set(files)):
                   try:
                       if p.stat().st_size > 2_000_000:
@@ -75,31 +85,38 @@ jobs:
                       continue
                   f.write(f"\n\n===== {p} ({p.stat().st_size} bytes) =====\n")
                   f.write(data[:300_000])
-              module_dirs = sorted({str(p.parent) for p in root.rglob("*.ko*")})
-              f.write("\n\n===== Kernel module directories =====\n")
-              f.write("\n".join(module_dirs) if module_dirs else "No .ko module files discovered.")
-              module_names = sorted({p.name for p in root.rglob("*.ko*")})
+              module_files = sorted({p for root in roots for p in root.rglob("*.ko*")})
+              f.write("\n\n===== Kernel module files =====\n")
+              f.write("\n".join(str(p) for p in module_files) if module_files else "No .ko module files discovered.")
               f.write("\n\n===== Relevant NSS/ECM module filenames =====\n")
-              relevant = [n for n in module_names if re.search(r"nss|ecm|qca|ath", n, re.I)]
+              relevant = [p.name for p in module_files if re.search(r"nss|ecm|qca|ath", p.name, re.I)]
               f.write("\n".join(relevant) if relevant else "No matching module filenames discovered.")
           PY
           {
-            echo "## Image summary"
+            echo "## Image checksum"
             cat work/report/SHA256.txt
             echo
-            echo "## Firmware signature scan"
-            sed -n '1,160p' work/report/binwalk-signatures.txt
+            echo "## File type"
+            cat work/report/file-type.txt
             echo
-            echo "## Extracted evidence files"
+            echo "## Sysupgrade archive contents"
+            cat work/report/sysupgrade-tar-list.txt
+            echo
+            echo "## Firmware signatures"
+            sed -n '1,200p' work/report/binwalk-signatures.txt
+            echo
+            echo "## Metadata paths"
             cat work/report/discovered-files.txt
           } > work/report/README.txt
 
       - name: Upload analysis report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: athena-v1.2.39-firmware-analysis
           path: |
             work/report/
             work/extracted/
+            work/tar-container/
           if-no-files-found: warn
           retention-days: 7
