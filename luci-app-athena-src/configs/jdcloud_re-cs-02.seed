@@ -11,7 +11,7 @@ CONFIG_TARGET_qualcommax_ipq60xx_DEVICE_jdcloud_re-cs-02=y
 
 # ---- 固件品牌定制 (写入 /etc/openwrt_release) ----
 CONFIG_VERSION_DIST="AthenaWrt"
-CONFIG_VERSION_NUMBER="v1.2.29"
+CONFIG_VERSION_NUMBER="v1.2.60"
 CONFIG_VERSION_REPO="https://github.com/immortalwrt/immortalwrt"
 CONFIG_VERSION_MANUFACTURER="JDCloud"
 CONFIG_VERSION_PRODUCT="Athena"
