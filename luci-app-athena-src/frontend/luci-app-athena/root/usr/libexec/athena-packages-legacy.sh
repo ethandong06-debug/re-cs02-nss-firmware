@@ -68,9 +68,11 @@ now_up() { cut -d. -f1 /proc/uptime; }
 # 绝不阻塞调用方：调用方拿到的是"现在缓存里有什么"
 warm_background() {
 	mkdir "$AV_LOCK" 2>/dev/null || return 0
-	echo $$ > "$AV_LOCK/pid"
 	now_up > "$AV_LOCK/since"
 	(
+		# The lock must identify the worker, not this short-lived parent shell.
+		# $! below is the PID of this background subshell and remains valid
+		# after the request handler exits.
 		emit_list available_pkgs "" false > "$AV_CACHE.new" 2>/dev/null
 		if [ -s "$AV_CACHE.new" ]; then
 			mv "$AV_CACHE.new" "$AV_CACHE"
@@ -80,6 +82,8 @@ warm_background() {
 		fi
 		rm -rf "$AV_LOCK"
 	) >/dev/null 2>&1 &
+	WORKER_PID=$!
+	printf '%s\\n' "$WORKER_PID" > "$AV_LOCK/pid"
 }
 
 case "$CMD" in
