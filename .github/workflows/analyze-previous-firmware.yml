@@ -2,6 +2,11 @@ name: Analyze previous AthenaWrt firmware
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - build/v1.2.60-free-actions
+    paths:
+      - .github/workflows/analyze-previous-firmware.yml
 
 permissions:
   contents: read
@@ -49,25 +54,16 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
-          import os, pathlib, re
+          import pathlib, re
           root = pathlib.Path("work/extracted")
           out = pathlib.Path("work/report/firmware-metadata.txt")
-          names = {
-              "openwrt_release", "openwrt_version", "board.json", "manifest",
-              "repositories", "feeds.conf", "feeds.conf.default", "config",
-              "os-release", "version"
-          }
-          patterns = (
-              "openwrt_release", "openwrt_version", "board.json", "manifest",
-              "repositories", "feeds.conf", "config", "modules"
-          )
+          names = {"openwrt_release", "openwrt_version", "board.json", "manifest", "repositories", "feeds.conf", "feeds.conf.default", "config", "os-release", "version"}
           files = []
           for p in root.rglob("*"):
               if p.is_file() and (p.name in names or any(x in str(p).lower() for x in ("nss", "ecm", "athena"))):
                   files.append(p)
           with out.open("w", encoding="utf-8", errors="replace") as f:
-              f.write("AthenaWrt v1.2.39 firmware evidence\n")
-              f.write("===================================\n")
+              f.write("AthenaWrt v1.2.39 firmware evidence\n===================================\n")
               if not files:
                   f.write("No extracted filesystem files found. Review binwalk-extract.log and signatures.\n")
               for p in sorted(set(files)):
