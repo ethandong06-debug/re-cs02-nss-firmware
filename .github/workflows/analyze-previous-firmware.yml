@@ -1,0 +1,109 @@
+name: Analyze previous AthenaWrt firmware
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-analysis
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    name: Inspect AthenaWrt v1.2.39 image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Download the exact Release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work/report work/extracted
+          curl --fail --location --retry 3 \
+            "https://github.com/ethandong06-debug/re-cs02-nss-firmware/releases/download/firmware-analysis/AthenaWrt-v1.2.39-sysupgrade.bin" \
+            --output work/AthenaWrt-v1.2.39-sysupgrade.bin
+          echo "Expected SHA256: 1202574c74896813abcea552a2cd2408e3ac375019ffe1b9f34d71ecbe31a243" > work/report/SHA256.txt
+          sha256sum work/AthenaWrt-v1.2.39-sysupgrade.bin | tee -a work/report/SHA256.txt
+          echo "Expected size: 39987473 bytes" >> work/report/SHA256.txt
+          stat -c "Actual size: %s bytes" work/AthenaWrt-v1.2.39-sysupgrade.bin >> work/report/SHA256.txt
+          echo "sha256sum verification:" >> work/report/SHA256.txt
+          echo "1202574c74896813abcea552a2cd2408e3ac375019ffe1b9f34d71ecbe31a243  work/AthenaWrt-v1.2.39-sysupgrade.bin" | sha256sum --check
+
+      - name: Install firmware inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y binwalk squashfs-tools file jq
+
+      - name: Identify and extract firmware
+        shell: bash
+        run: |
+          set +e
+          binwalk work/AthenaWrt-v1.2.39-sysupgrade.bin | tee work/report/binwalk-signatures.txt
+          binwalk -eM --run-as=root work/AthenaWrt-v1.2.39-sysupgrade.bin --directory work/extracted 2>&1 | tee work/report/binwalk-extract.log
+          find work/extracted -maxdepth 5 -type f \( -name "openwrt_release" -o -name "openwrt_version" -o -name "board.json" -o -name "manifest" -o -name "repositories" -o -name "feeds.conf*" -o -name "config" \) -print > work/report/discovered-files.txt
+          set -e
+
+      - name: Collect OS, package, kernel and NSS evidence
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, re
+          root = pathlib.Path("work/extracted")
+          out = pathlib.Path("work/report/firmware-metadata.txt")
+          names = {
+              "openwrt_release", "openwrt_version", "board.json", "manifest",
+              "repositories", "feeds.conf", "feeds.conf.default", "config",
+              "os-release", "version"
+          }
+          patterns = (
+              "openwrt_release", "openwrt_version", "board.json", "manifest",
+              "repositories", "feeds.conf", "config", "modules"
+          )
+          files = []
+          for p in root.rglob("*"):
+              if p.is_file() and (p.name in names or any(x in str(p).lower() for x in ("nss", "ecm", "athena"))):
+                  files.append(p)
+          with out.open("w", encoding="utf-8", errors="replace") as f:
+              f.write("AthenaWrt v1.2.39 firmware evidence\n")
+              f.write("===================================\n")
+              if not files:
+                  f.write("No extracted filesystem files found. Review binwalk-extract.log and signatures.\n")
+              for p in sorted(set(files)):
+                  try:
+                      if p.stat().st_size > 2_000_000:
+                          continue
+                      data = p.read_text(encoding="utf-8", errors="replace")
+                  except Exception:
+                      continue
+                  f.write(f"\n\n===== {p} ({p.stat().st_size} bytes) =====\n")
+                  f.write(data[:300_000])
+              module_dirs = sorted({str(p.parent) for p in root.rglob("*.ko*")})
+              f.write("\n\n===== Kernel module directories =====\n")
+              f.write("\n".join(module_dirs) if module_dirs else "No .ko module files discovered.")
+              module_names = sorted({p.name for p in root.rglob("*.ko*")})
+              f.write("\n\n===== Relevant NSS/ECM module filenames =====\n")
+              relevant = [n for n in module_names if re.search(r"nss|ecm|qca|ath", n, re.I)]
+              f.write("\n".join(relevant) if relevant else "No matching module filenames discovered.")
+          PY
+          {
+            echo "## Image summary"
+            cat work/report/SHA256.txt
+            echo
+            echo "## Firmware signature scan"
+            sed -n '1,160p' work/report/binwalk-signatures.txt
+            echo
+            echo "## Extracted evidence files"
+            cat work/report/discovered-files.txt
+          } > work/report/README.txt
+
+      - name: Upload analysis report
+        uses: actions/upload-artifact@v4
+        with:
+          name: athena-v1.2.39-firmware-analysis
+          path: |
+            work/report/
+            work/extracted/
+          if-no-files-found: warn
+          retention-days: 7
