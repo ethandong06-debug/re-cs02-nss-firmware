@@ -74,6 +74,13 @@ jobs:
           cd immortalwrt
           make tools/install -j2 V=s
 
+      - name: Install target toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd immortalwrt
+          make toolchain/install -j2 V=s
+
       - name: Compile only luci-app-athena
         shell: bash
         run: |
