@@ -67,6 +67,13 @@ jobs:
           grep -q '^CONFIG_TARGET_qualcommax_ipq60xx=y' .config
           grep -q '^CONFIG_PACKAGE_luci-app-athena=m' .config
 
+      - name: Build required host tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd immortalwrt
+          make tools/install -j2 V=s
+
       - name: Compile only luci-app-athena
         shell: bash
         run: |
