@@ -28,6 +28,20 @@ jobs:
         with:
           ref: main
 
+      - name: Fetch pinned File Browser binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          version='2.63.23'
+          archive="/tmp/linux-arm64-filebrowser.tar.gz"
+          curl -fL "https://github.com/filebrowser/filebrowser/releases/download/v${version}/linux-arm64-filebrowser.tar.gz" -o "${archive}"
+          echo 'c55b3450b6ac07ef73b5b49f0b2955a8e755100b71af1df73f9e5d25b12fd27a  /tmp/linux-arm64-filebrowser.tar.gz' | sha256sum -c -
+          mkdir -p /tmp/filebrowser-extract luci-app-athena-src/frontend/luci-app-athena/root/usr/bin
+          tar -xzf "${archive}" -C /tmp/filebrowser-extract
+          test -s /tmp/filebrowser-extract/filebrowser
+          install -m 0755 /tmp/filebrowser-extract/filebrowser luci-app-athena-src/frontend/luci-app-athena/root/usr/bin/filebrowser
+          file luci-app-athena-src/frontend/luci-app-athena/root/usr/bin/filebrowser
+
       - name: Install build dependencies
         shell: bash
         run: |
