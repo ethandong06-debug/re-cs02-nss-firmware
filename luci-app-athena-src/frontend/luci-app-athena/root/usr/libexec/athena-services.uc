@@ -382,6 +382,7 @@ for (let it in items) {
 	let one = '{"id":"' + jesc(it.id) + '","name":"' + jesc(it.name) + '","desc":"' + jesc(it.desc) +
 		'","on":' + (it.on ? 'true' : 'false') + ',"toggle":' + (it.toggle ? 'true' : 'false');
 	if (it.plugin == 1) one += ',"plugin":true';
+	if (it.restart) one += ',"restart":true';
 	/* path 统一带前导斜杠（静态表是 "/admin/..."，menu.d/控制器解析出来是 "admin/..."），
 	   不统一前端会拼成 /cgi-bin/luciadmin/... 直接 404 */
 	if (it.path != '' && it.path != null) {
