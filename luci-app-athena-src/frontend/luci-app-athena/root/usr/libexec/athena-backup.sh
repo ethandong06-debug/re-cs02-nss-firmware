@@ -133,6 +133,7 @@ case "$CMD" in
 	download)
 		FILE="${2:-}"
 		[ -z "$FILE" ] && { echo '{"ok":false,"msg":"缺少备份文件名"}'; exit 1; }
+		valid_backup_name "$FILE" || { echo '{"ok":false,"msg":"备份文件名无效"}'; exit 1; }
 		FP="$BACKUP_DIR/$FILE"
 		[ -f "$FP" ] || { echo '{"ok":false,"msg":"备份文件不存在"}'; exit 1; }
 		B64=$(base64 "$FP" 2>/dev/null | tr -d '\n')
@@ -144,6 +145,7 @@ case "$CMD" in
 		# 兼容旧页面调用，直接回落到 base64 通道，不再写 /www。
 		FILE="${2:-}"
 		[ -z "$FILE" ] && { echo '{"ok":false,"msg":"缺少备份文件名"}'; exit 1; }
+		valid_backup_name "$FILE" || { echo '{"ok":false,"msg":"备份文件名无效"}'; exit 1; }
 		FP="$BACKUP_DIR/$FILE"
 		[ -f "$FP" ] || { echo '{"ok":false,"msg":"备份文件不存在"}'; exit 1; }
 		B64=$(base64 "$FP" 2>/dev/null | tr -d '\n')
