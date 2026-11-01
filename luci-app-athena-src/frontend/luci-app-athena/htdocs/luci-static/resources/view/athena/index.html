@@ -998,20 +998,20 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch" data-k="matrix" onclick="toggleMatrix()"></div></div>
         <div class="check-row"><span>亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="matrixLight" min="0" max="7" value="5" onchange="setMatrixLight(this.value)"></div>
         <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option value="multi">多频道轮播</option><option value="single">单频道轮播</option></select></div>
-        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openMatrixFull()">打开完整管理</button><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
+        <div style="display:flex;gap:8px;margin-top:14px"><!-- 完整管理页未集成，暂不显示无效入口 --><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
       </div>
       <div class="card">
         <h3>显示内容区域</h3>
-        <div class="check-row"><span>时间显示</span><span class="flex"></span><div class="switch on" data-mx="clock" onclick="toggleMatrixItem('clock')"></div></div>
-        <div class="check-row"><span>勋章显示</span><span class="flex"></span><div class="switch on" data-mx="medal" onclick="toggleMatrixItem('medal')"></div></div>
+        <div class="check-row"><span>时间显示</span><span class="flex"></span><div class="switch" data-mx="clock" onclick="toggleMatrixItem('clock')"></div></div>
+        <div class="check-row"><span>勋章显示</span><span class="flex"></span><div class="switch" data-mx="medal" onclick="toggleMatrixItem('medal')"></div></div>
         <div class="check-row"><span>上行信息</span><span class="flex"></span><div class="switch" data-mx="up" onclick="toggleMatrixItem('up')"></div></div>
-        <div class="check-row"><span>下行信息</span><span class="flex"></span><div class="switch on" data-mx="down" onclick="toggleMatrixItem('down')"></div></div>
+        <div class="check-row"><span>下行信息</span><span class="flex"></span><div class="switch" data-mx="down" onclick="toggleMatrixItem('down')"></div></div>
       </div>
       <div class="card">
         <h3>夜间模式 <span class="sub">降亮度不熄屏</span></h3>
         <div class="check-row"><span>启用夜间模式</span><span class="flex"></span><div class="switch" data-k="night" onclick="toggleMatrixNight()"></div></div>
-        <div class="check-row"><span>开始时间</span><span class="flex"></span><input type="time" id="nightStart" value="22:30" onchange="setNightTime()"></div>
-        <div class="check-row"><span>结束时间</span><span class="flex"></span><input type="time" id="nightEnd" value="07:00" onchange="setNightTime()"></div>
+        <div class="check-row"><span>开始时间</span><span class="flex"></span><input type="time" id="nightStart" value="" onchange="setNightTime()"></div>
+        <div class="check-row"><span>结束时间</span><span class="flex"></span><input type="time" id="nightEnd" value="" onchange="setNightTime()"></div>
         <div class="check-row"><span>夜间亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="nightLevel" min="0" max="7" value="2" onchange="setNightLevel(this.value)"></div>
       </div>
       <div class="row2">
@@ -1024,7 +1024,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <h3>三色状态灯 <span class="sub">内核 GPIO 实时状态</span></h3>
           <div class="info-row"><span><span class="led-dot" style="background:#dc2626"></span>红色（故障 / 启动）</span><span id="ledRed"><span class="tag gray">读取中</span></span></div>
           <div class="info-row"><span><span class="led-dot" style="background:#16a34a"></span>绿色（运行中）</span><span id="ledGreen"><span class="tag gray">读取中</span></span></div>
-          <div class="info-row"><span><span class="led-dot" style="background:#378ADD"></span>蓝色（启动引导）</span><span id="ledBlue"><span class="tag gray">已熄灭</span></span></div>
+          <div class="info-row"><span><span class="led-dot" style="background:#378ADD"></span>蓝色（启动引导）</span><span id="ledBlue"><span class="tag gray">读取中</span></span></div>
           <div class="check-row"><span>呼吸灯（绿色心跳）</span><span class="flex"></span><div class="switch" data-k="breath" onclick="toggleBreath()"></div></div>
         </div>
       </div>
@@ -1048,14 +1048,14 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>固件信息</h3>
         <div class="info-row"><span>固件版本</span><span style="font-weight:600" id="fwVer">v1.2.61</span></div>
         <div class="info-row"><span>硬件</span><span style="font-weight:600">JDCloud RE-CS-02 · IPQ6018</span></div>
-        <div class="info-row"><span>内核</span><span style="font-weight:600" id="fwKernel">Linux 6.18.55</span></div>
-        <div class="info-row"><span>运行时长</span><span style="font-weight:600" id="fwUptime">2 天 14 小时</span></div>
-        <div class="info-row"><span>CPU 温度</span><span style="font-weight:600" id="fwTemp">42°C <span style="font-size:11px;color:var(--text3)">被动散热 · 正常</span></span></div>
+        <div class="info-row"><span>内核</span><span style="font-weight:600" id="fwKernel">读取中</span></div>
+        <div class="info-row"><span>运行时长</span><span style="font-weight:600" id="fwUptime">读取中</span></div>
+        <div class="info-row"><span>CPU 温度</span><span style="font-weight:600" id="fwTemp">读取中</span></div>
       </div>
       <div class="card">
         <h3>重启与升级</h3>
         <div class="info-row"><span>重启路由器</span><button class="btn sm" onclick="openRebootConfirm()">立即重启</button></div>
-        <div class="info-row"><span>定时重启</span><button class="btn sm" data-rebootSched onclick="openRebootSched()">已设置 04:00（每周日）</button></div>
+        <div class="info-row"><span>定时重启</span><button class="btn sm" data-rebootSched onclick="openRebootSched()">正在读取定时任务</button></div>
         <div class="info-row"><span>升级固件</span><button class="btn sm primary" onclick="openUpgradeConfirm()">升级</button></div>
         <div class="info-row"><span>恢复出厂设置</span><button class="btn sm danger" onclick="openResetConfirm()">恢复出厂</button></div>
       </div>
@@ -1064,7 +1064,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="info-row"><span>立即备份配置</span><button class="btn sm" onclick="backupNow()">备份</button></div>
         <div class="info-row"><span>从备份恢复</span><button class="btn sm" onclick="openRestore()">恢复</button></div>
         <div class="info-row"><span>自动备份 <span data-autoBackupDesc style="color:var(--text3);font-size:12px">正在读取备份计划</span></span><span style="display:flex;align-items:center;gap:10px"><div class="switch" data-k="autoBackup" onclick="toggleAutoBackup()"></div><button class="btn sm" onclick="openAutoBackupModal()">设置</button></span></div>
-        <div class="info-row"><span>备份列表</span><button class="btn sm" onclick="openBackupList()">查看（<span id="bkCount">0</span>）</button></div>
+        <div class="info-row"><span>备份列表</span><button class="btn sm" onclick="openBackupList()">查看（<span id="bkCount">—</span>）</button></div>
         <div style="font-size:12px;color:var(--text3);margin-top:8px">备份包含网络 / 无线 / 防火墙 / 插件等全部配置，不含磁盘数据。</div>
       </div>
     </div>
