@@ -118,7 +118,9 @@ case "$1" in
 			*) echo '{"ok":false,"msg":"MAC 地址格式错误"}'; exit 1 ;;
 		esac
 
-		# 星期校验
+		# 星期校验：拒绝空值、空元素和非法字符，避免保存一个前端看似成功但实际不生效的空规则。
+		[ -n "$DAYS" ] || { echo '{"ok":false,"msg":"至少选择一个星期"}'; exit 1; }
+		case "$DAYS" in ,*|*,|*,,*|*[!0-6,]*) echo '{"ok":false,"msg":"星期格式无效，只能使用 0-6 并以逗号分隔"}'; exit 1 ;; esac
 		for d in $(echo "$DAYS" | tr ',' ' '); do
 			case "$d" in
 				0|1|2|3|4|5|6) ;;
