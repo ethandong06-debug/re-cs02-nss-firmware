@@ -786,7 +786,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <!-- 拓扑 + 快捷 -->
     <div class="row2">
       <div class="card">
-        <h3>家庭网络拓扑 <span class="sub">示意</span></h3>
+        <h3>家庭网络拓扑 <span class="sub">物理连接示意 · 非交换机实时端口监控</span></h3>
         <div class="topo" id="topoBox"><div class="apps-empty">正在采集实际网络与设备信息…</div></div>
       </div>
       <div class="card">
@@ -2436,7 +2436,12 @@ function topologyHTML(){
   var iptvLeaf=IPTV_VLAN?'<div class="leaf"><b>LAN4</b>IPTV 机顶盒 · VLAN '+esc(IPTV_VLAN)+'</div>':'<div class="leaf" style="opacity:.45"><b>—</b>未接入</div>';
   return '<div class="topo-node"><span class="st '+(wanOk?'st-on':'st-off')+'" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">'+(wanOk?'已连接':'未连接')+'</span></div>'
     +'<div class="topo-line">光猫 · 桥接模式</div>'
-    +'<div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">'+esc(wanLabel)+' · '+modeName+'</span></div>'
+    +'<div class="topo-node"><span class="st" style="width:8px;height:8px"></span><span class="n">光猫</span><span class="m">桥接上联</span></div>'
+    +'<div class="topo-line">单线复用上联 · VLAN 透传</div>'
+    +'<div class="topo-node"><span class="st" style="width:8px;height:8px"></span><span class="n">2.5G 管理交换机</span><span class="m">光猫 ↔ 雅典娜 WAN</span></div>'
+    +'<div class="topo-branch"><div class="leaf"><b>交换机其他端口</b>次级路由器 / 其他有线设备</div></div>'
+    +'<div class="topo-line">雅典娜 AX6600 · '+modeName+'</div>'
+    +'<div class="topo-node"><span class="st '+(wanOk?'st-on':'st-off')+'" style="width:8px;height:8px"></span><span class="n">AthenaWrt</span><span class="m">'+esc(wanLabel)+'</span></div>'
     +branch('LAN · 有线 '+grp.lan.list.filter(function(d){return d.online;}).length+' 台在线', grp.lan.list)
     +branch('2.4G WiFi · '+grp.g24.list.filter(function(d){return d.online;}).length+' 台在线', grp.g24.list)
     +branch('5G WiFi · '+grp.g5.list.filter(function(d){return d.online;}).length+' 台在线', grp.g5.list)
@@ -2476,6 +2481,7 @@ function updateNumbers(){
   var modeName={router:'主路由',ap:'AP 桥接',bypass:'旁路由'}[curMode]||curMode;
   var protoName=WAN_PROTO==='pppoe'?'PPPoE':WAN_PROTO==='dhcp'?'DHCP':'静态';
   var netMode=document.getElementById('netMode'); if(netMode) netMode.textContent=modeName;
+  var homeModeDot=document.querySelector('#pg-home .netband .chip .st'); if(homeModeDot) homeModeDot.className='st '+(WAN_IP?'st-on':'st-off');
   var netWan=document.getElementById('netWan'); if(netWan) netWan.textContent=protoName;
   var netIp=document.getElementById('netIp'); if(netIp) netIp.textContent=WAN_IP||'—';
   var netFw=document.getElementById('netFw'); if(netFw) netFw.textContent=FIRMWARE_VER||'v1.2.61';
