@@ -5,6 +5,7 @@ FW_ALLOWED="/tmp/athena-fw-upload.bin"
 
 verify_file() {
 	FILE="$1"
+	[ "$FILE" = "$FW_ALLOWED" ] || { REASON="固件路径不在允许范围内"; return 1; }
 	COMP=false
 	REASON="固件包结构无效"
 	DIR=""
