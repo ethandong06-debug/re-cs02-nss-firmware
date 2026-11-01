@@ -13,8 +13,10 @@
 
 sync_index() {
 	local MODE LAST TARGET
-	MODE=$(uci -q get athena.ui.mode 2>/dev/null)
-	LAST=$(uci -q get athena.ui.last 2>/dev/null)
+	MODE=$(/usr/libexec/athena-prefs.sh get ui_mode 2>/dev/null)
+	LAST=$(/usr/libexec/athena-prefs.sh get ui_last 2>/dev/null)
+	[ -z "$MODE" ] && MODE=$(uci -q get athena.ui.mode 2>/dev/null)
+	[ -z "$LAST" ] && LAST=$(uci -q get athena.ui.last 2>/dev/null)
 	[ -z "$MODE" ] && MODE=last
 	[ -z "$LAST" ] && LAST=athena
 
@@ -48,8 +50,10 @@ EOF
 
 get_mode() {
 	local MODE LAST
-	MODE=$(uci -q get athena.ui.mode 2>/dev/null)
-	LAST=$(uci -q get athena.ui.last 2>/dev/null)
+	MODE=$(/usr/libexec/athena-prefs.sh get ui_mode 2>/dev/null)
+	LAST=$(/usr/libexec/athena-prefs.sh get ui_last 2>/dev/null)
+	[ -z "$MODE" ] && MODE=$(uci -q get athena.ui.mode 2>/dev/null)
+	[ -z "$LAST" ] && LAST=$(uci -q get athena.ui.last 2>/dev/null)
 	[ -z "$MODE" ] && MODE=last
 	[ -z "$LAST" ] && LAST=athena
 	echo "{\"mode\":\"$MODE\",\"last\":\"$LAST\"}"
@@ -62,8 +66,9 @@ case "$1" in
 	set)
 		case "$2" in
 			athena|native|last)
-				uci set athena.ui.mode="$2"
-				uci commit athena
+				/usr/libexec/athena-prefs.sh set ui_mode "$2" >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无法保存界面模式"}'; exit 1; }
+				uci -q set athena.ui.mode="$2" 2>/dev/null
+				uci -q commit athena 2>/dev/null
 				sync_index
 				echo "{\"ok\":true,\"mode\":\"$2\"}"
 				;;
@@ -76,8 +81,9 @@ case "$1" in
 	mark)
 		case "$2" in
 			athena|native)
-				uci set athena.ui.last="$2"
-				uci commit athena
+				/usr/libexec/athena-prefs.sh set ui_last "$2" >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无法保存最近界面"}'; exit 1; }
+				uci -q set athena.ui.last="$2" 2>/dev/null
+				uci -q commit athena 2>/dev/null
 				echo '{"ok":true}'
 				;;
 			*)
