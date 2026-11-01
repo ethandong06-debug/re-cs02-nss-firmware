@@ -40,9 +40,10 @@ uci2enc() {
 enc2uci() {
 	case "$1" in
 		"开放（无加密）") echo "none" ;;
-		"WPA3-SAE") echo "sae" ;;
-		"WPA2/WPA3-PSK") echo "sae-mixed" ;;
-		*) echo "psk2" ;;
+		"WPA3-SAE"|"WPA3-PSK") echo "sae" ;;
+		"WPA2/WPA3-PSK"|"WPA3/WPA2"|"WPA2/WPA3") echo "sae-mixed" ;;
+		"WPA2-PSK") echo "psk2" ;;
+		*) echo "" ;;
 	esac
 }
 # htmode: uci -> 前端
@@ -111,7 +112,19 @@ emit_band() {
 }
 
 do_get() {
-	printf '{"ok":true,"on":true,"bands":['
+	local any_on=false idx disabled real_up
+	for idx in 0 1 2; do
+		[ "$(uci -q get "wireless.radio$idx" 2>/dev/null)" = "wifi-device" ] || continue
+		disabled=$(uci -q get "wireless.radio$idx.disabled" 2>/dev/null)
+		[ "$disabled" = "1" ] && continue
+		real_up=""
+		if command -v ubus >/dev/null 2>&1; then
+			real_up=$(ubus call network.wireless status 2>/dev/null | jsonfilter -e "@.radio$idx.up" 2>/dev/null)
+		fi
+		[ "$real_up" = "false" ] && continue
+		any_on=true
+	done
+	printf '{"ok":true,"on":%s,"bands":[' "$any_on"
 	printf '%s,' "$(emit_band b24 1)"
 	printf '%s,' "$(emit_band b52 2)"
 	printf '%s]}' "$(emit_band b58 0)"
@@ -153,6 +166,7 @@ do_set() {
 	[ -z "$iface" ] && { echo '{"ok":false,"msg":"无线接口不存在"}'; exit 1; }
 	local band_type=$(uci -q get "wireless.$radio.band" 2>/dev/null)
 	local enc_u=$(enc2uci "$enc")
+	[ -n "$enc_u" ] || { echo '{"ok":false,"msg":"不支持的无线加密方式，请重新选择"}'; exit 1; }
 	# 防呆：当前接口无密码（开放）且用户未填新密码 → 拒绝保存，避免继续以开放/无密码状态造成困惑
 	local cur_key=$(uci -q get "wireless.$iface.key" 2>/dev/null)
 	if [ "$enc_u" != "none" ] && [ -z "$pwd" ] && [ -z "$cur_key" ]; then
