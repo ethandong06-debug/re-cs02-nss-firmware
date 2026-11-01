@@ -42,8 +42,8 @@ case "$CMD" in
 			[ "$size_mb" -le 0 ] && continue
 			[ -n "$DISKS" ] && DISKS="$DISKS,"
 			mount=""; fs=""; used_mb=0; PARTS=""; nparts=0
-			for part in /sys/block/$name/${name}p*; do
-				[ -e "$part" ] || continue
+			for part in /sys/block/$name/${name}*; do
+				[ -f "$part/partition" ] || continue
 				pname=$(basename "$part")
 				echo "$pname" | grep -qE 'boot[0-9]+$' && continue
 				psec=$(cat "$part/size" 2>/dev/null || echo 0)
