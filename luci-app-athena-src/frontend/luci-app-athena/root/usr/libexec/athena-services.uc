@@ -372,6 +372,7 @@ for (let base in inits) {
 		id: base, name: base, desc: '第三方服务',
 		on: init_enabled(base), toggle: base == 'openclash' ? false : true,
 		restart: base == 'openclash' ? true : false,
+		startOnly: base == 'openclash' ? true : false,
 		plugin: 0, path: detect_path(base),
 		port: detect_port(base)
 	});
@@ -383,6 +384,7 @@ for (let it in items) {
 		'","on":' + (it.on ? 'true' : 'false') + ',"toggle":' + (it.toggle ? 'true' : 'false');
 	if (it.plugin == 1) one += ',"plugin":true';
 	if (it.restart) one += ',"restart":true';
+	if (it.startOnly) one += ',"startOnly":true';
 	/* path 统一带前导斜杠（静态表是 "/admin/..."，menu.d/控制器解析出来是 "admin/..."），
 	   不统一前端会拼成 /cgi-bin/luciadmin/... 直接 404 */
 	if (it.path != '' && it.path != null) {
