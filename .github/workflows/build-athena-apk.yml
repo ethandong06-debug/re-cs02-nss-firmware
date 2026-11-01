@@ -101,18 +101,38 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Import persistent APK signing key
+        shell: bash
+        env:
+          ATHENAWRT_APK_SIGNING_KEY: ${{ secrets.ATHENAWRT_APK_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ATHENAWRT_APK_SIGNING_KEY:-}" ]; then
+            echo "::error::Missing repository secret ATHENAWRT_APK_SIGNING_KEY"
+            exit 1
+          fi
+          printf '%s\\n' "$ATHENAWRT_APK_SIGNING_KEY" > immortalwrt/private-key.pem
+          chmod 600 immortalwrt/private-key.pem
+          openssl pkey -in immortalwrt/private-key.pem -check -noout
+          openssl pkey -in immortalwrt/private-key.pem -pubout -out immortalwrt/public-key.pem
+          chmod 644 immortalwrt/public-key.pem
+
       - name: Prepare package-only build
         shell: bash
         run: |
           set -euo pipefail
           cp -a luci-app-athena-src/frontend/luci-app-athena immortalwrt/package/luci-app-athena
           cp luci-app-athena-src/configs/jdcloud_re-cs-02.seed immortalwrt/.config
-          printf '\nCONFIG_PACKAGE_luci-app-athena=m\n' >> immortalwrt/.config
+          printf '\nCONFIG_USE_APK=y\nCONFIG_SIGN_EACH_PACKAGE=y\nCONFIG_PACKAGE_luci-app-athena=m\n' >> immortalwrt/.config
           cd immortalwrt
           make defconfig
           grep -q '^CONFIG_TARGET_qualcommax=y' .config
           grep -q '^CONFIG_TARGET_qualcommax_ipq60xx=y' .config
+          grep -q '^CONFIG_USE_APK=y' .config
+          grep -q '^CONFIG_SIGN_EACH_PACKAGE=y' .config
           grep -q '^CONFIG_PACKAGE_luci-app-athena=m' .config
+          test -s private-key.pem
+          test -s public-key.pem
 
       - name: Build required host tools
         shell: bash
@@ -147,9 +167,12 @@ jobs:
             exit 1
           fi
           cp "${apks[0]}" output/
+          cp immortalwrt/public-key.pem output/athenawrt-apk-public-key.pem
+          immortalwrt/staging_dir/host/bin/apk --keys-dir immortalwrt verify "output/$(basename "${apks[0]}")"
           file output/*.apk | tee output/file-type.txt
           sha256sum output/*.apk | tee output/SHA256SUMS.txt
-          stat -c '%n %s bytes' output/*.apk | tee output/size.txt
+          sha256sum output/athenawrt-apk-public-key.pem | tee output/PUBLIC-KEY-SHA256.txt
+          stat -c '%n %s bytes' output/*.apk output/athenawrt-apk-public-key.pem | tee output/size.txt
           tar -czf output/athena-source-build-metadata.tar.gz \
             luci-app-athena-src/frontend/luci-app-athena/Makefile \
             luci-app-athena-src/README.md
