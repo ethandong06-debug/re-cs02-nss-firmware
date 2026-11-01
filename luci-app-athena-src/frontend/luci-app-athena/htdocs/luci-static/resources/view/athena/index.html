@@ -816,25 +816,25 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="band">
         <div class="band-card" data-band="b24" onclick="editBand('b24')">
-          <div class="top"><div class="nm"><span class="st st-on"></span>2.4G<span class="chip2" style="margin-left:8px">日常上网</span></div><div class="switch" data-k="band" onclick="event.stopPropagation();toggleBand('b24')" data-b="b24"></div></div>
+          <div class="top"><div class="nm"><span class="st"></span>2.4G</div><div class="switch" data-k="band" onclick="event.stopPropagation();toggleBand('b24')" data-b="b24"></div></div>
           <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中</span></div>
-          <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
+          <div class="info-row"><span>密码</span><span style="font-weight:600">密码不回显</span></div>
           <div class="info-row"><span>加密方式</span><span><span class="tag">读取中</span></span></div>
           <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b24')">编辑 WiFi 名称 / 密码</button>
         </div>
         <div class="band-card" data-band="b52" onclick="editBand('b52')">
-          <div class="top"><div class="nm"><span class="st"></span>5.2G<span class="chip2" style="margin-left:8px">游戏加速</span></div><div class="switch" data-k="band" onclick="event.stopPropagation();toggleBand('b52')" data-b="b52"></div></div>
+          <div class="top"><div class="nm"><span class="st"></span>5.2G</div><div class="switch" data-k="band" onclick="event.stopPropagation();toggleBand('b52')" data-b="b52"></div></div>
           <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中</span></div>
-          <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
+          <div class="info-row"><span>密码</span><span style="font-weight:600">密码不回显</span></div>
           <div class="info-row"><span>加密方式</span><span><span class="tag">读取中</span></span></div>
           <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b52')">编辑 WiFi 名称 / 密码</button>
         </div>
         <div class="band-card" data-band="b58" onclick="editBand('b58')">
-          <div class="top"><div class="nm"><span class="st"></span>5.8G<span class="chip2" style="margin-left:8px">影视投屏</span></div><div class="switch" data-k="band" onclick="event.stopPropagation();toggleBand('b58')" data-b="b58"></div></div>
+          <div class="top"><div class="nm"><span class="st"></span>5.8G</div><div class="switch" data-k="band" onclick="event.stopPropagation();toggleBand('b58')" data-b="b58"></div></div>
           <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中</span></div>
-          <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
+          <div class="info-row"><span>密码</span><span style="font-weight:600">密码不回显</span></div>
           <div class="info-row"><span>加密方式</span><span><span class="tag">读取中</span></span></div>
           <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b58')">编辑 WiFi 名称 / 密码</button>
@@ -842,7 +842,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>访客网络 <span class="sub">与内网隔离，适合客人使用</span></h3>
-        <div class="check-row"><span>开启访客网络（Athena-Guest）</span><span class="flex"></span><div class="switch" data-k="guest" onclick="toggleGuest()"></div></div>
+        <div class="check-row"><span>开启访客网络</span><span class="flex"></span><div class="switch" data-k="guest" onclick="toggleGuest()"></div></div>
         <div class="info-row"><span>访客 WiFi 名称</span><span style="font-weight:600">读取中</span></div>
         <div class="info-row"><span>访问内网</span><span><span class="tag gray">读取中</span></span></div>
         <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" onclick="openGuestModal()">访客网络设置</button></div>
@@ -2519,7 +2519,7 @@ function renderWifiCards(){
     var rows=card.querySelectorAll('.info-row');
     if(rows.length>=4){
       rows[0].querySelector('span:last-child').textContent=b.ssid;
-      rows[1].querySelector('span:last-child').textContent=b.enc==='开放（无加密）'?'无密码':'••••••••';
+      rows[1].querySelector('span:last-child').textContent=b.enc==='开放（无加密）'?'无密码':'密码不回显';
       rows[2].querySelector('span:last-child').textContent=b.enc;
       rows[3].querySelector('span:last-child').textContent=b.ch+' · '+b.bw;
     }
