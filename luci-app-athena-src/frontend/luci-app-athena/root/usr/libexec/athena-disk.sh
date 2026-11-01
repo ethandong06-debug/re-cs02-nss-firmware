@@ -12,9 +12,10 @@ CMD="${1:-list}"
 # 只允许操作真实的 USB/SCSI 分区；拒绝整盘、别名（usb/emmc）、eMMC/NVMe 和系统分区。
 valid_usb_partition() {
 	local dev="$1" base
-	case "$dev" in /dev/sd[a-z][0-9]*) ;; *) return 1 ;; esac
+	case "$dev" in /dev/sd[a-z]*) ;; *) return 1 ;; esac
 	base="${dev##*/}"
-	case "$base" in *[!a-zA-Z0-9]*) return 1 ;; esac
+	local part="${base#sd?}"
+	case "$part" in ''|*[!0-9]*) return 1 ;; esac
 	[ -b "$dev" ] || return 1
 	[ -f "/sys/class/block/$base/partition" ] || return 1
 	return 0
