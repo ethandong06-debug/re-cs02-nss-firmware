@@ -22,7 +22,10 @@ case "$CMD" in
 		case "$HOST" in ''|-*|*[!A-Za-z0-9.:-]*) echo '{"ok":false,"msg":"目标地址格式无效"}'; exit 1 ;; esac
 		case "$CNT" in ''|*[!0-9]*) echo '{"ok":false,"msg":"次数必须是 1 到 10 的整数"}'; exit 1 ;; esac
 		[ "$CNT" -ge 1 ] 2>/dev/null && [ "$CNT" -le 10 ] 2>/dev/null || { echo '{"ok":false,"msg":"次数必须是 1 到 10 的整数"}'; exit 1; }
-		raw=$(ping -c "$CNT" -W 2 "$HOST" 2>/dev/null)
+		case "$HOST" in
+			*:*) if command -v ping6 >/dev/null 2>&1; then raw=$(ping6 -c "$CNT" -W 2 "$HOST" 2>/dev/null); else raw=$(ping -6 -c "$CNT" -W 2 "$HOST" 2>/dev/null); fi ;;
+			*) raw=$(ping -c "$CNT" -W 2 "$HOST" 2>/dev/null) ;;
+		esac
 		[ -z "$raw" ] && { echo "{\"ok\":false,\"msg\":\"ping 失败或无响应\"}"; exit 1; }
 	# 提取丢包率 / 平均时延 / 抖动（mdev）
 	loss=$(echo "$raw" | awk '/packet loss/{for(i=1;i<=NF;i++)if($i~/%/)print $i}' | tr -d '%')
@@ -78,6 +81,13 @@ case "$CMD" in
 				wan_ok=true; wan_msg="公网可达（ICMP · 223.5.5.5）"
 			fi
 		fi
+		# IPv6：同时检查默认 IPv6 路由和 LAN 侧全局地址（PD 下发结果）。
+		IPV6_ROUTE=$(ip -6 route show default 2>/dev/null | head -1)
+		IPV6_LAN_ADDR=$(ip -6 -o addr show dev br-lan scope global 2>/dev/null | awk 'NR==1 {print $4}')
+		ipv6_ok=false; ipv6_msg="未检测到完整 IPv6 路由或 LAN 全局地址"
+		if [ -n "$IPV6_ROUTE" ] && [ -n "$IPV6_LAN_ADDR" ]; then
+			ipv6_ok=true; ipv6_msg="默认 IPv6 路由正常，LAN 地址：$IPV6_LAN_ADDR"
+		fi
 		# DNS
 		dns_ok=false; dns_msg="域名解析失败"
 		if nslookup www.qq.com >/dev/null 2>&1; then dns_ok=true; dns_msg="www.qq.com 解析正常"; fi
@@ -88,7 +98,8 @@ case "$CMD" in
 		cat <<EOF
 {"ok":true,"items":[
 {"key":"gateway","name":"默认路由","ok":$gw_ok,"msg":"$gw_ms"},
-{"key":"wan","name":"外网连通","ok":$wan_ok,"msg":"$wan_msg"},
+{"key":"wan","name":"IPv4 外网连通","ok":$wan_ok,"msg":"$wan_msg"},
+{"key":"ipv6","name":"IPv6 / 前缀下发","ok":$ipv6_ok,"msg":"$ipv6_msg"},
 {"key":"dns","name":"DNS 解析","ok":$dns_ok,"msg":"$dns_msg"},
 {"key":"icmp","name":"ICMP 探测","ok":$icmp_ok,"msg":"$icmp_msg","info":true}
 ]}
