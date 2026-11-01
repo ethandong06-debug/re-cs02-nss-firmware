@@ -18,6 +18,9 @@ valid_usb_partition() {
 	case "$part" in ''|*[!0-9]*) return 1 ;; esac
 	[ -b "$dev" ] || return 1
 	[ -f "/sys/class/block/$base/partition" ] || return 1
+	local sys_path
+	sys_path=$(readlink -f "/sys/class/block/$base" 2>/dev/null)
+	case "$sys_path" in */usb*/*) ;; *) return 1 ;; esac
 	return 0
 }
 is_mounted() {
