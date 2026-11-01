@@ -560,7 +560,7 @@ html::-webkit-scrollbar-thumb:hover{background:var(--primary)}
 .pkg-actions .btn.sm{height:28px;padding:0 10px;font-size:11.5px;border-radius:8px}
 .pkg-empty{color:var(--text3);font-size:13px;padding:20px 0;text-align:center}
 
-/* ===== v1.2.39 细节优化（反馈项） ===== */
+/* ===== v1.2.61 细节优化（反馈项） ===== */
 .modal{position:relative}
 .modal-x{position:absolute;top:12px;right:12px;width:30px;height:30px;border:0;background:transparent;color:var(--text3);font-size:22px;line-height:1;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;z-index:3;padding:0}
 .modal-x:hover{background:var(--border);color:var(--text)}
@@ -716,11 +716,11 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
             <circle class="track" cx="32" cy="32" r="29"/>
             <circle class="bar" id="cpuRing" cx="32" cy="32" r="29" stroke="var(--ok)"/>
           </svg>
-          <span class="num" id="cpuTxt">23%</span>
+          <span class="num" id="cpuTxt">—</span>
         </div>
         <div class="info">
           <div class="t">CPU 使用率 · 4 核</div>
-          <div class="v" id="cpuV">23.4%</div>
+          <div class="v" id="cpuV">—</div>
           <div class="bar-mini" id="cpuBars"></div>
         </div>
       </div>
@@ -730,12 +730,12 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
             <circle class="track" cx="32" cy="32" r="29"/>
             <circle class="bar" id="memRing" cx="32" cy="32" r="29" stroke="var(--warn)"/>
           </svg>
-          <span class="num" id="memTxt">47%</span>
+          <span class="num" id="memTxt">—</span>
         </div>
         <div class="info">
           <div class="t">内存占用</div>
-          <div class="v" id="memV">187 / 398 MB</div>
-          <div class="d" id="memD">剩余 211 MB · 运行 2 天 14 小时</div>
+          <div class="v" id="memV">—</div>
+          <div class="d" id="memD">正在读取内存与运行时间</div>
         </div>
       </div>
       <div class="card kpi" id="kpi-up">
@@ -744,8 +744,8 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div class="info">
           <div class="t">运行时长</div>
-          <div class="v" id="kpiUpV">2d 14h</div>
-          <div class="d" id="kpiUpD">上次启动：10-24 09:12</div>
+          <div class="v" id="kpiUpV">读取中</div>
+          <div class="d" id="kpiUpD">正在读取启动时间</div>
         </div>
       </div>
       <div class="card kpi" id="kpi-dev" style="cursor:pointer" onclick="goto('dev')">
@@ -754,21 +754,21 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div class="info">
           <div class="t">在线设备</div>
-          <div class="v" id="kpiDevV">9 <span style="font-size:13px;color:var(--text3);font-weight:500">/ 11 台</span></div>
-          <div class="d" id="kpiDevD">有线 4 · 无线 5 · 新设备 0</div>
+          <div class="v" id="kpiDevV">— <span style="font-size:13px;color:var(--text3);font-weight:500">/ — 台</span></div>
+          <div class="d" id="kpiDevD">正在采集设备信息</div>
         </div>
       </div>
     </div>
 
     <!-- 网络信息带 -->
     <div class="card netband" style="cursor:pointer" onclick="goto('net')" title="进入网络设置">
-      <span class="chip"><span class="k">网络模式</span><b id="netMode">主路由</b><span class="st st-on"></span></span>
-      <span class="chip"><span class="k">WAN</span><b id="netWan">PPPoE</b></span>
+      <span class="chip"><span class="k">网络模式</span><b id="netMode">读取中</b><span class="st st-on"></span></span>
+      <span class="chip"><span class="k">WAN</span><b id="netWan">读取中</b></span>
       <span class="chip"><span class="k">外网 IP</span><b id="netIp">—</b></span>
-      <span class="chip" data-bandchip="b24"><span class="k">2.4G</span><span class="st st-on"></span><b>在线</b></span>
-      <span class="chip" data-bandchip="b52"><span class="k">5.2G</span><span class="st st-on"></span><b>在线</b></span>
-      <span class="chip" data-bandchip="b58"><span class="k">5.8G</span><span class="st st-on"></span><b>在线</b></span>
-      <span class="chip"><span class="k">固件</span><b id="netFw">v1.2.39</b></span>
+      <span class="chip" data-bandchip="b24"><span class="k">2.4G</span><span class="st"></span><b>读取中</b></span>
+      <span class="chip" data-bandchip="b52"><span class="k">5.2G</span><span class="st"></span><b>读取中</b></span>
+      <span class="chip" data-bandchip="b58"><span class="k">5.8G</span><span class="st"></span><b>读取中</b></span>
+      <span class="chip"><span class="k">固件</span><b id="netFw">v1.2.61</b></span>
     </div>
 
     <!-- 活跃应用（OAF 分类 + DNS 指纹识别） -->
@@ -825,39 +825,39 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     </div>
     <div class="grid">
       <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
-        <div><div class="ct">WiFi 总开关</div><div data-k="wifiAllTxt" style="font-size:12px;color:var(--text3);margin-top:4px">三个频段全部开启（2.4G · 5.2G 游戏 · 5.8G 影视）</div></div>
+        <div><div class="ct">WiFi 总开关</div><div data-k="wifiAllTxt" style="font-size:12px;color:var(--text3);margin-top:4px">正在读取无线状态</div></div>
         <div class="switch on" data-k="wifiAll" onclick="toggleWifiAll()"></div>
       </div>
       <div class="band">
         <div class="band-card" data-band="b24" onclick="editBand('b24')">
           <div class="top"><div class="nm"><span class="st st-on"></span>2.4G<span class="chip2" style="margin-left:8px">日常上网</span></div><div class="switch on" data-k="band" onclick="event.stopPropagation();toggleBand('b24')" data-b="b24"></div></div>
-          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">Athena-2.4G</span></div>
+          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中</span></div>
           <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
-          <div class="info-row"><span>加密方式</span><span><span class="tag">WPA3/WPA2</span></span></div>
-          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">6 · 40MHz</span></div>
+          <div class="info-row"><span>加密方式</span><span><span class="tag">读取中</span></span></div>
+          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b24')">编辑 WiFi 名称 / 密码</button>
         </div>
         <div class="band-card" data-band="b52" onclick="editBand('b52')">
           <div class="top"><div class="nm"><span class="st st-on"></span>5.2G<span class="chip2" style="margin-left:8px">游戏加速</span></div><div class="switch on" data-k="band" onclick="event.stopPropagation();toggleBand('b52')" data-b="b52"></div></div>
-          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">Athena-5G</span></div>
+          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中</span></div>
           <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
-          <div class="info-row"><span>加密方式</span><span><span class="tag">WPA3/WPA2</span></span></div>
-          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">44 · 80MHz</span></div>
+          <div class="info-row"><span>加密方式</span><span><span class="tag">读取中</span></span></div>
+          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b52')">编辑 WiFi 名称 / 密码</button>
         </div>
         <div class="band-card" data-band="b58" onclick="editBand('b58')">
           <div class="top"><div class="nm"><span class="st st-on"></span>5.8G<span class="chip2" style="margin-left:8px">影视投屏</span></div><div class="switch on" data-k="band" onclick="event.stopPropagation();toggleBand('b58')" data-b="b58"></div></div>
-          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">Athena-5G-Game</span></div>
+          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中</span></div>
           <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
-          <div class="info-row"><span>加密方式</span><span><span class="tag">WPA3/WPA2</span></span></div>
-          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">153 · 80MHz</span></div>
+          <div class="info-row"><span>加密方式</span><span><span class="tag">读取中</span></span></div>
+          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b58')">编辑 WiFi 名称 / 密码</button>
         </div>
       </div>
       <div class="card">
         <h3>访客网络 <span class="sub">与内网隔离，适合客人使用</span></h3>
-        <div class="check-row"><span>开启访客网络（Athena-Guest）</span><span class="flex"></span><div class="switch on" data-k="guest" onclick="toggleGuest()"></div></div>
-        <div class="info-row"><span>访客 WiFi 名称</span><span style="font-weight:600">Athena-Guest</span></div>
+        <div class="check-row"><span>开启访客网络（Athena-Guest）</span><span class="flex"></span><div class="switch" data-k="guest" onclick="toggleGuest()"></div></div>
+        <div class="info-row"><span>访客 WiFi 名称</span><span style="font-weight:600">读取中</span></div>
         <div class="info-row"><span>访问内网</span><span><span class="tag gray">已隔离</span></span></div>
         <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" onclick="openGuestModal()">访客网络设置</button></div>
       </div>
@@ -882,7 +882,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="metric2" onclick="devNew()"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div><div><div class="mv" id="devNewV" style="color:var(--warn)">0</div><div class="mt">新设备提醒</div></div></div>
       </div>
       <div class="card" style="padding:14px 0 10px">
-        <div class="tabs" style="margin:2px 16px 6px"><button class="on" data-devt="all" onclick="switchDevTab('all')">全部 11</button><button data-devt="online" onclick="switchDevTab('online')">在线 9</button><button data-devt="offline" onclick="switchDevTab('offline')">未检测到 2</button></div>
+        <div class="tabs" style="margin:2px 16px 6px"><button class="on" data-devt="all" onclick="switchDevTab('all')">全部</button><button data-devt="online" onclick="switchDevTab('online')">在线</button><button data-devt="offline" onclick="switchDevTab('offline')">未检测到</button></div>
         <table class="table">
           <tr><th>设备</th><th>状态</th><th>操作</th></tr>
           <tbody id="devTbody">
@@ -919,32 +919,30 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div class="card">
         <h3>上网模式 <span class="sub">一键切换，自动完成底层配置</span></h3>
         <div class="modes" id="modeBox">
-          <button class="mode sel" data-mode="router" onclick="pickMode('router')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8a1 1 0 0 1-1 .8H5.6a1 1 0 0 1-1-.8z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M3 10v-1h18v1"/></svg> 主路由</div><div class="md">路由器拨号上网，全家设备都走它</div><span class="mt">当前使用</span></button>
+          <button class="mode" data-mode="router" onclick="pickMode('router')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8a1 1 0 0 1-1 .8H5.6a1 1 0 0 1-1-.8z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M3 10v-1h18v1"/></svg> 主路由</div><div class="md">路由器拨号上网，全家设备都走它</div><span class="mt">读取中</span></button>
           <button class="mode" data-mode="bypass" onclick="pickMode('bypass')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 8a4 4 0 1 1 8 0M12 12v6"/><circle cx="12" cy="8" r="1.2"/></svg> 旁路由</div><div class="md">主路由不动，它只做增强 / 分流</div><span class="mt">适合折腾</span></button>
           <button class="mode" data-mode="ap" onclick="pickMode('ap')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg> AP 桥接</div><div class="md">当无线 AP，由上级路由器分配 IP</div><span class="mt">适合当扩展</span></button>
         </div>
         <div style="margin-top:18px">
-          <div data-modeTitle style="font-size:13px;font-weight:700;margin-bottom:12px">上网配置 · 单臂路由</div>
-          <div id="modeFormBox">
-          <div class="field"><label>PPPoE 宽带账号</label><input type="text" value="023-88888888"></div>
+          <div data-modeTitle style="font-size:13px;font-weight:700;margin-bottom:12px">正在读取当前网络配置…</div>
+          <div id="modeFormBox"><div class="apps-empty">正在读取现有网络参数；未读取完成前不会显示可提交的配置表单。</div>
           <div class="field"><label>PPPoE 宽带密码</label><div class="pwd-wrap"><input type="text" data-pwd="1" value="········" onchange="done('宽带密码已更新')"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>
           <div class="field"><label>外网 VLAN（拨号）</label><input type="text" value="2044"></div>
           <div class="field"><label>内网回传 VLAN</label><input type="text" value="10"></div>
           <div class="field"><label>IPTV VLAN</label><input type="text" value="3066"></div>
           </div>
-          <button data-applyBtn class="btn primary" onclick="saveApply()">保存并应用</button>
+          <button data-applyBtn class="btn primary" onclick="saveApply()" style="display:none" disabled>保存并应用</button>
         </div>
       </div>
       <div class="card netband">
-        <span class="chip"><span class="k">上网方式</span><b>PPPoE</b></span>
-        <span class="chip"><span class="k">接口设备</span><b>wan.2044</b></span>
-        <span class="chip"><span class="k">协商速率</span><b>2.5Gbps</b></span>
-        <span class="chip"><span class="k">连接状态</span><span class="st st-on"></span><b>已连接</b></span>
+        <span class="chip"><span class="k">上网方式</span><b>读取中</b></span>
+        <span class="chip"><span class="k">接口设备</span><b>读取中</b></span>
+        <span class="chip"><span class="k">协商速率</span><b>读取中</b></span>
+        <span class="chip"><span class="k">连接状态</span><span class="st"></span><b>读取中</b></span>
       </div>
       <div class="card">
         <h3>网口状态 <span class="sub">LAN 口接入示意</span></h3>
-        <div class="port-grid" id="portBox">
-          <div class="port-card"><div class="pg"><i class="on"></i><i class="link"></i><i class="link"></i><i class="on"></i></div><div class="pn">WAN 2.5G</div><div class="ptag">已连接</div><div class="pd">PPPoE 拨号 · 1000M 全双工</div></div>
+        <div class="port-grid" id="portBox"><div class="apps-empty">正在读取物理网口链路状态…</div><div class="pn">WAN 2.5G</div><div class="ptag">已连接</div><div class="pd">PPPoE 拨号 · 1000M 全双工</div></div>
           <div class="port-card"><div class="pg"><i class="on"></i><i class="link"></i><i class="on"></i><i class="link"></i></div><div class="pn">LAN1</div><div class="ptag">已连接</div><div class="pd">内网 · 交换机上行</div></div>
           <div class="port-card"><div class="pg"><i class="on"></i><i class="on"></i><i class="link"></i><i class="on"></i></div><div class="pn">LAN2</div><div class="ptag">已连接</div><div class="pd">内网 · 小米电视</div></div>
           <div class="port-card"><div class="pg"><i></i><i></i><i></i><i></i></div><div class="pn">LAN3</div><div class="ptag">空闲</div><div class="pd">未接入设备</div></div>
@@ -963,7 +961,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="card">
           <h3>网速测试 <span class="sub">当前宽带实测</span></h3>
           <div class="field" style="margin-bottom:4px"><label>测速引擎</label><select id="speedNode" onchange="changeSpeedNode()"><option value="auto">自动（按运营商选源 + 信通院 iperf3）</option><option value="iperf3">中国信通院 iperf3</option><option value="mirrors">公共镜像多流（无 TLS）</option></select></div>
-          <div style="font-size:12px;color:var(--text3);margin:0 0 12px">重庆联通 · 单线程 · 预估延迟 11ms</div>
+          <div style="font-size:12px;color:var(--text3);margin:0 0 12px">测速完成后显示实际节点与延迟</div>
           <div style="display:flex;gap:40px;margin:12px 0 14px">
             <div><div style="font-size:12px;color:var(--text3)">下载</div><div style="font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--down)"><span data-speedDn>--</span><span style="font-size:13px;color:var(--text3);font-weight:500"> Mbps</span></div></div>
             <div><div style="font-size:12px;color:var(--text3)">上传</div><div style="font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--up)"><span data-speedUp>--</span><span style="font-size:13px;color:var(--text3);font-weight:500"> Mbps</span></div></div>
@@ -986,17 +984,17 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0">磁盘管理</h3><button class="btn sm" data-refreshDisk onclick="refreshDisks()">刷新</button></div>
         <div class="disk-row" data-disk="emmc">
           <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></div>
-          <div class="db"><div class="dn">内置存储 eMMC</div><div class="dm">mmcblk0 · ext4 · 已挂载</div>
-            <div class="disk-bar"><i style="width:58%"></i></div>
-            <div class="dv">已用 18.6 GB / 32 GB（58%）</div>
+          <div class="db"><div class="dn">正在识别内置存储…</div><div class="dm">等待后端检测</div>
+            <div class="disk-bar"><i style="width:0%"></i></div>
+            <div class="dv">读取中</div>
           </div>
           <button class="btn sm danger" disabled title="为保护系统存储，eMMC 格式化已禁用">格式化不可用</button>
         </div>
         <div class="disk-row" data-disk="usb">
           <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 21h16"/></svg></div>
-          <div class="db"><div class="dn">USB 3.0 移动硬盘</div><div class="dm">sda1 · exfat · 已挂载 /mnt/usb</div>
-            <div class="disk-bar"><i style="width:36%;background:linear-gradient(90deg,var(--warn),var(--warn))"></i></div>
-            <div class="dv">已用 365 GB / 1 TB（36%）</div>
+          <div class="db"><div class="dn">USB 3.0 外接存储</div><div class="dm">正在检测连接状态</div>
+            <div class="disk-bar"><i style="width:0%;background:linear-gradient(90deg,var(--warn),var(--warn))"></i></div>
+            <div class="dv">等待检测</div>
           </div>
           <span class="disk-ops"><button class="btn sm" onclick="umountUsb()">卸载</button>
           <button class="btn sm danger" onclick="fmtDisk('usb')">格式化</button></span>
@@ -1010,7 +1008,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <div style="flex:1;min-width:200px"><div class="ct">网页文件管理</div><div style="font-size:12px;color:var(--text3);margin-top:5px">手机 / 电脑浏览器打开一个网页，就能上传、下载、播放文件</div></div>
           <button class="btn primary" onclick="openFbModal()">打开文件共享</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">filebrowser 运行中 · 端口 8081</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">文件共享状态待检测 · LAN 端口 8081</div>
       </div>
     </div>
   </div>
@@ -1052,7 +1050,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="card">
           <h3>三色状态灯 <span class="sub">内核 GPIO 实时状态</span></h3>
           <div class="info-row"><span><span class="led-dot" style="background:#dc2626"></span>红色（故障 / 启动）</span><span id="ledRed"><span class="tag gray">已熄灭</span></span></div>
-          <div class="info-row"><span><span class="led-dot" style="background:#16a34a"></span>绿色（运行中）</span><span id="ledGreen"><span class="tag green">已点亮</span></span></div>
+          <div class="info-row"><span><span class="led-dot" style="background:#16a34a"></span>绿色（运行中）</span><span id="ledGreen"><span class="tag gray">读取中</span></span></div>
           <div class="info-row"><span><span class="led-dot" style="background:#378ADD"></span>蓝色（启动引导）</span><span id="ledBlue"><span class="tag gray">已熄灭</span></span></div>
           <div class="check-row"><span>呼吸灯（绿色心跳）</span><span class="flex"></span><div class="switch on" data-k="breath" onclick="toggleBreath()"></div></div>
         </div>
@@ -1075,7 +1073,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <div class="grid">
       <div class="card">
         <h3>固件信息</h3>
-        <div class="info-row"><span>固件版本</span><span style="font-weight:600" id="fwVer">v1.2.39</span></div>
+        <div class="info-row"><span>固件版本</span><span style="font-weight:600" id="fwVer">v1.2.61</span></div>
         <div class="info-row"><span>硬件</span><span style="font-weight:600">JDCloud RE-CS-02 · IPQ6018</span></div>
         <div class="info-row"><span>内核</span><span style="font-weight:600" id="fwKernel">Linux 6.18.55</span></div>
         <div class="info-row"><span>运行时长</span><span style="font-weight:600" id="fwUptime">2 天 14 小时</span></div>
@@ -1092,7 +1090,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>备份与恢复</h3>
         <div class="info-row"><span>立即备份配置</span><button class="btn sm" onclick="backupNow()">备份</button></div>
         <div class="info-row"><span>从备份恢复</span><button class="btn sm" onclick="openRestore()">恢复</button></div>
-        <div class="info-row"><span>自动备份 <span data-autoBackupDesc style="color:var(--text3);font-size:12px">每天 04:30 · 保留 10 份</span></span><span style="display:flex;align-items:center;gap:10px"><div class="switch on" data-k="autoBackup" onclick="toggleAutoBackup()"></div><button class="btn sm" onclick="openAutoBackupModal()">设置</button></span></div>
+        <div class="info-row"><span>自动备份 <span data-autoBackupDesc style="color:var(--text3);font-size:12px">正在读取备份计划</span></span><span style="display:flex;align-items:center;gap:10px"><div class="switch" data-k="autoBackup" onclick="toggleAutoBackup()"></div><button class="btn sm" onclick="openAutoBackupModal()">设置</button></span></div>
         <div class="info-row"><span>备份列表</span><button class="btn sm" onclick="openBackupList()">查看（<span id="bkCount">0</span>）</button></div>
         <div style="font-size:12px;color:var(--text3);margin-top:8px">备份包含网络 / 无线 / 防火墙 / 插件等全部配置，不含磁盘数据。</div>
       </div>
@@ -1125,8 +1123,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>运行中的服务 <span class="sub">第三方应用服务</span></h3>
-        <div id="svcBox">
-        <div class="svc-row" data-svc="agh"><div class="svc-info" onclick="openSvcWin('agh')"><div class="svc-name">AdGuard Home</div><div class="svc-desc">DNS 广告过滤</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('agh')">打开</button><button class="btn sm danger" onclick="svcAct('agh','toggle')">停止</button><button class="btn sm" onclick="svcAct('agh','restart')">重启</button></div>
+        <div id="svcBox"><div class="apps-empty">正在读取第三方服务状态…</div><div class="svc-desc">DNS 广告过滤</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('agh')">打开</button><button class="btn sm danger" onclick="svcAct('agh','toggle')">停止</button><button class="btn sm" onclick="svcAct('agh','restart')">重启</button></div>
         <div class="svc-row" data-svc="clash"><div class="svc-info" onclick="openSvcWin('clash')"><div class="svc-name">OpenClash</div><div class="svc-desc">代理分流</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('clash')">打开</button><button class="btn sm danger" onclick="svcAct('clash','toggle')">停止</button><button class="btn sm" onclick="svcAct('clash','restart')">重启</button></div>
         <div class="svc-row" data-svc="fb"><div class="svc-info" onclick="openSvcWin('fb')"><div class="svc-name">filebrowser</div><div class="svc-desc">网页文件管理 · 端口 8081</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('fb')">打开</button><button class="btn sm danger" onclick="svcAct('fb','toggle')">停止</button></div>
         <div class="svc-row" data-svc="ddns"><div class="svc-info" onclick="openSvcWin('ddns')"><div class="svc-name">DDNS</div><div class="svc-desc">动态域名解析</div></div><span class="svc-status off">已停止</span><button class="btn sm primary" onclick="svcAct('ddns','toggle')">启动</button></div>
@@ -2211,7 +2208,7 @@ var _STORE_TOTAL=0,_STORE_USED=0,_STORE_NAME='',_STORE_IS_EXT=false;
 var WAN_PROTO='pppoe',WAN_USER='',WAN_PWD='',WAN_DEV='wan',WAN_IP='',WAN_VLAN='',INNER_VLAN='',IPTV_VLAN='',IPTV_PORT='lan4';
 var WAN_STATIC={ip:'',mask:'',gw:'',dns:''};
 var curMode='router',modeUserSet=false;
-var FIRMWARE_VER='v1.2.39',KERNEL_VER='',UPTIME_S=0,SYS_MODEL='JDCloud RE-CS-02 · IPQ6018';
+var FIRMWARE_VER='v1.2.61',KERNEL_VER='',UPTIME_S=0,SYS_MODEL='JDCloud RE-CS-02 · IPQ6018';
 var REBOOT_SCHED={enabled:false,hour:'03:30',dow:'*',loaded:false};
 var BACKUPS=[],AUTO_BACKUP=false,BACKUP_FREQ='daily',BACKUP_TIME='02:00',BACKUP_KEEP=3;
 var UI_MODE={mode:'last',last:'athena',loaded:false};
@@ -2520,7 +2517,7 @@ function updateNumbers(){
   var netMode=document.getElementById('netMode'); if(netMode) netMode.textContent=modeName;
   var netWan=document.getElementById('netWan'); if(netWan) netWan.textContent=protoName;
   var netIp=document.getElementById('netIp'); if(netIp) netIp.textContent=WAN_IP||'—';
-  var netFw=document.getElementById('netFw'); if(netFw) netFw.textContent=FIRMWARE_VER||'v1.2.39';
+  var netFw=document.getElementById('netFw'); if(netFw) netFw.textContent=FIRMWARE_VER||'v1.2.61';
   [['b24',0],['b52',1],['b58',2]].forEach(function(pr){
     var chip=document.querySelector('[data-bandchip="'+pr[0]+'"]'); var b=WIFI_BANDS[pr[1]];
     if(chip){ var st=chip.querySelector('.st'); var bEl=chip.querySelector('b');
@@ -2728,7 +2725,7 @@ function renderLedPanel(){
   var br=document.querySelector('[data-k="breath"]'); if(br) br.classList.toggle('on',LED.breathing);
 }
 function renderFirmware(){
-  var f1=document.getElementById('fwVer'); if(f1) f1.textContent=FIRMWARE_VER||'v1.2.39';
+  var f1=document.getElementById('fwVer'); if(f1) f1.textContent=FIRMWARE_VER||'v1.2.61';
   var f2=document.getElementById('fwKernel'); if(f2) f2.textContent=KERNEL_VER||'—';
   var f3=document.getElementById('fwUptime'); if(f3) f3.textContent=fmtDur(UPTIME_S);
   var f4=document.getElementById('fwTemp'); if(f4) f4.innerHTML=(temp>0?temp+'°C':'—')+' <span style="font-size:11px;color:var(--text3)">被动散热 · 正常</span>';
