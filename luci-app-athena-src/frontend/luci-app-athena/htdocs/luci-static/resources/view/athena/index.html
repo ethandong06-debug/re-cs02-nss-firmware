@@ -2705,7 +2705,7 @@ function svcRowHTML(s){
     +'<div class="svc-info" onclick="openSvcWin(\''+esc(s.id)+'\')"><div class="svc-name">'+esc(nm)+'</div><div class="svc-desc">'+esc(s.desc||'')+'</div></div>'
     +'<span class="svc-status '+(s.on?'on':'')+'">'+(s.on?'已启用':'未启用')+'</span>'
     +(s.toggle!==false?'<button class="btn sm '+(s.on?'danger':'primary')+'" onclick="svcAct(\''+esc(s.id)+'\',\'toggle\')">'+(s.on?'停止':'启动')+'</button>':'')
-    +(s.on&&s.toggle!==false?'<button class="btn sm" onclick="svcAct(\''+esc(s.id)+'\',\'restart\')">重启</button>':'')
+    +(s.on&&(s.toggle!==false||s.restart===true)?'<button class="btn sm" onclick="svcAct(\\''+esc(s.id)+'\\',\\'restart\\')">重启</button>':'')
     +(openable?'<button class="btn sm" onclick="openSvcPage(\''+esc(s.id)+'\')">打开</button>':'')
     +'</div>';
 }
@@ -3879,7 +3879,7 @@ window.openSvcWin=function(id){
   }else{
     inner='<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;background:var(--input-bg);border:1px solid var(--border);border-radius:10px">该服务既没有 LuCI 菜单，也没扫到监听端口，只能在此启动 / 停止 / 重启；需要看配置请进原生 LuCI 后台找对应插件</div>';
   }
-  openBkModal('<h3>'+esc(name)+'</h3><div class="m-sub" style="padding-bottom:10px">'+(desc?esc(desc)+' · ':'')+'当前状态：'+(on?'<span class="tag green">运行中</span>':'<span class="tag gray">已停止</span>')+'</div>'
+  openBkModal('<h3>'+esc(name)+'</h3><div class="m-sub" style="padding-bottom:10px">'+(desc?esc(desc)+' · ':'')+'当前状态：'+(on?'<span class="tag green">已启用</span>':'<span class="tag gray">未启用</span>')+'</div>'
     +inner
     +(toggle?'<div class="m-foot"><button class="btn '+(on?'danger':'primary')+'" onclick="svcAct(\''+id+'\',\'toggle\')">'+(on?'停止':'启动')+'</button><button class="btn" onclick="svcAct(\''+id+'\',\'restart\')">重启</button>'+(url?'<button class="btn" onclick="window.open(\''+url+'\',\'_blank\')">新窗口</button>':'')+'<button class="btn" onclick="closeModal()">关闭</button></div>'
        :'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button></div>'), true);
