@@ -127,10 +127,17 @@ case "$CMD" in
 		[ -s "$TMP" ] || { echo '{"ok":false,"msg":"未找到上传的备份内容（请重新选择备份文件）"}'; exit 1; }
 		OUT="/tmp/athena-restore.tar.gz"
 		base64 -d "$TMP" > "$OUT" 2>/dev/null
-		[ -s "$OUT" ] || { echo '{"ok":false,"msg":"备份内容解码失败"}'; exit 1; }
-		sysupgrade -r "$OUT" >/dev/null 2>&1
-		rm -f "$TMP" "$OUT" 2>/dev/null
-		echo '{"ok":true,"msg":"配置已恢复，设备即将重启"}'
+		[ -s "$OUT" ] || { rm -f "$TMP" "$OUT" 2>/dev/null; echo '{"ok":false,"msg":"备份内容解码失败"}'; exit 1; }
+		tar -tzf "$OUT" >/dev/null 2>&1 || { rm -f "$TMP" "$OUT" 2>/dev/null; echo '{"ok":false,"msg":"文件不是有效的 OpenWrt 配置备份（tar.gz）"}'; exit 1; }
+		if sysupgrade -r "$OUT" >/dev/null 2>&1; then
+			rm -f "$TMP" "$OUT" 2>/dev/null
+			echo '{"ok":true,"msg":"配置已恢复，设备即将重启"}'
+		else
+			rc=$?
+			rm -f "$TMP" "$OUT" 2>/dev/null
+			echo '{"ok":false,"msg":"sysupgrade 拒绝恢复该配置备份"}'
+			exit "$rc"
+		fi
 		;;
 	schedule)
 		case "${2:-get}" in
