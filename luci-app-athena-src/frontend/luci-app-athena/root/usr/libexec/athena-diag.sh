@@ -40,9 +40,9 @@ case "$CMD" in
 		;;
 	dns)
 		DOMAIN="${2:-www.qq.com}"; DNS="${3:-}"
-		case "$DOMAIN" in ''|*[!A-Za-z0-9.-]*) echo '{"ok":false,"msg":"域名格式无效"}'; exit 1 ;; esac
+		case "$DOMAIN" in ''|-*|*[!A-Za-z0-9.-]*) echo '{"ok":false,"msg":"域名格式无效"}'; exit 1 ;; esac
 		[ "${#DOMAIN}" -le 253 ] || { echo '{"ok":false,"msg":"域名长度无效"}'; exit 1; }
-		case "$DNS" in *[!A-Za-z0-9.:-]*) echo '{"ok":false,"msg":"DNS 地址格式无效"}'; exit 1 ;; esac
+		case "$DNS" in -*|*[!A-Za-z0-9.:-]*) echo '{"ok":false,"msg":"DNS 地址格式无效"}'; exit 1 ;; esac
 		if [ -n "$DNS" ]; then
 			out=$(nslookup "$DOMAIN" "$DNS" 2>/dev/null)
 		else
