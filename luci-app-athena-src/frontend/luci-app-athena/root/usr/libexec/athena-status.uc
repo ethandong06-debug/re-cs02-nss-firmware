@@ -397,8 +397,8 @@ function arp_list() {
 	return out;
 }
 let arp = arp_list();
-let arp_online = {};
-for (let a in arp) arp_online[a.mac] = true;
+let arp_seen = {};
+for (let a in arp) arp_seen[a.mac] = true;
 
 // 11.2.1 内核邻居表补充：STALE/DELAY/PROBE 仍代表近期存在的二层邻居，不只依赖 /proc/net/arp。
 let neigh_online = {};
@@ -485,7 +485,7 @@ for (let line in split(lease_txt, '\n')) {
 	let ip = f[2];
 	let host = (f[3] == '*') ? '' : f[3];
 	if (mac == '') continue;
-	let online = wifi_online[mac] || arp_online[mac] || neigh_online[mac] ? true : false;
+	let online = wifi_online[mac] || neigh_online[mac] ? true : false;
 	let ds = devstate(mac, online ? 1 : 0);
 	let band = band_map[mac];
 	if (band == null || band == '') band = '有线';
