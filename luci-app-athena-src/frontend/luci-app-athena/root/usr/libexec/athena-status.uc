@@ -412,9 +412,17 @@ for (let line in split(neigh_txt, '\n')) {
 	let state = st[length(st) - 1];
 	if (state != 'REACHABLE' && state != 'STALE' && state != 'DELAY' && state != 'PROBE' && state != 'PERMANENT' && state != 'NOARP') continue;
 	let mac = lower_hex(mm[1]);
-	if (mac != '00:00:00:00:00:00') neigh_online[mac] = true;
+	if (mac == '00:00:00:00:00:00') continue;
+	neigh_online[mac] = true;
+	// 补充 IPv6 SLAAC 设备：只采集内网桥上的全局 IPv6 邻居，不把 WAN 邻居或 link-local 地址当作终端。
+	let ipaddr = st[0], dev = '';
+	for (let i = 0; i < length(st) - 1; i++) if (st[i] == 'dev' && i + 1 < length(st)) dev = st[i + 1];
+	if ((dev == 'br-lan' || dev == 'br-guest' || dev == 'br-iptv') && index(ipaddr, ':') >= 0 && substr(ipaddr, 0, 4) != 'fe80') {
+		let exists = false;
+		for (let item in arp) if (item.mac == mac) { exists = true; break; }
+		if (!exists) push(arp, { ip: ipaddr, mac: mac, host: '' });
+	}
 }
-
 // 11.3 在线时长状态文件（tmpfs，重启清空）
 let dev_old = {};
 for (let line in split(rd(DEVSTATE), '\n')) {
