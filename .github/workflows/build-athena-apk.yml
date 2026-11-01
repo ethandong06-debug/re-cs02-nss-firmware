@@ -111,7 +111,7 @@ jobs:
             echo "::error::Missing repository secret ATHENAWRT_APK_SIGNING_KEY"
             exit 1
           fi
-          printf '%s\\n' "$ATHENAWRT_APK_SIGNING_KEY" > immortalwrt/private-key.pem
+          printf '%s\n' "$ATHENAWRT_APK_SIGNING_KEY" > immortalwrt/private-key.pem
           chmod 600 immortalwrt/private-key.pem
           openssl pkey -in immortalwrt/private-key.pem -check -noout
           openssl pkey -in immortalwrt/private-key.pem -pubout -out immortalwrt/public-key.pem
