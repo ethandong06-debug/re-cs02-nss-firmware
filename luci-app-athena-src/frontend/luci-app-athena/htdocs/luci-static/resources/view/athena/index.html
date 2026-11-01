@@ -669,6 +669,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <span><i style="background:var(--down)"></i>下载</span>
           <span><i style="background:var(--up)"></i>上传</span>
           <span>峰值 <b id="pkTxt" style="color:var(--text2)">—</b></span>
+          <span id="rateState" style="font-size:11px;color:var(--text3)">等待采样</span>
         </div>
       </div>
       <div class="speed-main">
@@ -2883,24 +2884,42 @@ async function loadStatus(silent){
 }
 /* 实时网速：athena-status.sh rate（只读 /proc，约 10ms）→ 2 秒一个采样点，1 点即 2 秒真实速率。
    不要并进 15 秒轮询：那个 delta 窗口就是 15 秒，1900M 的测速会被摊成 900 多，而且屏幕永远慢一拍。 */
-var _rateTimer=null,_rateBusy=false;
+var _rateTimer=null,_rateBusy=false,_rateErrors=0;
 async function loadRate(){
   if(document.hidden||_rateBusy) return;
   _rateBusy=true;
+  var state=document.getElementById('rateState');
   try{
     var d=await athenaRPC.exec('athena-status.sh',['rate']);
-    if(d&&d.ok!==false){
-      var rd=parseFloat(d.rx_mbps||0)||0, ru=parseFloat(d.tx_mbps||0)||0;
-      pushSpark(rd,ru);
-      /* v1.2.59：大数字改近 10 秒（5 点）中值滤波。
-         /proc/net/dev 在 NSS/ECM 硬件卸载下会攒批 flush，单点 2 秒采样会接到 flush 尖峰（实测 7503），
-         中值直接剔掉单点突刺，与 Ookla 平均口径对齐；曲线和峰值仍画原始采样。 */
-      function medLast(arr){ var w=arr.slice(Math.max(0,arr.length-5)).slice().sort(function(a,b){return a-b;}); var n=w.length; return n?(n%2?w[(n-1)/2]:(w[n/2-1]+w[n/2])/2):0; }
-      down=medLast(_sparkDn); up=medLast(_sparkUp);
-      updateNumbers();
+    if(!d||d.ok===false) throw new Error((d&&d.msg)||'采样接口未返回有效数据');
+    _rateErrors=0;
+    var rd=parseFloat(d.rx_mbps||0), ru=parseFloat(d.tx_mbps||0);
+    if(!isFinite(rd)||rd<0) rd=0;
+    if(!isFinite(ru)||ru<0) ru=0;
+    pushSpark(rd,ru);
+    /* 10 秒中值滤波抑制 NSS/ECM 批量 flush 造成的单点尖峰；曲线保留原始采样。 */
+    function medLast(arr){
+      var w=arr.slice(Math.max(0,arr.length-5)).slice().sort(function(a,b){return a-b;});
+      var n=w.length;
+      return n?(n%2?w[(n-1)/2]:(w[n/2-1]+w[n/2])/2):0;
     }
-  }catch(e){}
-  _rateBusy=false;
+    down=medLast(_sparkDn); up=medLast(_sparkUp);
+    updateNumbers();
+    if(state){
+      state.textContent=d.primed?'正在建立采样基准':(d.if?('实时采样 · '+d.if):'未检测到流量接口');
+      state.style.color='var(--text3)';
+      state.title='约每 2 秒读取一次接口累计字节数';
+    }
+  }catch(e){
+    _rateErrors++;
+    if(state){
+      state.textContent=_rateErrors>=3?'采样异常':'采样暂时中断';
+      state.style.color='var(--warn)';
+      state.title=(e&&e.message)||'实时网速采样失败';
+    }
+  }finally{
+    _rateBusy=false;
+  }
 }
 async function loadClients(){
   try{
