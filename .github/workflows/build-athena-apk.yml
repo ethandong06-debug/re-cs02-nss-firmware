@@ -118,6 +118,8 @@ jobs:
           openssl pkey -pubin -in /tmp/athena-public-key.pem -text -noout | grep -q 'prime256v1'
           install -m 0600 /tmp/athena-private-key.pem immortalwrt/private-key.pem
           install -m 0644 /tmp/athena-public-key.pem immortalwrt/public-key.pem
+          install -d luci-app-athena-src/frontend/luci-app-athena/root/etc/apk/keys
+          install -m 0644 /tmp/athena-public-key.pem luci-app-athena-src/frontend/luci-app-athena/root/etc/apk/keys/athenawrt-build-signing.pem
           sha256sum /tmp/athena-public-key.pem | tee /tmp/athena-public-key.sha256
 
       - name: Prepare package-only build
