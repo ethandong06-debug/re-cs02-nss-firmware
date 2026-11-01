@@ -24,8 +24,9 @@ valid_usb_partition() {
 	return 0
 }
 is_mounted() {
-	grep -Fq " $1 " /proc/mounts 2>/dev/null && return 0
-	grep -Fq "$1 " /proc/swaps 2>/dev/null && return 0
+	local dev="$1"
+	awk -v dev="$dev" '$1 == dev { found=1 } END { exit !found }' /proc/mounts 2>/dev/null && return 0
+	awk -v dev="$dev" 'NR > 1 && $1 == dev { found=1 } END { exit !found }' /proc/swaps 2>/dev/null && return 0
 	return 1
 }
 is_system_partition() {
