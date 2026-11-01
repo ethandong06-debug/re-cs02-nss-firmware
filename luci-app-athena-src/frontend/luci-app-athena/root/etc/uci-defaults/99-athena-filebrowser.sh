@@ -7,7 +7,7 @@
 
 uci -q set filebrowser.filebrowser=filebrowser
 uci -q set filebrowser.filebrowser.port='8081'
-uci -q set filebrowser.filebrowser.root_dir='/mnt'
+uci -q set filebrowser.filebrowser.root_dir='/mnt/usb'
 uci -q commit filebrowser
 
 exit 0
