@@ -39,9 +39,10 @@ prog_show() { cat "$PROG_FILE" 2>/dev/null; }
 # ---- 备份当前网络配置 ----
 backup() {
 	mkdir -p "$BACKUP_DIR"
-	uci export network > "$BACKUP_DIR/network.$TS.uci" 2>/dev/null
-	uci export wireless > "$BACKUP_DIR/wireless.$TS.uci" 2>/dev/null
-	log "已备份网络配置到 $BACKUP_DIR/network.$TS.uci"
+	for cfg in network wireless dhcp firewall athena; do
+		uci export "$cfg" > "$BACKUP_DIR/$cfg.$TS.uci" 2>/dev/null
+	done
+	log "已备份 network/wireless/dhcp/firewall/athena 配置，备份标识：$TS"
 }
 
 # ---- 定位 br-lan 的 device 段（config_generate 生成的匿名段，name='br-lan'）----
@@ -540,9 +541,12 @@ case "$MODE" in
 			[ "${9:-lan4}" = "lan4" ] || { echo '{"ok":false,"msg":"当前网桥布局仅支持 lan4 作为 IPTV 透传口"}'; exit 1; }
 		fi
 		(
-			# 后台执行完整配置：备份 → 配置 → 提交 → 重启
+			# 保留原始 VLAN 参数，供重载后的真实链路自检使用。
+			inner_vlan="${2:-1}"
+			wan_vlan="${3:-2044}"
+			iptv_vlan="${4:-3066}"
 			backup
-			pstep "网络配置已备份（可回滚）"
+			pstep "网络及相关配置已备份（可回滚）"
 			# 去掉 single-bg 前缀，让 config_single 的 $2..$9 对齐 <inner> <wan> <iptv> [proto] [user] [pass] [nss] [port]
 			shift 1
 			config_single single "$@"
@@ -557,27 +561,38 @@ case "$MODE" in
 			uci commit firewall 2>/dev/null
 			uci -q set athena.system.mode='single'
 			uci commit athena 2>/dev/null
-			pstep "配置已提交，正在重载网络并等待自检…"
+			pstep "配置已提交，正在重载网络并检查 VLAN 链路…"
 			( sleep 1; /etc/init.d/network restart >/dev/null 2>&1 || wifi reload >/dev/null 2>&1 ) &
-			# 只有网络重载后的自检通过才报告完成；失败时先回滚并明确报告结果。
-			( sleep 8
-			  if ! ip -4 addr show dev br-lan 2>/dev/null | grep -q '192.168.10.1'; then
-			    echo "自检失败：br-lan 未获得管理 IP（192.168.10.1），正在自动回滚…" >> "$PROG_FILE"
-			    latest=$(ls -t "$BACKUP_DIR"/network.*.uci 2>/dev/null | head -1)
-			    if [ -n "$latest" ]; then
-			      uci import network < "$latest" 2>/dev/null
-			      uci commit network 2>/dev/null
-			      uci -q set athena.system.mode='router'
-			      uci commit athena 2>/dev/null
-			      /etc/init.d/network restart >/dev/null 2>&1
-			      echo "已自动回滚至备份：$(basename "$latest")" >> "$PROG_FILE"
-			    else
-			      echo "无备份可回滚！请手动检查网络配置或恢复出厂" >> "$PROG_FILE"
-			    fi
-		  else
-			    echo "自检通过：br-lan 管理 IP 正常" >> "$PROG_FILE"
-			    echo "完成：单臂路由配置已通过自检" >> "$PROG_FILE"
-		  fi ) &
+			# 最多等待 15 秒：管理地址、内网回传 VLAN、拨号 VLAN，以及启用时的 IPTV VLAN 均须实际出现。
+			tries=0
+			check_ok=0
+			while [ "$tries" -lt 15 ]; do
+				if ip -4 -o addr show dev br-lan 2>/dev/null | grep -q '192.168.10.1/24' \
+					&& ip link show dev "wan.$inner_vlan" >/dev/null 2>&1 \
+					&& ip link show dev "wan.$wan_vlan" >/dev/null 2>&1; then
+					case "$iptv_vlan" in
+						off|none|OFF|NONE|"关闭"|"无"|"") check_ok=1 ;;
+						*) ip link show dev "wan.$iptv_vlan" >/dev/null 2>&1 && ip link show dev br-iptv >/dev/null 2>&1 && check_ok=1 ;;
+					esac
+				fi
+				[ "$check_ok" -eq 1 ] && break
+				sleep 1
+				tries=$((tries + 1))
+			done
+			if [ "$check_ok" -ne 1 ]; then
+				echo "自检失败：管理地址或 VLAN 链路未按预期出现，正在自动回滚…" >> "$PROG_FILE"
+				latest_ts="$TS"
+				for cfg in network wireless dhcp firewall athena; do
+					backup_file="$BACKUP_DIR/$cfg.$latest_ts.uci"
+					if [ -s "$backup_file" ]; then uci import "$cfg" < "$backup_file" 2>/dev/null; fi
+				done
+				for cfg in network wireless dhcp firewall athena; do uci commit "$cfg" 2>/dev/null; done
+				/etc/init.d/network restart >/dev/null 2>&1
+				echo "已自动回滚 network/wireless/dhcp/firewall/athena 配置：$latest_ts" >> "$PROG_FILE"
+			else
+				echo "自检通过：管理地址、内网 VLAN、拨号 VLAN及 IPTV VLAN（如启用）均已出现" >> "$PROG_FILE"
+				echo "完成：单臂路由配置已通过自检" >> "$PROG_FILE"
+			fi
 		) &
 		echo '{"ok":true,"async":true,"progress":"'$PROG_FILE'"}'
 		exit 0
