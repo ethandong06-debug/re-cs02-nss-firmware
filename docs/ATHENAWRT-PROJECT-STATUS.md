@@ -36,33 +36,49 @@
 - Athena APK 源码目录：`luci-app-athena-src/frontend/luci-app-athena/`
 - 构建工作流：`.github/workflows/build-athena-apk.yml`
 
-## 4. 固定 APK 签名迁移（已暂停）
+## 4. APK 1.2.60 签名故障定位与处理
 
-### 用户决定
+### 已有成功构建（不是待构建状态）
 
-用户于 2026-11-01 明确决定不继续 Codespaces 固定密钥初始化流程，恢复原有 APK 构建流程。
+- 分支：`athenawrt/phase1-p0-fixes`
+- 源码提交：`ed69ea935030f37bf0916ac9653bf5bbfd878db2`
+- Actions run：`41304711196`（run #23，结论 success）
+- Artifact：`luci-app-athena-apk`，artifact ID `13084243143`，有效期至 2026-11-15。
+- APK：`luci-app-athena-1.2.60-r1.apk`，14,683,961 bytes。
+- SHA-256：`99b2d52d8d7faa8fd41e11f258d5fb08306793dacb89170f0d83809ed7b7bdf4`。
+- 用户已确认路由器 `/tmp/upload.apk` 的 SHA-256 与构建产物一致；当前安装版本仍是 `1.2.59-r1`，中文语言包仍安装。
 
-### 已完成
+### 已确认的签名根因
 
-- 曾创建分支 `athenawrt/apk-fixed-signing` 并尝试改造构建工作流以读取固定签名 Secret。
-- 用户取消固定密钥方案后，已将该分支的 `.github/workflows/build-athena-apk.yml` 恢复为原始基线分支 `athenawrt/phase1-p0-fixes` 的工作流内容。
-- 恢复提交：`c71585b688e3e5b66bdf2acc27f52176831f6fbf`。
-- 恢复后的工作流 Blob SHA：`7cb91ae35f6ef89fadd8af62071f6989acb1d40a`，与原始基线工作流 Blob SHA 完全一致。
-- 恢复后的工作流不再读取 `ATHENAWRT_APK_SIGNING_KEY`，不要求 Codespaces，也不执行固定公钥导出步骤。
+- 已下载并检查原始 Actions Artifact 和 `athena-package-build.log`。
+- 构建日志显示 ImmortalWrt 在 Actions runner 上生成临时 ECDSA P-256 私钥：`immortalwrt/private-key.pem`。
+- 同一构建随后从私钥导出 `immortalwrt/public-key.pem`。
+- `luci-app-athena-1.2.60-r1.apk` 的 `apk mkpkg` 命令明确使用该临时私钥签名。
+- 原始 Artifact 未包含 `public-key.pem`，也没有保存私钥；Actions runner 已结束。因此路由器现有三个公钥不能验证该 APK，出现 `UNTRUSTED signature`。
+- 这不是 APK 传输损坏：路由器端文件哈希与 Artifact 内 APK 哈希一致。
+- 旧 APK 对应的公钥目前未从原始 Artifact/日志中取回。不得伪称已有对应公钥，也不得用 `--allow-untrusted` 绕过校验。
 
-### 明确未完成
+### 当前修复
 
-- 尚未触发 GitHub Actions 构建。
-- 尚未生成或验证新的 APK。
-- 尚未检查 APK 的签名、版本、架构和依赖。
-- 尚未进行路由器端模拟升级或正式安装。
-- 不要声称固定签名密钥已创建；该方案已暂停。
+- 用户取消的是 Codespaces/固定私钥 Secret 方案；不重新引导用户配置 Secret。
+- 已在 `athenawrt/apk-fixed-signing` 分支更新构建工作流：成功构建后将本次构建的**公钥** `immortalwrt/public-key.pem` 复制为 `output/athenawrt-build-signing.pub` 并随 APK Artifact 上传；只导出公钥，不上传私钥。
+- 修复提交：`1f7fb302081c9c5d02116dd7d2f60a86270739b8`。
+- 源码页面未修改；此修复会重新执行 package-only 构建以产生一份带匹配公钥的 APK Artifact。它不是页面重写或整机固件构建。
+
+### 尚未完成
+
+- 尚未运行修复后的 workflow。
+- 尚未取得新 Artifact 中的匹配公钥与 APK。
+- 尚未把公钥安装到路由器或执行签名验证。
+- 尚未执行 APK 模拟升级或正式安装。
 
 ### 后续原则
 
-- 当前按用户决定使用恢复后的原有构建流程继续第一阶段验收。
-- 不要重新要求用户创建 Codespaces、生成密钥或配置 Repository Secret，除非用户以后主动重新提出固定签名需求。
-- 仍须遵守 APK 安装前的签名/包管理检查和模拟升级要求；不得绕过设备端现有信任校验。
+- 不创建 Codespaces，不生成或配置长期固定私钥 Secret。
+- 先取得同一次构建产出的 APK 与公钥，核对公钥格式、文件哈希，并在路由器验证 APK 签名。
+- 再做 APK 模拟升级，确认不会移除 `luci-i18n-athena-zh-cn` 或其他无关包。
+- 未经用户明确同意，不执行正式安装；不改 PPPoE、VLAN、IPv6、防火墙、OpenClash 或 NSS/ECM。
+
 ## 5. 构建工作流注意事项
 
 - 当前工作流定义了 `workflow_dispatch`。
@@ -81,10 +97,10 @@
 
 ## 7. 当前下一步
 
-1. 核对恢复后的工作流文件与基线一致。
-2. 通过 GitHub Actions 手动运行 `athenawrt/apk-fixed-signing` 分支的 `Build Athena LuCI APK`。
-3. 检查运行结果与 Artifact；构建成功后再审查 APK 版本、架构、依赖、签名和 SHA-256。
-4. 只有完成设备侧安全检查和模拟升级后，才向用户提出正式安装。
+1. 在 GitHub Actions 手动运行 `athenawrt/apk-fixed-signing` 分支的 `Build Athena LuCI APK`（该分支不在 push 触发列表中）。
+2. 确认 Artifact 同时包含 `luci-app-athena-*.apk` 与 `athenawrt-build-signing.pub`。
+3. 核验 APK 和公钥哈希、签名及包元数据；先把公钥安全导入路由器并验证 APK 签名。
+4. 执行模拟升级，确认中文语言包和其他无关包不会被移除；经用户明确同意后才正式安装。
 
 ## 8. 已取消的 Codespaces 方案
 
