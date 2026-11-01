@@ -3382,7 +3382,7 @@ window.doApply=function(){
         if(/完成：单臂路由配置已通过自检/.test(txt)){
           clearInterval(window._progTimer); window._progTimer=null;
           setTimeout(function(){ closeModal(); if(cfg.ok) cfg.ok(); },800);
-        } else if(/已自动回滚|无备份可回滚|配置失败，已中止/.test(txt)){
+        } else if(/已自动回滚|无备份可回滚|配置备份失败，已中止|配置失败，已中止/.test(txt)){
           clearInterval(window._progTimer); window._progTimer=null;
           toast('单臂配置未通过，请查看上方失败或回滚记录；未报告成功');
         }
