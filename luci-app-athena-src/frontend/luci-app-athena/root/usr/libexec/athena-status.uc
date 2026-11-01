@@ -536,7 +536,6 @@ if (mode == '') mode = 'router';
 
 // ---------- 13) WAN 配置回读 ----------
 let wan_user = ug(U_NET, 'network.wan.username', '');
-let wan_pwd = ug(U_NET, 'network.wan.password', '');
 let wan_proto = '';
 if (wan_user != '') {
 	wan_proto = 'pppoe';
