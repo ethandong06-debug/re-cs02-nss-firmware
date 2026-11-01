@@ -863,7 +863,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>WiFi 连不上了？一键恢复默认</h3>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">三个频段恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 密码 <b style="color:var(--text)">12345678</b>。密码错乱、连不上时点这里自愈。</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">三个频段恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 恢复后自动生成随机强密码并显示。密码错乱、连不上时点这里自愈。</div>
         <button class="btn primary" onclick="resetWifi()">恢复默认 WiFi</button>
       </div>
     </div>
@@ -1511,7 +1511,7 @@ var KPI_ITEMS=[
     var bwOpts={b2:'<option>20MHz</option><option selected>40MHz</option>',b5:'<option>20MHz</option><option selected>80MHz</option><option>160MHz</option>',b6:'<option>20MHz</option><option selected>80MHz</option><option>160MHz</option>'}[b];
     openModal("编辑 WiFi 配置",({b2:"2.4G",b5:"5.2G",b6:"5.8G"}[b])+" · 修改后保存即生效",
       '<div class="field"><label>WiFi 名称（SSID）</label><input id="ebSsid" type="text" value="'+x.ssid+'"></div>'
-      +'<div class="field"><label>密码（8-63 位）</label><div class="pwd-wrap"><input id="ebPwd" type="text" data-pwd="1" value="12345678"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>'
+      +'<div class="field"><label>密码（8-63 位）</label><div class="pwd-wrap"><input id="ebPwd" type="text" data-pwd="1" placeholder="请设置 8-63 位独立密码"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>'
       +'<div class="field"><label>加密方式</label><select id="ebEnc"><option>WPA3/WPA2</option><option>WPA2</option><option>开放（无加密）</option></select></div>'
       +'<div class="field"><label>信道（当前频段可选）</label><select id="ebCh">'+chOpts+'</select></div>'
       +'<div class="field"><label>频宽</label><select id="ebBw">'+bwOpts+'</select></div>'
@@ -1533,7 +1533,7 @@ var KPI_ITEMS=[
     closeModal(); showToast("已保存 "+( {b2:"2.4G",b5:"5.2G",b6:"5.8G"}[b] )+" 配置");
   };
   window.resetWifi=function(){
-    confirmAct("恢复默认 WiFi？","三个频段将恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 密码 12345678", "resetWifiDo");
+    confirmAct("恢复默认 WiFi？","三个频段将恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 恢复后自动生成随机强密码", "resetWifiDo");
   };
   window.resetWifiDo=function(){
     S.bands={b2:{on:true,ssid:"Athena-2.4G"},b5:{on:true,ssid:"Athena-5G"},b6:{on:true,ssid:"Athena-5G-Game"}};
@@ -3163,7 +3163,7 @@ function bandBwList(id){
 window.editBand=function(id){
   var b=WIFI_BANDS.find(function(x){return x.id===id;}); if(!b) return;
   var state=b.loaded?'已从设备读取真实配置':'正在读取设备配置…（未加载完前禁止保存）';
-  var pwdField=b.loaded&&b.enc!=='开放（无加密）'?'<div class="pwd-wrap"><input type="text" data-pwd="1" id="bandPwd" value="'+esc(b.pwd||'')+'"></div>':'<div class="pwd-wrap"><input type="text" data-pwd="1" id="bandPwd" placeholder="此频段当前无密码"></div>';
+  var pwdField=b.loaded&&b.enc!=='开放（无加密）'?'<div class="pwd-wrap"><input type="text" data-pwd="1" id="bandPwd" placeholder="留空表示不修改现有密码"></div>':'<div class="pwd-wrap"><input type="text" data-pwd="1" id="bandPwd" placeholder="此频段当前无密码"></div>';
   var chsRaw=b.chs||'', bwsRaw=b.bws||'';
   if(typeof chsRaw!=='string') chsRaw=Array.isArray(chsRaw)?chsRaw.join(','):'';
   if(typeof bwsRaw!=='string') bwsRaw=Array.isArray(bwsRaw)?bwsRaw.join(','):'';
@@ -3177,7 +3177,7 @@ window.editBand=function(id){
     +'<div class="limit-row"><div><label>WiFi 密码</label>'+pwdField+'</div></div>'
     +'<div class="limit-row"><div><label>加密方式</label><select id="bandEnc">'+WIFI_ENC.map(function(e){return '<option'+(e===b.enc?' selected':'')+'>'+e+'</option>';}).join('')+'</select></div><div><label>信道</label><select id="bandCh">'+chOpts+'</select></div></div>'
     +'<div class="limit-row"><div><label>频宽</label><select id="bandBw">'+bwOpts+'</select></div><div></div></div>'
-    +'<div style="font-size:12px;color:var(--text3)">密码框显示设备当前真实密码，留空 = 不修改密码。保存后 WiFi 会短暂断开重连。</div>'
+    +'<div style="font-size:12px;color:var(--text3)">为保护密码，编辑时不回显现有密码；留空 = 保留当前密码。保存后 WiFi 会短暂断开重连。</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveBand(\''+b.id+'\')">保存</button></div>');
 };
 window.saveBand=function(id){
@@ -3200,8 +3200,8 @@ window.saveBand=function(id){
 window.openGuestModal=function(){
   openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，访客仅可上网</div>'
     +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" maxlength="32" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="12345678"></div></div>'
-    +'<div style="font-size:12px;color:var(--text3)">默认密码为 12345678，可在此修改。开启后访客无法访问内网设备。</div>'
+    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" placeholder="请设置 8-63 位独立密码"></div></div>'
+    +'<div style="font-size:12px;color:var(--text3)">请设置独立的访客 WiFi 密码，不再使用通用默认口令。开启后访客无法访问内网设备。</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
   try{ enhancePwds(document.querySelector('.mask.show')); }catch(e){}
 };
@@ -3220,10 +3220,18 @@ window.toggleGuest=function(){
   athenaRPC.exec('athena-wireless.sh',['guest','disable']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭访客网络'); GUEST.enabled=false; toast('访客网络已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.resetWifi=function(){
-  openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：<b>12345678</b><br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
+  openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：自动生成随机强密码并在恢复后显示<br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
 };
 window.doResetWireless=function(){
-  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复'); toast('已恢复默认，WiFi 重新广播中'); window.closeModal(); setTimeout(loadWireless,2500); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){
+    if(!d||d.ok!==true||!d.password) throw new Error((d&&d.msg)||'后端未返回新 WiFi 密码');
+    window.closeModal();
+    openBkModal('<h3>WiFi 已恢复</h3><div class="m-sub">三个频段已恢复默认名称与 WPA2-PSK。所有无线设备需要重新连接。</div>'
+      +'<div style="padding:12px 0;font-size:13px;color:var(--text2)">新密码：<b style="font-family:var(--font-num);color:var(--primary);word-break:break-all">'+d.password+'</b></div>'
+      +'<div class="m-sub">请保存此随机密码。为了安全，不再使用所有设备通用的固定默认密码。</div>'
+      +'<div class="m-foot"><button class="btn primary" onclick="closeModal()">知道了</button></div>');
+    setTimeout(loadWireless,2500);
+  }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
 };
 
 /* ---- 设备 ---- */
