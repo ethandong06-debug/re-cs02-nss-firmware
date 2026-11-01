@@ -261,7 +261,11 @@ config_single() {
 			exit 1
 		fi
 	done
-	case "$iptv_port" in lan1|lan2|lan3|lan4) ;; *) echo '{"ok":false,"msg":"IPTV 透传端口必须是 lan1-lan4"}'; exit 1 ;; esac
+	[ "$vlan_inner" != "$vlan_wan" ] || { echo '{"ok":false,"msg":"内网 VLAN 与拨号 VLAN 不能重复"}'; exit 1; }
+	if [ -n "$vlan_iptv" ]; then
+		[ "$vlan_iptv" != "$vlan_inner" ] && [ "$vlan_iptv" != "$vlan_wan" ] || { echo '{"ok":false,"msg":"IPTV VLAN 不能与内网或拨号 VLAN 重复"}'; exit 1; }
+		[ "$iptv_port" = "lan4" ] || { echo '{"ok":false,"msg":"当前网桥布局仅支持 lan4 作为 IPTV 透传口"}'; exit 1; }
+	fi
 	case "$nss" in on|off) ;; *) echo '{"ok":false,"msg":"NSS 参数必须是 on|off"}'; exit 1 ;; esac
 
 	# ---- 清理旧方案残留：bridge-vlan filtering 段、旧 wan.X 子接口、单臂专用接口 ----
@@ -530,6 +534,11 @@ case "$MODE" in
 				exit 1
 			fi
 		done
+		[ "${2:-1}" != "${3:-2044}" ] || { echo '{"ok":false,"msg":"内网 VLAN 与拨号 VLAN 不能重复"}'; exit 1; }
+		if [ -n "${4:-3066}" ] && [ "${4:-3066}" != "off" ] && [ "${4:-3066}" != "none" ]; then
+			[ "${4:-3066}" != "${2:-1}" ] && [ "${4:-3066}" != "${3:-2044}" ] || { echo '{"ok":false,"msg":"IPTV VLAN 不能与内网或拨号 VLAN 重复"}'; exit 1; }
+			[ "${10:-lan4}" = "lan4" ] || { echo '{"ok":false,"msg":"当前网桥布局仅支持 lan4 作为 IPTV 透传口"}'; exit 1; }
+		fi
 		(
 			# 后台执行完整配置：备份 → 配置 → 提交 → 重启
 			backup
@@ -548,12 +557,12 @@ case "$MODE" in
 			uci commit firewall 2>/dev/null
 			uci -q set athena.system.mode='single'
 			uci commit athena 2>/dev/null
-			pstep "配置已提交，网络重启生效中…"
-			# 应用后自检 + 失败自动回滚：8 秒后检查 br-lan 管理 IP，未恢复则从备份回滚并重启网络，
-			# 防止"WiFi 在但后台进不去"的锁死状态（hostapd 独立于 netifd，network 失败 WiFi 仍广播）
+			pstep "配置已提交，正在重载网络并等待自检…"
+			( sleep 1; /etc/init.d/network restart >/dev/null 2>&1 || wifi reload >/dev/null 2>&1 ) &
+			# 只有网络重载后的自检通过才报告完成；失败时先回滚并明确报告结果。
 			( sleep 8
 			  if ! ip -4 addr show dev br-lan 2>/dev/null | grep -q '192.168.10.1'; then
-			    echo "自检失败：br-lan 未获得管理 IP（192.168.10.1），自动回滚…" >> "$PROG_FILE"
+			    echo "自检失败：br-lan 未获得管理 IP（192.168.10.1），正在自动回滚…" >> "$PROG_FILE"
 			    latest=$(ls -t "$BACKUP_DIR"/network.*.uci 2>/dev/null | head -1)
 			    if [ -n "$latest" ]; then
 			      uci import network < "$latest" 2>/dev/null
@@ -565,10 +574,10 @@ case "$MODE" in
 			    else
 			      echo "无备份可回滚！请手动检查网络配置或恢复出厂" >> "$PROG_FILE"
 			    fi
-			  else
+		  else
 			    echo "自检通过：br-lan 管理 IP 正常" >> "$PROG_FILE"
-			  fi ) &
-			pstep "完成：单臂路由已生效"
+			    echo "完成：单臂路由配置已通过自检" >> "$PROG_FILE"
+		  fi ) &
 		) &
 		echo '{"ok":true,"async":true,"progress":"'$PROG_FILE'"}'
 		exit 0
