@@ -3371,7 +3371,13 @@ window.doApply=function(){
         steps=txt.split('\n').filter(function(s){return s&&s.trim();});
         var el=document.getElementById('progBox');
         if(el){ el.innerHTML=steps.map(function(s){ return '<div>'+(s.indexOf('完成')>=0||s.indexOf('已生效')>=0?'<span style="color:var(--ok)">✓</span> ':'<span style="color:var(--acc)">›</span> ')+esc(s)+'</div>'; }).join(''); el.scrollTop=el.scrollHeight; }
-        if(/完成|已生效/.test(txt)){ clearInterval(window._progTimer); window._progTimer=null; setTimeout(function(){ closeModal(); if(cfg.ok) cfg.ok(); },800); }
+        if(/完成：单臂路由配置已通过自检/.test(txt)){
+          clearInterval(window._progTimer); window._progTimer=null;
+          setTimeout(function(){ closeModal(); if(cfg.ok) cfg.ok(); },800);
+        } else if(/已自动回滚|无备份可回滚|配置失败，已中止/.test(txt)){
+          clearInterval(window._progTimer); window._progTimer=null;
+          toast('单臂配置未通过，请查看上方失败或回滚记录；未报告成功');
+        }
       }).catch(function(){});
     },600);
     athenaRPC.exec('athena-mode.sh',['single-bg'].concat(cfg.a.slice(1))).then(function(){ }).catch(function(e){ clearInterval(window._progTimer); window._progTimer=null; closeModal(); toast('应用失败：'+(e.message||'')); });
@@ -3504,8 +3510,7 @@ function setMatrix(key,val){
   }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 }
 window.openMatrixFull=function(){
-  if(!athenaRPC.live){ toast('登录后可用'); return; }
-  openSvcFrame('点阵屏完整管理','/admin/services/athena_led');
+  toast('独立的点阵屏完整管理页面尚未集成；当前页面已提供点阵屏与灯效设置');
 };
 function openSvcFrame(name,path){
   var src='/cgi-bin/luci'+(path.indexOf('/cgi-bin/luci')===0?path.slice(11):path);
@@ -3763,7 +3768,10 @@ window.doRestore=function(){
 window.toggleAutoBackup=function(){
   if(!athenaRPC.live){ toast('登录后可用'); return; }
   if(!AUTO_BACKUP){ window.openAutoBackupModal(); return; }
-  athenaRPC.exec('athena-backup.sh',['schedule','disable']).then(function(){ AUTO_BACKUP=false; toast('已关闭自动备份'); renderAutoBackup(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-backup.sh',['schedule','disable']).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭');
+    AUTO_BACKUP=false; toast('已关闭自动备份'); renderAutoBackup();
+  }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.openAutoBackupModal=function(){
   openBkModal('<h3>自动备份</h3><div class="m-sub">定期自动保存配置，设备异常时可快速恢复</div>'
