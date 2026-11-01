@@ -4117,6 +4117,22 @@ window.navGo=function(id,el){
   try{ if(_origNavGo) _origNavGo(id,el); }catch(e){}
   setTimeout(function(){ renderForPage(id); },120);
 };
+window.devNew=function(){
+  updateNewDevs();
+  if(!NEW_DEVS.length){ toast('目前没有待识别的新设备'); return; }
+  devTab='online';
+  renderDevTable();
+  var target=DEVS.find(function(d){return d.online&&NEW_DEVS.indexOf(d.mac)>=0;});
+  if(target){
+    var row=document.querySelector('[data-devrow="'+target.id+'"]');
+    if(row){
+      row.classList.add('tr-flash');
+      if(row.scrollIntoView) row.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(function(){row.classList.remove('tr-flash');},3200);
+    }
+  }
+  toast('发现 '+NEW_DEVS.length+' 台待识别的新设备');
+};
 window.athenaRPC=athenaRPC;
 })();
 </script>
