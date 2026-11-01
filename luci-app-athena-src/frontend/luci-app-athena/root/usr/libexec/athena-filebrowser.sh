@@ -37,7 +37,7 @@ case "$CMD" in
 				/etc/init.d/filebrowser start >/dev/null 2>&1 || { echo '{"ok":false,"msg":"文件共享启动失败，请确认 LAN 地址与服务状态"}'; exit 1; }
 				sleep 1
 			fi
-			if pidof filebrowser >/dev/null 2>&1; then RUNNING=true; else RUNNING=false; fi
+			if pidof filebrowser >/dev/null 2>&1; then RUNNING=true; else echo '{"ok":false,"msg":"文件共享进程未能启动，请检查服务日志"}'; exit 1; fi
 			printf '{"ok":true,"username":"root","password":"%s","running":%s,"root":"/mnt/usb"}\n' "$PASS" "$RUNNING"
 		fi
 		;;
