@@ -38,11 +38,13 @@ prog_show() { cat "$PROG_FILE" 2>/dev/null; }
 
 # ---- 备份当前网络配置 ----
 backup() {
-	mkdir -p "$BACKUP_DIR"
+	mkdir -p "$BACKUP_DIR" || return 1
 	for cfg in network wireless dhcp firewall athena; do
-		uci export "$cfg" > "$BACKUP_DIR/$cfg.$TS.uci" 2>/dev/null
+		uci export "$cfg" > "$BACKUP_DIR/$cfg.$TS.uci" 2>/dev/null || return 1
+		[ -s "$BACKUP_DIR/$cfg.$TS.uci" ] || return 1
 	done
 	log "已备份 network/wireless/dhcp/firewall/athena 配置，备份标识：$TS"
+	return 0
 }
 
 # ---- 定位 br-lan 的 device 段（config_generate 生成的匿名段，name='br-lan'）----
@@ -552,7 +554,10 @@ case "$MODE" in
 			inner_vlan="${2:-1}"
 			wan_vlan="${3:-2044}"
 			iptv_vlan="${4-3066}"
-			backup
+			if ! backup; then
+				pstep "配置备份失败，已中止（网络未变更）"
+				exit 1
+			fi
 			pstep "网络及相关配置已备份（可回滚）"
 			# 去掉 single-bg 前缀，让 config_single 的 $2..$9 对齐 <inner> <wan> <iptv> [proto] [user] [pass] [nss] [port]
 			shift 1
