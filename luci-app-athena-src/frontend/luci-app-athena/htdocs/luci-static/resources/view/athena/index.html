@@ -3163,7 +3163,7 @@ function bandBwList(id){
 window.editBand=function(id){
   var b=WIFI_BANDS.find(function(x){return x.id===id;}); if(!b) return;
   var state=b.loaded?'已从设备读取真实配置':'正在读取设备配置…（未加载完前禁止保存）';
-  var pwdField=b.loaded&&b.enc!=='开放（无加密）'?'<div class="pwd-wrap"><input type="text" data-pwd="1" id="bandPwd" placeholder="留空表示不修改现有密码"></div>':'<div class="pwd-wrap"><input type="text" data-pwd="1" id="bandPwd" placeholder="此频段当前无密码"></div>';
+  var pwdField=b.loaded&&b.enc!=='开放（无加密）'?'<div class="pwd-wrap"><input type="password" data-pwd="1" id="bandPwd" placeholder="留空表示不修改现有密码"></div>':'<div class="pwd-wrap"><input type="password" data-pwd="1" id="bandPwd" placeholder="此频段当前无密码"></div>';
   var chsRaw=b.chs||'', bwsRaw=b.bws||'';
   if(typeof chsRaw!=='string') chsRaw=Array.isArray(chsRaw)?chsRaw.join(','):'';
   if(typeof bwsRaw!=='string') bwsRaw=Array.isArray(bwsRaw)?bwsRaw.join(','):'';
@@ -3190,7 +3190,7 @@ window.saveBand=function(id){
   var ch=document.getElementById('bandCh').value;
   if(!ssid){ toast('WiFi 名称不能为空'); return; }
   if(enc==='开放（无加密）'&&pwd){ toast('开放网络不能设置密码，请选择加密方式'); return; }
-  if(enc!=='开放（无加密）'&&pwd&&pwd.length<8){ toast('密码至少 8 位'); return; }
+  if(enc!=='开放（无加密）'&&pwd&&(pwd.length<8||pwd.length>63)){ toast('密码必须为 8-63 位'); return; }
   athenaRPC.exec('athena-wireless.sh',['set',id,ssid,pwd,ch||'0',bw,enc]).then(function(d){
     if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认保存');
     b.ssid=ssid; if(pwd) b.pwd=pwd; b.enc=enc; b.bw=bw; b.ch=ch||b.ch; b.loaded=true;
