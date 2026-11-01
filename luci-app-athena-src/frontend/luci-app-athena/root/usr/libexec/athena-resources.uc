@@ -56,7 +56,7 @@ const RESULT_LOCK = '/var/run/athena-resources.lock';
 const RESULT_TTL = 2;
 
 function uptime_s() {
-	let m = match(try_readfile('/proc/uptime') ?? '', /^(\\d+)/);
+	let m = match(try_readfile('/proc/uptime') ?? '', /^(\d+)/);
 	return m ? int(m[1]) : 0;
 }
 
@@ -368,7 +368,7 @@ out += ']}';
 
 /* 原子写入快照；缓存失败不影响本次采集结果返回。 */
 try {
-	fs.writefile(RESULT_CACHE + '.tmp', out + '\\n');
+	fs.writefile(RESULT_CACHE + '.tmp', out + '\n');
 	fs.rename(RESULT_CACHE + '.tmp', RESULT_CACHE);
 	fs.writefile(RESULT_STAMP, '' + now_up);
 } catch (e) { }
