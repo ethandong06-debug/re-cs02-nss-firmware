@@ -401,7 +401,7 @@ let arp = arp_list();
 
 // 11.2.1 内核邻居表补充：REACHABLE/DELAY/PROBE 作为在线证据；STALE 仅用于发现设备，不直接判定在线。
 let neigh_online = {};
-let neigh_cmd = fs.popen('ip neigh show 2>/dev/null');
+let neigh_cmd = fs.popen('ip neigh show 2>/dev/null; ip -6 neigh show 2>/dev/null');
 let neigh_txt = neigh_cmd.read('all');
 neigh_cmd.close();
 for (let line in split(neigh_txt, '\n')) {
