@@ -69,7 +69,7 @@ let now = uptime_cs();
 let prev = fields(rd(CACHE));
 let p_cs = 0, p_prx = 0, p_ptx = 0, p_brx = 0, p_btx = 0, p_if = '';
 let p_prr = '0.0', p_ptr = '0.0', p_brr = '0.0', p_btr = '0.0';
-if (length(prev) >= 9) {
+if (length(prev) >= 10) {
 	p_cs = int(prev[0]); p_prx = +prev[1]; p_ptx = +prev[2];
 	p_brx = +prev[3]; p_btx = +prev[4]; p_if = prev[5];
 	if (p_if == 'none') p_if = '';
@@ -84,7 +84,7 @@ let B = (DEV[br] != null) ? DEV[br] : { rx: 0, tx: 0 };
 function log_line(s) {
 	let old = split(rd(LOG), '\n');
 	let kept = [];
-	for (let i = length(old) - LOG_KEEP; i < length(old); i++) {
+	for (let i = length(old) - LOG_KEEP + 1; i < length(old); i++) {
 		if (i >= 0) push(kept, old[i]);
 	}
 	push(kept, s);
