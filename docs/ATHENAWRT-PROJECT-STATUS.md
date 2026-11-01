@@ -1,7 +1,7 @@
 # AthenaWrt 项目状态与交接记录
 
 > 本文件是持续开发的项目事实来源。每次完成一个阶段后更新；新对话开始时先核对本文件与 GitHub 当前分支状态。
-> 最后更新：2026-11-01
+> 最后更新：2026-11-02
 
 ## 1. 项目与设备背景
 
@@ -65,12 +65,18 @@
 - 修复提交：`1f7fb302081c9c5d02116dd7d2f60a86270739b8`。
 - 源码页面未修改；此修复会重新执行 package-only 构建以产生一份带匹配公钥的 APK Artifact。它不是页面重写或整机固件构建。
 
-### 尚未完成
+### 修复后构建已完成（Run #24）
 
-- 尚未运行修复后的 workflow。
-- 尚未取得新 Artifact 中的匹配公钥与 APK。
-- 尚未把公钥安装到路由器或执行签名验证。
-- 尚未执行 APK 模拟升级或正式安装。
+- 构建提交：`192807f73cb9e1db164265027fa463d9ec4f6098`（`ci: run Athena APK build on recovery branch`）。
+- 后续分支 HEAD：`851c5b0dde17ec764a71017a9380ea80d2886fc5`（仅后续记录提交；本次构建对应源码/工作流提交仍为上项）。
+- Actions run：`41319061077`（run #24，event=push，结论 success），所有 13 个主要步骤均成功。
+- Artifact：`luci-app-athena-apk`，artifact ID `13090108299`，大小 14,685,069 bytes，创建于 2026-11-01，预计 2026-11-15 过期。
+- Artifact 内含 `luci-app-athena-1.2.60-r1.apk`（14,683,958 bytes）、`athenawrt-build-signing.pub`（178 bytes）、SHA256SUMS、构建日志及源码元数据。
+- APK SHA-256：`6b553a1f571bfa7335a705e713ebd12594434a4c7a466a3afdcd38d97e2434fc`。
+- 公钥文件 SHA-256：`a7961c8c7994823d983f922af84f834463fbd4f0a5e8e02ea635bbd0365e4b3c`。
+- 已用 OpenSSL 成功解析公钥：ECDSA P-256 / prime256v1，PEM 格式有效；未发现私钥被放入 Artifact。
+- 构建日志确认 `luci-app-athena` 版本 `1.2.60-r1`、架构 `noarch`，由本次 runner 的 `immortalwrt/private-key.pem` 签名；同一构建也生成了 `luci-i18n-athena-zh-cn`，但 Artifact 只上传主 APK 和匹配公钥。
+- 当前仍未在 Athena 路由器上导入该公钥、执行设备端 APK 签名验证或模拟升级；因此不能宣称设备端签名验收已通过。
 
 ### 后续原则
 
@@ -82,9 +88,9 @@
 ## 5. 构建工作流注意事项
 
 - 当前工作流定义了 `workflow_dispatch`。
-- 当前 `push` 触发分支列表是 `main` 与 `athenawrt/phase1-p0-fixes`，不包含 `athenawrt/apk-fixed-signing`。因此在新分支上应通过 GitHub Actions 的手动运行入口选择该分支，不要误以为向新分支 push 会自动触发。
-- 运行前必须确认 Repository Secret 已配置。
-- 不得在日志中输出私钥；不得把 Secret 写入 Artifact、缓存或构建日志。
+- 当前工作流 `push` 触发分支列表已包含 `main`、`athenawrt/phase1-p0-fixes` 与 `athenawrt/apk-fixed-signing`；Run #24 实际由该分支的 push 触发。
+- 本分支当前工作流不依赖长期固定签名 Secret；使用本次 runner 的临时密钥并仅导出公钥。
+- 不得在日志中输出私钥；不得把私钥写入 Artifact、缓存或构建日志。
 
 ## 6. 后续对话交接流程
 
@@ -97,10 +103,11 @@
 
 ## 7. 当前下一步
 
-1. 在 GitHub Actions 手动运行 `athenawrt/apk-fixed-signing` 分支的 `Build Athena LuCI APK`（该分支不在 push 触发列表中）。
-2. 确认 Artifact 同时包含 `luci-app-athena-*.apk` 与 `athenawrt-build-signing.pub`。
-3. 核验 APK 和公钥哈希、签名及包元数据；先把公钥安全导入路由器并验证 APK 签名。
-4. 执行模拟升级，确认中文语言包和其他无关包不会被移除；经用户明确同意后才正式安装。
+1. 将 Run #24 Artifact 中的 `athenawrt-build-signing.pub` 导入 Athena 的 APK 信任密钥目录（仅公钥）。
+2. 在路由器上用当前系统的 APK 工具验证 `luci-app-athena-1.2.60-r1.apk` 签名；若验证失败，停止，不绕过信任校验。
+3. 签名验证通过后执行模拟升级/依赖求解，重点确认不会卸载 `luci-i18n-athena-zh-cn`、LuCI 或其他无关软件包。
+4. 把模拟结果交由用户确认；未经用户明确同意，不执行正式安装。
+5. 安装验收完成后再进入前端审计/页面功能验收。
 
 ## 8. 已取消的 Codespaces 方案
 
