@@ -34,6 +34,7 @@ case "$CMD" in
 		MM=$(echo "$HHMM" | cut -d: -f2)
 		case "$HHMM" in [0-9][0-9]:[0-9][0-9]) ;; *) echo '{"ok":false,"msg":"时间格式应为 HH:MM"}'; exit 1 ;; esac
 		[ "$HH" -le 23 ] 2>/dev/null && [ "$MM" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"时间必须在 00:00-23:59"}'; exit 1; }
+		[ -n "$DOW" ] || { echo '{"ok":false,"msg":"星期值不能为空"}'; exit 1; }
 		case "$DOW" in
 			*) if [ "$DOW" != "*" ]; then
 				for d in $(echo "$DOW" | tr ',' ' '); do case "$d" in 0|1|2|3|4|5|6) ;; *) echo '{"ok":false,"msg":"星期值必须为 * 或 0-6"}'; exit 1 ;; esac; done
