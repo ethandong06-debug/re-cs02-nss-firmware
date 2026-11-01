@@ -388,17 +388,18 @@ function arp_list() {
 	let lines = split(rd('/proc/net/arp'), '\n');
 	for (let i = 1; i < length(lines); i++) {
 		let f = fields(lines[i]);
-		if (length(f) < 4) continue;
-		let ip = f[0], flags = f[2], mac = f[3];
+		if (length(f) < 6) continue;
+		let ip = f[0], flags = f[2], mac = f[3], dev = f[5];
 		if (mac == '' || mac == '00:00:00:00:00:00') continue;
 		if (flags == '0x0') continue;
+		if (dev != 'br-lan' && dev != 'br-guest' && dev != 'br-iptv') continue;
 		push(out, { ip: ip, mac: lower_hex(mac) });
 	}
 	return out;
 }
 let arp = arp_list();
 
-// 11.2.1 内核邻居表补充：STALE/DELAY/PROBE 仍代表近期存在的二层邻居，不只依赖 /proc/net/arp。
+// 11.2.1 内核邻居表补充：REACHABLE/DELAY/PROBE 作为在线证据；STALE 仅用于发现设备，不直接判定在线。
 let neigh_online = {};
 let neigh_cmd = fs.popen('ip neigh show 2>/dev/null');
 let neigh_txt = neigh_cmd.read('all');
