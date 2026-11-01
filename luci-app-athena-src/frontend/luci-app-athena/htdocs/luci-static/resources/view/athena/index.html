@@ -1317,8 +1317,8 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
 
   /* ===== 交互模拟层（预览稿：全部可点、可改、有反馈） ===== */
   S._devs=[
-    {n:"小米电视",t:"电视",ip:"192.168.10.100",band:"有线",online:true,new:true,blocked:false,mac:"A4:83:E7:11:22:33",parent:"每周一至五 21:00 – 07:00 断网"},
-    {n:"Jason iPhone",t:"手机",ip:"192.168.10.101",band:"无线 · 5.2G",online:true,new:false,blocked:false,mac:"7C:2E:0D:AA:BB:CC",parent:""},
+    {n:"示例电视",t:"电视",ip:"192.168.10.100",band:"有线",online:true,new:true,blocked:false,mac:"A4:83:E7:11:22:33",parent:"每周一至五 21:00 – 07:00 断网"},
+    {n:"示例手机",t:"手机",ip:"192.168.10.101",band:"无线 · 5.2G",online:true,new:false,blocked:false,mac:"7C:2E:0D:AA:BB:CC",parent:""},
     {n:"MacBook Pro",t:"电脑",ip:"192.168.10.102",band:"无线 · 5.8G",online:true,new:false,blocked:false,mac:"C4:85:08:12:34:56",parent:""},
     {n:"客厅摄像头",t:"安防",ip:"192.168.10.103",band:"无线 · 2.4G",online:true,new:false,blocked:false,mac:"5C:EA:1D:AB:CD:EF",parent:""},
     {n:"HP 打印机",t:"打印",ip:"192.168.10.105",band:"有线",online:false,new:false,blocked:false,mac:"54:40:36:77:88:99",parent:""},
@@ -1458,7 +1458,7 @@ var KPI_ITEMS=[
     switchDevTab("all");
     var row=document.querySelector('[data-devrow="0"]');
     if(row){ row.classList.add("tr-flash"); setTimeout(function(){ row.classList.remove("tr-flash"); },3200); }
-    showToast("新设备：小米电视（20 分钟前上线）");
+    showToast("新设备：示例电视（20 分钟前上线）");
   }
   window.editBand=function(b){
     var x=S.bands[b];
@@ -2554,6 +2554,7 @@ function renderDevTable(){
       +(bl?'<button class="btn sm" onclick="unblockDev('+d.id+')">解除拉黑</button>':(d.online?'<button class="btn sm danger" onclick="blockDev('+d.id+')">拉黑</button>':''))
       +'</td></tr>';
   }).join('')||'<tr><td colspan="3" style="text-align:center;color:var(--text3);padding:24px 0">'+(athenaRPC.live?'暂无接入设备':'设备列表由后端实时采集')+'</td></tr>';
+  var ge=document.getElementById('guardEmpty'); if(ge) ge.textContent=NEW_DEVS.length?'发现 '+NEW_DEVS.length+' 台待确认的新设备':'未发现待确认的新设备';
   var gb=document.getElementById('guardBox');
   if(gb){
     gb.innerHTML=NEW_DEVS.length?NEW_DEVS.map(function(mac){
