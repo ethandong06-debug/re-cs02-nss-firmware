@@ -2316,8 +2316,9 @@ function boot(){
   _safe(loadWireless,'wireless'); _safe(loadGuest,'guest'); _safe(loadDisks,'disks');
   _safe(loadMatrixAll,'matrix'); _safe(loadLed,'led');
   _safe(loadRebootStatus,'rebootStatus'); _safe(loadBackupList,'backupList'); _safe(loadParentRules,'parentRules');
-  _safe(function(){ loadStatus(true); },'status'); _safe(loadClients,'clients'); _safe(loadServices,'services');
-  _safe(loadResources,'resources'); _safe(loadPkgSummary,'pkgSummary'); _safe(loadActiveApps,'activeApps'); _safe(loadUnit,'unit');
+  _safe(function(){ loadStatus(true); },'status'); _safe(loadClients,'clients');
+  /* v1.2.59：服务、资源与软件包仅在进入高级页时按需加载，避免登录后集中扫描。 */
+  _safe(loadActiveApps,'activeApps'); _safe(loadUnit,'unit');
   setTimeout(function(){
     _safe(renderDevTable,'devTable'); _safe(renderNetPage,'netPage'); _safe(renderDisksRows,'disksRows');
     _safe(renderSvcBox,'svcBox'); _safe(renderResBox,'resBox'); _safe(renderPkgSummary,'pkgRender');
@@ -3070,18 +3071,25 @@ async function loadServices(){
     SERVICES=(d&&d.services)||[]; renderSvcBox();
   }catch(e){}
 }
+var _resourcesPromise=null;
 async function loadResources(){
-  try{
-    var d=await athenaRPC.exec('athena-resources.sh');
-    if(d){
-      _RES.cpu=d.cpu||null; _RES.memory=d.memory||null;
-      // 后端把 procs 输出在顶层（{"cpu":{},"memory":{},"procs":[]}），挂到 cpu/memory 上供 renderResBox/procAct 读取
-      var ps=(d&&d.procs)||[];
-      if(_RES.cpu) _RES.cpu.procs=ps; else _RES.cpu={procs:ps};
-      if(_RES.memory) _RES.memory.procs=ps; else _RES.memory={procs:ps};
-      renderResBox();
-    }
-  }catch(e){}
+  /* v1.2.59：同一时刻只允许一个资源采集 RPC；后端另有 2 秒快照缓存。 */
+  if(_resourcesPromise) return _resourcesPromise;
+  _resourcesPromise=(async function(){
+    try{
+      var d=await athenaRPC.exec('athena-resources.sh');
+      if(d){
+        _RES.cpu=d.cpu||null; _RES.memory=d.memory||null;
+        // 后端把 procs 输出在顶层（{"cpu":{},"memory":{},"procs":[]}），挂到 cpu/memory 上供 renderResBox/procAct 读取
+        var ps=(d&&d.procs)||[];
+        if(_RES.cpu) _RES.cpu.procs=ps; else _RES.cpu={procs:ps};
+        if(_RES.memory) _RES.memory.procs=ps; else _RES.memory={procs:ps};
+        renderResBox();
+      }
+    }catch(e){}
+  })();
+  try{ return await _resourcesPromise; }
+  finally{ _resourcesPromise=null; }
 }
 async function loadPkgSummary(){
   /* 高级页只需要"已安装多少个"这一个数字，绝不在这里拉可安装清单：
