@@ -2857,8 +2857,9 @@ function renderRebootSched(){
   if(b) b.textContent=REBOOT_SCHED.enabled?('已设置 '+REBOOT_SCHED.hour+'（每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[REBOOT_SCHED.dow]||'天')+'）'):'设置';
 }
 function renderAutoBackup(){
-  var d=document.querySelector('[data-autoBackupDesc]'); if(d) var freqLabel={daily:'每天',weekly:'每周',monthly:'每月'}[BACKUP_FREQ]||'定时';
-  d.textContent=AUTO_BACKUP?(freqLabel+' '+BACKUP_TIME+' · 保留 '+BACKUP_KEEP+' 份'):'未开启';
+  var freqLabel={daily:'每天',weekly:'每周',monthly:'每月'}[BACKUP_FREQ]||'定时';
+  var d=document.querySelector('[data-autoBackupDesc]');
+  if(d) d.textContent=AUTO_BACKUP?(freqLabel+' '+BACKUP_TIME+' · 保留 '+BACKUP_KEEP+' 份'):'未开启';
   var s=document.querySelector('[data-k="autoBackup"]'); if(s) s.classList.toggle('on',AUTO_BACKUP);
   var c=document.getElementById('bkCount'); if(c) c.textContent=BACKUPS.length;
 }
