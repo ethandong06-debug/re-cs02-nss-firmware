@@ -19,6 +19,10 @@ sync_index() {
 	[ -z "$LAST" ] && LAST=$(uci -q get athena.ui.last 2>/dev/null)
 	[ -z "$MODE" ] && MODE=last
 	[ -z "$LAST" ] && LAST=athena
+	case "$MODE" in athena|native|last) ;; *) MODE=last ;; esac
+	case "$LAST" in athena|native) ;; *) LAST=athena ;; esac
+	case "$MODE" in athena|native|last) ;; *) MODE=last ;; esac
+	case "$LAST" in athena|native) ;; *) LAST=athena ;; esac
 
 	case "$MODE" in
 		native) TARGET='/cgi-bin/luci/' ;;
