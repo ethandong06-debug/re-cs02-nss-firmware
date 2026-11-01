@@ -2,13 +2,18 @@
 # AthenaWrt 修改管理账号/密码
 # 用法: athena-passwd.sh <当前密码> <新密码> <同步SSH:0|1>
 # 输出单行 JSON；当前密码校验通过 sha256 对比 shadow，或比对 /etc/config/athena 暂存明文
-# 说明：真机首次启动 root 密码 = password（见 03_defaults / 99-athena-custom.sh）
+# 说明：管理与 SSH 共用 root shadow 密码；不设置或展示任何默认密码。
 
 CUR="${1:-}"; NEW="${2:-}"; SYNC="${3:-1}"
 
 [ -z "$CUR" ] && { echo '{"ok":false,"msg":"缺少当前密码"}'; exit 1; }
 [ -z "$NEW" ] && { echo '{"ok":false,"msg":"缺少新密码"}'; exit 1; }
 [ ${#NEW} -lt 8 ] && { echo '{"ok":false,"msg":"新密码至少 8 位"}'; exit 1; }
+[ ${#NEW} -gt 128 ] && { echo '{"ok":false,"msg":"新密码不能超过 128 位"}'; exit 1; }
+case "$NEW" in *:*) echo '{"ok":false,"msg":"新密码不能包含冒号"}'; exit 1 ;; esac
+case "$NEW" in *"
+"*|*""*) echo '{"ok":false,"msg":"新密码不能包含换行符"}'; exit 1 ;; esac
+case "$SYNC" in 0|1) ;; *) echo '{"ok":false,"msg":"SSH 同步参数无效"}'; exit 1 ;; esac
 
 # ---- 校验当前密码 ----
 check_cur() {
@@ -33,8 +38,8 @@ check_cur() {
 		[ -n "$test_hash" ] && [ "$test_hash" = "$hash" ] && return 0
 		return 1
 	fi
-	# 无 openssl：无法离线校验，信任已认证的 rpcd 会话（能调用本脚本即已 root 认证）
-	return 0
+	# 无 openssl 或 shadow 哈希算法不支持时，拒绝绕过当前密码校验。
+	return 1
 }
 
 if ! check_cur; then
@@ -56,6 +61,11 @@ if [ "$rc" -ne 0 ]; then
 	exit 1
 fi
 
-# ---- 同步 SSH 登录密码（dropbear 共用 shadow，无需额外操作）----
-echo "{\"ok\":true,\"msg\":\"管理密码已更新${SYNC:+\"，SSH 登录密码已同步\"}\"}"
+# ---- SSH 与管理界面共用 root shadow，无需单独同步 ----
+if [ "$SYNC" = "1" ]; then
+	MSG="管理密码已更新，SSH 登录密码已同步"
+else
+	MSG="管理密码已更新"
+fi
+echo "{\"ok\":true,\"msg\":\"$MSG\"}"
 exit 0
