@@ -3179,7 +3179,8 @@ window.saveBand=function(id){
   if(!ssid){ toast('WiFi 名称不能为空'); return; }
   if(enc==='开放（无加密）'&&pwd){ toast('开放网络不能设置密码，请选择加密方式'); return; }
   if(enc!=='开放（无加密）'&&pwd&&pwd.length<8){ toast('密码至少 8 位'); return; }
-  athenaRPC.exec('athena-wireless.sh',['set',id,ssid,pwd,ch||'0',bw,enc]).then(function(){
+  athenaRPC.exec('athena-wireless.sh',['set',id,ssid,pwd,ch||'0',bw,enc]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认保存');
     b.ssid=ssid; if(pwd) b.pwd=pwd; b.enc=enc; b.bw=bw; b.ch=ch||b.ch; b.loaded=true;
     window.closeModal(); toast('WiFi 配置已保存，设备重新连接'); renderWifiCards();
   }).catch(function(e){ toast('保存失败：'+(e.message||'')); });
@@ -3210,7 +3211,7 @@ window.resetWifi=function(){
   openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：<b>12345678</b><br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
 };
 window.doResetWireless=function(){
-  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(){ toast('已恢复默认，WiFi 重新广播中'); window.closeModal(); setTimeout(loadWireless,2500); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复'); toast('已恢复默认，WiFi 重新广播中'); window.closeModal(); setTimeout(loadWireless,2500); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
 };
 
 /* ---- 设备 ---- */
