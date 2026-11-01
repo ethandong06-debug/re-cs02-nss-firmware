@@ -109,7 +109,7 @@ emit_band() {
 		"$id" "$on" \
 		"$(printf '%s' "$ssid" | json_str)" "$(printf '%s' "$key" | json_str)" "$ch" "$(htmode2bw "$htmode")" "$(uci2enc "$enc")" "$chs" "$bws" \
 		"$([ "$disabled" = "1" ] && echo true || echo false)" \
-		"$([ "$real_up" = "false" ] && echo false || echo true)"
+		"$([ "$real_check" = true ] && [ "$real_up" != "true" ] && echo false || echo true)"
 }
 
 do_get() {
