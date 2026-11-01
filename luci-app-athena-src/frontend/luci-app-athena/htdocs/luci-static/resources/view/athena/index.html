@@ -2858,7 +2858,7 @@ function renderRebootSched(){
   if(b) b.textContent=REBOOT_SCHED.enabled?('已设置 '+REBOOT_SCHED.hour+'（'+day+'）'):'设置';
 }
 function renderAutoBackup(){
-  var freqLabel={daily:'每天',weekly:'每周',monthly:'每月'}[BACKUP_FREQ]||'定时';
+  var freqLabel={daily:'每天',weekly:'每周日',monthly:'每月'}[BACKUP_FREQ]||'定时';
   var d=document.querySelector('[data-autoBackupDesc]');
   if(d) d.textContent=AUTO_BACKUP?(freqLabel+' '+BACKUP_TIME+' · 保留 '+BACKUP_KEEP+' 份'):'未开启';
   var s=document.querySelector('[data-k="autoBackup"]'); if(s) s.classList.toggle('on',AUTO_BACKUP);
@@ -3783,7 +3783,7 @@ window.toggleAutoBackup=function(){
 };
 window.openAutoBackupModal=function(){
   openBkModal('<h3>自动备份</h3><div class="m-sub">定期自动保存配置，设备异常时可快速恢复</div>'
-    +'<div class="limit-row"><div><label>频率</label><select id="abFreq"><option value="daily"'+(BACKUP_FREQ==='daily'?' selected':'')+'>每天</option><option value="weekly"'+(BACKUP_FREQ==='weekly'?' selected':'')+'>每周</option><option value="monthly"'+(BACKUP_FREQ==='monthly'?' selected':'')+'>每月</option></select></div><div><label>时间</label><input type="time" id="abTime" value="'+BACKUP_TIME+'"></div></div>'
+    +'<div class="limit-row"><div><label>频率</label><select id="abFreq"><option value="daily"'+(BACKUP_FREQ==='daily'?' selected':'')+'>每天</option><option value="weekly"'+(BACKUP_FREQ==='weekly'?' selected':'')+'>每周日</option><option value="monthly"'+(BACKUP_FREQ==='monthly'?' selected':'')+'>每月</option></select></div><div><label>时间</label><input type="time" id="abTime" value="'+BACKUP_TIME+'"></div></div>'
     +'<div class="limit-row"><div><label>保留份数</label><input type="number" id="abKeep" value="'+BACKUP_KEEP+'" min="1" max="30"></div></div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveAutoBackup()">保存</button></div>');
 };
