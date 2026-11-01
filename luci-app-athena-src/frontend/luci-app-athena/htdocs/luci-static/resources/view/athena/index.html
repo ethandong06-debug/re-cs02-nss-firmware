@@ -2339,7 +2339,7 @@ function applyStatus(d){
   _STATUS=d;
   /* 只在“进入网络页且状态尚未就绪”时补渲染一次；绝不随轮询刷新，
      否则会每 5 秒覆盖用户正在编辑的表单 */
-  if(_NET_PENDING){
+  if(_NET_PENDING&&NET_LOADED){
     _NET_PENDING=false;
     var _pgNet=document.getElementById('pg-net');
     if(_pgNet && _pgNet.classList.contains('on') && typeof renderNetPage==='function'){
@@ -3295,6 +3295,7 @@ window.cancelParent=function(mac){
 window.pickMode=function(m){ if(!NET_LOADED){ toast('当前网络配置尚未读取完成，暂不允许切换模式'); return; } curMode=m; modeUserSet=true; renderNetPage(); };
 window.setWanProto=function(p){ if(!NET_LOADED) return; WAN_PROTO=p; renderNetPage(); };
 window.saveApply=function(){
+  if(!NET_LOADED){ toast('当前网络配置尚未读取完成，已阻止提交，避免覆盖现有网络设置'); return; }
   var args=[];
   if(curMode==='router'){
     // 连接类型以表单下拉框当前值为准（回读异常时表单已兜底 PPPoE，这里同步）
