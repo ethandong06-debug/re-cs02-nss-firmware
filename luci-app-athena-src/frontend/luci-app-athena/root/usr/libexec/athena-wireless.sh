@@ -134,7 +134,9 @@ do_get() {
 do_switch() {
 	local action="$1" target="$2"
 	local radios=""
+	case "$target" in all|b24|b52|b58) ;; *) echo '{"ok":false,"msg":"目标频段无效"}'; exit 1 ;; esac
 	if [ "$target" = "all" ]; then radios="0 1 2"; else radios="$(band_radio "$target")"; fi
+	[ -n "$radios" ] || { echo '{"ok":false,"msg":"未找到目标无线设备"}'; exit 1; }
 	for idx in $radios; do
 		local radio="radio$idx"
 		[ "$(uci -q get "wireless.$radio" 2>/dev/null)" = "wifi-device" ] || continue
@@ -167,6 +169,22 @@ do_set() {
 	[ -z "$iface" ] && { echo '{"ok":false,"msg":"无线接口不存在"}'; exit 1; }
 	local band_type=$(uci -q get "wireless.$radio.band" 2>/dev/null)
 	local enc_u=$(enc2uci "$enc")
+	local ssid_bytes=$(printf '%s' "$ssid" | wc -c | tr -d ' ')
+	[ "$ssid_bytes" -ge 1 ] && [ "$ssid_bytes" -le 32 ] || { echo '{"ok":false,"msg":"WiFi 名称长度必须为 1-32 字节"}'; exit 1; }
+	printf '%s' "$ssid" | LC_ALL=C grep -q '[[:cntrl:]]' && { echo '{"ok":false,"msg":"WiFi 名称不能包含控制字符"}'; exit 1; }
+	case "$band" in
+		b24) case "$ch" in auto|1|2|3|4|5|6|7|8|9|10|11|12|13) ;; *) echo '{"ok":false,"msg":"2.4G 信道必须为 auto 或 1-13"}'; exit 1 ;; esac
+			case "$bw" in 20MHz|40MHz) ;; *) echo '{"ok":false,"msg":"2.4G 仅支持 20/40MHz"}'; exit 1 ;; esac ;;
+		b52) case "$ch" in auto|36|40|44|48|52|56|60|64) ;; *) echo '{"ok":false,"msg":"5.2G 信道必须为 auto 或 36-64 的标准信道"}'; exit 1 ;; esac
+			case "$bw" in 20MHz|40MHz|80MHz|160MHz) ;; *) echo '{"ok":false,"msg":"5.2G 频宽无效"}'; exit 1 ;; esac ;;
+		b58) case "$ch" in auto|149|153|157|161|165) ;; *) echo '{"ok":false,"msg":"5.8G 信道必须为 auto 或 149-165 的标准信道"}'; exit 1 ;; esac
+			case "$bw" in 20MHz|40MHz|80MHz) ;; *) echo '{"ok":false,"msg":"5.8G 仅支持 20/40/80MHz"}'; exit 1 ;; esac ;;
+	esac
+	if [ -n "$pwd" ]; then
+		pwd_bytes=$(printf '%s' "$pwd" | wc -c | tr -d ' ')
+		[ "$pwd_bytes" -ge 8 ] && [ "$pwd_bytes" -le 63 ] || { echo '{"ok":false,"msg":"WiFi 密码长度必须为 8-63 字节"}'; exit 1; }
+		printf '%s' "$pwd" | LC_ALL=C grep -q '[[:cntrl:]]' && { echo '{"ok":false,"msg":"WiFi 密码不能包含控制字符"}'; exit 1; }
+	fi
 	[ -n "$enc_u" ] || { echo '{"ok":false,"msg":"不支持的无线加密方式，请重新选择"}'; exit 1; }
 	# 防呆：当前接口无密码（开放）且用户未填新密码 → 拒绝保存，避免继续以开放/无密码状态造成困惑
 	local cur_key=$(uci -q get "wireless.$iface.key" 2>/dev/null)
@@ -174,23 +192,26 @@ do_set() {
 		echo '{"ok":false,"msg":"该频段当前无密码（开放网络），请填写新密码后再保存"}'
 		exit 1
 	fi
-	uci set "wireless.$radio.channel=$ch"
-	uci set "wireless.$radio.htmode=$(bw2htmode "$band_type" "$bw")"
-	uci set "wireless.$iface.ssid=$ssid"
-	uci set "wireless.$iface.encryption=$enc_u"
+	uci set "wireless.$radio.channel=$ch" || { echo '{"ok":false,"msg":"信道配置写入失败"}'; exit 1; }
+	uci set "wireless.$radio.htmode=$(bw2htmode "$band_type" "$bw")" || { echo '{"ok":false,"msg":"频宽配置写入失败"}'; exit 1; }
+	uci set "wireless.$iface.ssid=$ssid" || { echo '{"ok":false,"msg":"WiFi 名称写入失败"}'; exit 1; }
+	uci set "wireless.$iface.encryption=$enc_u" || { echo '{"ok":false,"msg":"加密方式写入失败"}'; exit 1; }
 	if [ "$enc_u" = "none" ]; then
 		uci -q delete "wireless.$iface.key" 2>/dev/null
 	elif [ -n "$pwd" ]; then
 		# 密码留空 = 不修改（保持原 key），避免前端默认值覆盖真机密码
 		uci set "wireless.$iface.key=$pwd"
 	fi
-	uci commit wireless 2>/dev/null
-	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+	uci commit wireless 2>/dev/null || { echo '{"ok":false,"msg":"无线配置提交失败"}'; exit 1; }
+	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"配置已保存，但无线重载失败"}'; exit 1; }
 	echo '{"ok":true,"msg":"无线配置已保存并生效"}'
 }
 
-# ---- 恢复出厂默认无线（一键自愈：SSID / WPA2-PSK / 12345678 / CN / 信道 auto）----
+# ---- 恢复默认无线：生成随机强密码，避免通用默认口令 ----
 do_reset_defaults() {
+	local pass
+	pass=$(od -An -N12 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')
+	[ "${#pass}" -eq 24 ] || { echo '{"ok":false,"msg":"无法生成安全 WiFi 密码"}'; exit 1; }
 	for r in 0 1 2; do
 		band=$(uci -q get "wireless.radio${r}.band" 2>/dev/null)
 		[ -z "$band" ] && continue
@@ -212,14 +233,14 @@ do_reset_defaults() {
 		if [ -n "$iface" ]; then
 			uci -q set "${iface}.ssid=$SSID"
 			uci -q set "${iface}.encryption=psk2"
-			uci -q set "${iface}.key=12345678"
+			uci -q set "${iface}.key=$pass"
 			# 清除 WPA3 残留（PMF/SAE），避免手机按 WPA3 方式连接 WPA2 网络报"密码错误"
 			uci -q delete "${iface}.ieee80211w" 2>/dev/null
 		fi
 	done
-	uci commit wireless 2>/dev/null
-	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
-	echo '{"ok":true,"msg":"无线已恢复出厂默认（WPA2-PSK，密码 12345678）"}'
+	uci commit wireless 2>/dev/null || { echo '{"ok":false,"msg":"无线默认配置提交失败"}'; exit 1; }
+	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"配置已保存，但无线重载失败"}'; exit 1; }
+	printf '{"ok":true,"password":"%s","msg":"无线已恢复默认，已生成随机密码"}\\n' "$pass"
 }
 
 # ---- 访客网络（2.4G 多 BSS + guest 独立桥 + 防火墙隔离）----
@@ -244,10 +265,10 @@ guest_get() {
 }
 
 guest_enable() {
-	local ssid="${1:-$GUEST_SSID}" pwd="${2:-12345678}"
+	local ssid="${1:-$GUEST_SSID}" pwd="${2:-}"
 	local radio="radio1"
 	[ "${#ssid}" -ge 1 ] && [ "${#ssid}" -le 32 ] || { echo '{"ok":false,"msg":"访客 WiFi 名称长度必须为 1-32 字节"}'; exit 1; }
-	[ "${#pwd}" -ge 8 ] && [ "${#pwd}" -le 63 ] || { echo '{"ok":false,"msg":"访客 WiFi 密码长度必须为 8-63 字符"}'; exit 1; }
+	[ -n "$pwd" ] && [ "${#pwd}" -ge 8 ] && [ "${#pwd}" -le 63 ] || { echo '{"ok":false,"msg":"请设置 8-63 位访客 WiFi 密码，不再使用通用默认密码"}'; exit 1; }
 	[ "$(uci -q get "wireless.$radio" 2>/dev/null)" = "wifi-device" ] || { echo '{"ok":false,"msg":"2.4G 无线设备不存在"}'; exit 1; }
 	guest_clear_internal
 	uci set "wireless.$GUEST_IFACE=wifi-iface"
@@ -306,7 +327,7 @@ case "$CMD" in
 	guest)
 		case "${2:-get}" in
 			get) guest_get ;;
-			enable) guest_enable "${3:-$GUEST_SSID}" "${4:-12345678}" ;;
+			enable) guest_enable "${3:-$GUEST_SSID}" "${4:-}" ;;
 			disable) guest_disable ;;
 			*) echo '{"ok":false,"msg":"未知 guest 子命令（get|enable|disable）"}'; exit 1 ;;
 		esac
