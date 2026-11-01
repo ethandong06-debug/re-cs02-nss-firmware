@@ -34,6 +34,7 @@
 				"/usr/libexec/athena-theme.sh": [ "exec" ],
 				"/usr/libexec/athena-matrix.sh": [ "exec" ],
 				"/usr/libexec/athena-led.sh": [ "exec" ],
+				"/usr/libexec/athena-filebrowser.sh": [ "exec" ],
 				"/usr/libexec/athena-wireless.sh": [ "exec" ],
 				"/usr/libexec/athena-speedtest.sh": [ "exec" ],
 				"/usr/libexec/athena-ui.sh": [ "exec" ],
