@@ -34,7 +34,7 @@ schedule_get() {
 }
 
 schedule_set() {
-	local freq="${2:-daily}" time="${3:-02:00}" keep="${4:-3}"
+	local freq="${1:-daily}" time="${2:-02:00}" keep="${3:-3}"
 	local hh="${time%%:*}" mm="${time#*:}"
 	case "$freq" in
 		daily) cron="$mm $hh * * *" ;;
