@@ -3293,7 +3293,7 @@ window.cancelParent=function(mac){
 
 /* ---- 网络 ---- */
 window.pickMode=function(m){ if(!NET_LOADED){ toast('当前网络配置尚未读取完成，暂不允许切换模式'); return; } curMode=m; modeUserSet=true; renderNetPage(); };
-window.setWanProto=function(p){ WAN_PROTO=p; renderNetPage(); };
+window.setWanProto=function(p){ if(!NET_LOADED) return; WAN_PROTO=p; renderNetPage(); };
 window.saveApply=function(){
   var args=[];
   if(curMode==='router'){
@@ -4121,7 +4121,7 @@ function renderForPage(id){
   if(id==='home'){ renderOverview(); }
   else if(id==='wifi'){ renderWifiCards(); }
   else if(id==='dev'){ loadClients(); }
-  else if(id==='net'){ if(!_STATUS) _NET_PENDING=true; renderNetPage(); }
+  else if(id==='net'){ if(!NET_LOADED) _NET_PENDING=true; renderNetPage(); }
   else if(id==='st'){ loadDisks(); }
   else if(id==='light'){ loadMatrixAll(); loadLed(); }
   else if(id==='keep'){ loadBackupList(); loadBackupSchedule(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
