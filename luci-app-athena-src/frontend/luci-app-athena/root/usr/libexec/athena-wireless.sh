@@ -98,12 +98,13 @@ emit_band() {
 	bws="${caps#*|bws=}"
 	# 真实运行态：uci 只表示"是否禁用"，radio 可能因驱动/初始化失败而实际没起来，
 	# 用 network.wireless status 的 up 字段校正，避免前台显示"已开启"却搜不到 SSID。
-	local real_up=""
+	local real_up="" real_check=false
 	if command -v ubus >/dev/null 2>&1; then
+		real_check=true
 		real_up=$(ubus call network.wireless status 2>/dev/null | jsonfilter -e "@.$radio.up" 2>/dev/null)
 	fi
 	local on=true
-	if [ "$disabled" = "1" ] || [ "$real_up" = "false" ]; then on=false; fi
+	if [ "$disabled" = "1" ] || { [ "$real_check" = true ] && [ "$real_up" != "true" ]; }; then on=false; fi
 	printf '{"id":"%s","on":%s,"ssid":"%s","key":"%s","ch":"%s","bw":"%s","enc":"%s","chs":"%s","bws":"%s","uci_off":%s,"radio_up":%s}' \
 		"$id" "$on" \
 		"$(printf '%s' "$ssid" | json_str)" "$(printf '%s' "$key" | json_str)" "$ch" "$(htmode2bw "$htmode")" "$(uci2enc "$enc")" "$chs" "$bws" \
@@ -120,8 +121,8 @@ do_get() {
 		real_up=""
 		if command -v ubus >/dev/null 2>&1; then
 			real_up=$(ubus call network.wireless status 2>/dev/null | jsonfilter -e "@.radio$idx.up" 2>/dev/null)
+			[ "$real_up" = "true" ] || continue
 		fi
-		[ "$real_up" = "false" ] && continue
 		any_on=true
 	done
 	printf '{"ok":true,"on":%s,"bands":[' "$any_on"
