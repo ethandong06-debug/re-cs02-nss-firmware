@@ -246,6 +246,8 @@ guest_get() {
 guest_enable() {
 	local ssid="${1:-$GUEST_SSID}" pwd="${2:-12345678}"
 	local radio="radio1"
+	[ "${#ssid}" -ge 1 ] && [ "${#ssid}" -le 32 ] || { echo '{"ok":false,"msg":"访客 WiFi 名称长度必须为 1-32 字节"}'; exit 1; }
+	[ "${#pwd}" -ge 8 ] && [ "${#pwd}" -le 63 ] || { echo '{"ok":false,"msg":"访客 WiFi 密码长度必须为 8-63 字符"}'; exit 1; }
 	[ "$(uci -q get "wireless.$radio" 2>/dev/null)" = "wifi-device" ] || { echo '{"ok":false,"msg":"2.4G 无线设备不存在"}'; exit 1; }
 	guest_clear_internal
 	uci set "wireless.$GUEST_IFACE=wifi-iface"
