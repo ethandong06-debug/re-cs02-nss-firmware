@@ -14,6 +14,7 @@ verify_file() {
 	SIZE=$(wc -c < "$FILE" 2>/dev/null | tr -d ' ')
 	case "$SIZE" in ''|*[!0-9]*) REASON="无法读取固件大小"; return 1 ;; esac
 	[ "$SIZE" -ge 1048576 ] || { REASON="固件文件过小（不足 1 MiB）"; return 1; }
+	[ "$SIZE" -le 134217728 ] || { REASON="固件文件过大（超过 128 MiB）"; return 1; }
 	SHA=$(sha256sum "$FILE" 2>/dev/null | awk '{print $1}')
 	[ -n "$SHA" ] || { REASON="无法计算 SHA256"; return 1; }
 	HDR=$(dd if="$FILE" bs=1 count=12 2>/dev/null)
@@ -66,10 +67,14 @@ case "$CMD" in
 		[ "$FILE" = "$FW_ALLOWED" ] || { echo '{"ok":false,"msg":"固件路径不在允许范围"}'; exit 1; }
 		case "$KEEP" in 0|1) ;; *) echo '{"ok":false,"msg":"保留配置参数必须为 0 或 1"}'; exit 1 ;; esac
 		if ! verify_file "$FILE"; then
+			rm -f /tmp/athena-fw-upload.sha256
 			SAFE_REASON=$(printf '%s' "$REASON" | sed 's/\\/\\\\/g; s/"/\\"/g')
 			printf '{"ok":false,"msg":"刷写前校验失败：%s"}\n' "$SAFE_REASON"
 			exit 1
 		fi
+		VERIFIED_SHA=$(cat /tmp/athena-fw-upload.sha256 2>/dev/null)
+		[ -n "$VERIFIED_SHA" ] && [ "$VERIFIED_SHA" = "$SHA" ] || { echo '{"ok":false,"msg":"固件未完成预校验或文件在校验后发生变化，请重新验证"}'; exit 1; }
+		rm -f /tmp/athena-fw-upload.sha256
 		if [ "$KEEP" = "0" ]; then
 			echo '{"ok":true,"msg":"固件已通过机型与结构校验，开始全新刷写，设备即将重启"}'
 			( sleep 1; sysupgrade -n "$FILE" ) >/dev/null 2>&1 &
