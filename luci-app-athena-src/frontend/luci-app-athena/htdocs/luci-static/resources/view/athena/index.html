@@ -2710,7 +2710,7 @@ function renderDisksRows(){
       var mountedPart=(d0.parts||[]).find(function(p){return p&&p.mount;});
       var freePart=(d0.parts||[]).find(function(p){return p&&p.name&&!p.mount;});
       var mountOp=mountedPart?'<button class="btn sm" onclick="umountUsb()">卸载</button>':(freePart?'<button class="btn sm" onclick="mountUsb()">挂载</button>':'');
-      ops.innerHTML=mountOp+'<button class="btn sm danger" onclick="fmtDisk(\\'usb\\')">格式化</button>';
+      ops.innerHTML=mountOp+'<button class="btn sm danger" onclick="fmtDisk(\'usb\')">格式化</button>';
     }
     else if(ops){ ops.innerHTML=''; }
   }
