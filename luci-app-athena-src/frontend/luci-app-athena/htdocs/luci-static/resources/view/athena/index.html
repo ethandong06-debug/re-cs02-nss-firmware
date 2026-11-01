@@ -3030,7 +3030,7 @@ async function loadTheme(){
   window._athenaThemeMode=dm;
   if(dm==null){
     var ls=sGet('athena_dark');
-    dm=(ls==null)?'auto':(ls==='1'?'dark':'light');
+    dm=(ls==null||ls==='auto')?'auto':(ls==='1'?'dark':'light');
   }
   if(dm==='auto'){ document.documentElement.dataset.theme=(matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
   else{ document.documentElement.dataset.theme=dm; }
