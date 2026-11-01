@@ -998,7 +998,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <div class="grid">
       <div class="card">
         <h3>点阵屏设置</h3>
-        <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch on" data-k="matrix" onclick="toggleMatrix()"></div></div>
+        <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch" data-k="matrix" onclick="toggleMatrix()"></div></div>
         <div class="check-row"><span>亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="matrixLight" min="0" max="7" value="5" onchange="setMatrixLight(this.value)"></div>
         <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option value="multi">多频道轮播</option><option value="single">单频道轮播</option></select></div>
         <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openMatrixFull()">打开完整管理</button><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
@@ -1012,7 +1012,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>夜间模式 <span class="sub">降亮度不熄屏</span></h3>
-        <div class="check-row"><span>启用夜间模式</span><span class="flex"></span><div class="switch on" data-k="night" onclick="toggleMatrixNight()"></div></div>
+        <div class="check-row"><span>启用夜间模式</span><span class="flex"></span><div class="switch" data-k="night" onclick="toggleMatrixNight()"></div></div>
         <div class="check-row"><span>开始时间</span><span class="flex"></span><input type="time" id="nightStart" value="22:30" onchange="setNightTime()"></div>
         <div class="check-row"><span>结束时间</span><span class="flex"></span><input type="time" id="nightEnd" value="07:00" onchange="setNightTime()"></div>
         <div class="check-row"><span>夜间亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="nightLevel" min="0" max="7" value="2" onchange="setNightLevel(this.value)"></div>
@@ -1021,14 +1021,14 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:10px">
           <h3 style="align-self:flex-start">点阵屏预览</h3>
           <div class="matrix-preview" id="matrixPrev"><div class="mx-grid"><i style="background:#ffffff;box-shadow:0 0 5px #ffffff"></i><i style="background:#ffffff;box-shadow:0 0 5px #ffffff"></i><i style="background:#ffffff;box-shadow:0 0 5px #ffffff"></i><i style="background:#ffffff;box-shadow:0 0 5px #ffffff"></i><i style="background:#ffffff;box-shadow:0 0 5px #ffffff"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i></div></div>
-          <div style="font-size:12px;color:var(--text3)">时间 · 勋章 · 网速轮播</div>
+          <div style="font-size:12px;color:var(--text3)">点阵屏预览效果（示意）</div>
         </div>
         <div class="card">
           <h3>三色状态灯 <span class="sub">内核 GPIO 实时状态</span></h3>
-          <div class="info-row"><span><span class="led-dot" style="background:#dc2626"></span>红色（故障 / 启动）</span><span id="ledRed"><span class="tag gray">已熄灭</span></span></div>
+          <div class="info-row"><span><span class="led-dot" style="background:#dc2626"></span>红色（故障 / 启动）</span><span id="ledRed"><span class="tag gray">读取中</span></span></div>
           <div class="info-row"><span><span class="led-dot" style="background:#16a34a"></span>绿色（运行中）</span><span id="ledGreen"><span class="tag gray">读取中</span></span></div>
           <div class="info-row"><span><span class="led-dot" style="background:#378ADD"></span>蓝色（启动引导）</span><span id="ledBlue"><span class="tag gray">已熄灭</span></span></div>
-          <div class="check-row"><span>呼吸灯（绿色心跳）</span><span class="flex"></span><div class="switch on" data-k="breath" onclick="toggleBreath()"></div></div>
+          <div class="check-row"><span>呼吸灯（绿色心跳）</span><span class="flex"></span><div class="switch" data-k="breath" onclick="toggleBreath()"></div></div>
         </div>
       </div>
       <div class="card">
@@ -2978,13 +2978,13 @@ async function loadDisks(){
 async function loadMatrixAll(){
   try{
     var d=await athenaRPC.exec('athena-matrix.sh',['get']);
-    if(d){ MATRIX.enabled=!!d.enabled; if(d.light_level!=null) MATRIX.light_level=d.light_level; MATRIX.night=!!d.night; MATRIX.night_start=d.night_start||MATRIX.night_start; MATRIX.night_end=d.night_end||MATRIX.night_end; if(d.night_level!=null) MATRIX.night_level=d.night_level; MATRIX.profile=d.profile||MATRIX.profile; if(d.clock!=null) MATRIX.clock=!!d.clock; if(d.medal!=null) MATRIX.medal=!!d.medal; if(d.up!=null) MATRIX.up=!!d.up; if(d.down!=null) MATRIX.down=!!d.down; MATRIX.loaded=true; renderMatrixPanel(); }
+    if(d&&d.ok===true){ MATRIX.enabled=!!d.enabled; if(d.light_level!=null) MATRIX.light_level=d.light_level; MATRIX.night=!!d.night; MATRIX.night_start=d.night_start||MATRIX.night_start; MATRIX.night_end=d.night_end||MATRIX.night_end; if(d.night_level!=null) MATRIX.night_level=d.night_level; MATRIX.profile=d.profile||MATRIX.profile; if(d.clock!=null) MATRIX.clock=!!d.clock; if(d.medal!=null) MATRIX.medal=!!d.medal; if(d.up!=null) MATRIX.up=!!d.up; if(d.down!=null) MATRIX.down=!!d.down; MATRIX.loaded=true; renderMatrixPanel(); }
   }catch(e){}
 }
 async function loadLed(){
   try{
     var d=await athenaRPC.exec('athena-led.sh',['get']);
-    if(d){ LED.breathing=!!d.breathing; LED.red=!!d.red; LED.green=!!d.green; LED.blue=!!d.blue; LED.loaded=true; renderLedPanel(); }
+    if(d&&d.ok===true){ LED.breathing=!!d.breathing; LED.red=!!d.red; LED.green=!!d.green; LED.blue=!!d.blue; LED.loaded=true; renderLedPanel(); }
   }catch(e){}
 }
 async function loadTheme(){
