@@ -150,6 +150,7 @@ case "$CMD" in
 		;;
 	install)
 		PKG="${2:-}"; valid_pkg "$PKG" || { echo '{"ok":false,"msg":"包名格式无效"}'; exit 1; }
+		case "$PKG" in kmod-*) echo '{"ok":false,"msg":"为避免内核 ABI 不匹配，内核模块不允许从此页面安装"}'; exit 1 ;; esac
 		apk add "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 安装成功\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 安装失败\"}"
 		;;
 	remove)
