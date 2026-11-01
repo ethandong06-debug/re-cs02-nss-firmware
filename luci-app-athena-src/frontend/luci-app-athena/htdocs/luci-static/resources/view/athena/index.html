@@ -1025,7 +1025,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>点阵屏设置</h3>
         <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch on" data-k="matrix" onclick="toggleMatrix()"></div></div>
         <div class="check-row"><span>亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="matrixLight" min="0" max="7" value="5" onchange="setMatrixLight(this.value)"></div>
-        <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option>多频道轮播</option><option>单频道轮播</option></select></div>
+        <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option value="multi">多频道轮播</option><option value="single">单频道轮播</option></select></div>
         <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openMatrixFull()">打开完整管理</button><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
       </div>
       <div class="card">
