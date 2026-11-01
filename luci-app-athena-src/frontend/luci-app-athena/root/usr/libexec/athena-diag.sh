@@ -1,7 +1,7 @@
 #!/bin/sh
 # AthenaWrt 网络诊断脚本
 # 用法:
-#   athena-diag.sh nodes                      列出内置测速节点
+#   athena-diag.sh nodes                      返回测速引擎节点状态（当前由测速引擎自动选择）
 #   athena-diag.sh ping <host> [count]        ping 测试
 #   athena-diag.sh dns <domain> [dns]         DNS 解析测试
 #   athena-diag.sh check                      一键连通性体检（网关/DNS/外网）
@@ -10,14 +10,8 @@
 CMD="${1:-check}"
 json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
-# 内置测速节点（信通院等公共节点，域名形式，真机按需替换为 IP）
-NODES='[
-  {"id":"cata1","name":"中国信通院 · 北京","host":"speedtest.cata.net","type":"iperf3"},
-  {"id":"cata2","name":"中国信通院 · 广州","host":"speedtest2.cata.net","type":"iperf3"},
-  {"id":"ali","name":"阿里云 · 华东","host":"mirrors.aliyun.com","type":"curl"},
-  {"id":"qq","name":"腾讯云 · 华南","host":"mirrors.tencent.com","type":"curl"},
-  {"id":"netease","name":"网易 · 浙江","host":"mirrors.163.com","type":"curl"}
-]'
+# 测速节点由 athena-speedtest.sh 根据所选模式自动选择；此接口不再返回占位节点。
+NODES='[]'
 
 case "$CMD" in
 	nodes)
