@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: athena-apk-build
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -41,8 +41,8 @@ jobs:
         run: |
           set -euo pipefail
           pkg='luci-app-athena-src/frontend/luci-app-athena'
-          find "$pkg/root/usr/libexec" -type f -name '*.sh' -print0 | while IFS= read -r -d '' f; do
-            sh -n "$f"
+          find "$pkg/root/usr/libexec" "$pkg/root/etc/init.d" "$pkg/root/etc/uci-defaults" -type f -print0 | while IFS= read -r -d '' f; do
+            case "$f" in *.sh|*/etc/init.d/*|*/etc/uci-defaults/*) sh -n "$f" ;; esac
           done
           python3 - <<'PY'
           import json, pathlib, re
@@ -58,6 +58,7 @@ jobs:
           print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
           PY
           node --check /tmp/athena-inline.js
+          node --check luci-app-athena-src/frontend/luci-app-athena/htdocs/luci-static/resources/view/athena/index.js
 
       - name: Fetch pinned File Browser binary
         shell: bash
@@ -174,7 +175,9 @@ jobs:
           fi
           apk_host=immortalwrt/staging_dir/host/bin/apk
           test -x "$apk_host"
-          "$apk_host" verify --keys-dir immortalwrt "${apks[0]}"
+          mkdir -p output/keys
+          install -m 0644 immortalwrt/public-key.pem output/keys/public-key.pem
+          "$apk_host" verify --keys-dir output/keys "${apks[0]}"
           cp "${apks[0]}" output/
           install -m 0644 immortalwrt/public-key.pem output/athenawrt-build-signing.pem
           openssl pkey -pubin -in output/athenawrt-build-signing.pem -noout
