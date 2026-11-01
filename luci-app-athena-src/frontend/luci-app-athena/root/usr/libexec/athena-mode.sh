@@ -551,7 +551,7 @@ case "$MODE" in
 			# 保留原始 VLAN 参数，供重载后的真实链路自检使用。
 			inner_vlan="${2:-1}"
 			wan_vlan="${3:-2044}"
-			iptv_vlan="${4:-3066}"
+			iptv_vlan="${4-3066}"
 			backup
 			pstep "网络及相关配置已备份（可回滚）"
 			# 去掉 single-bg 前缀，让 config_single 的 $2..$9 对齐 <inner> <wan> <iptv> [proto] [user] [pass] [nss] [port]
