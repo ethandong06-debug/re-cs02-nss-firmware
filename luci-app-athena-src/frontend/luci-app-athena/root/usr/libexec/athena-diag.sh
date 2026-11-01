@@ -50,13 +50,19 @@ case "$CMD" in
 		fi
 		;;
 	check)
-		# 网关
-		gw=$(ip route 2>/dev/null | awk '/default/{print $3; exit}')
-		gw_ok=false; gw_ms="无默认网关"
-		if [ -n "$gw" ]; then
-			r=$(ping -c 1 -W 1 "$gw" 2>/dev/null | sed -n 's/.*time=\([0-9.]*\) ms.*/\1/p' | head -1)
-			[ -n "$r" ] && { gw_ok=true; gw_ms="$r ms"; }
+		# 默认路由：兼容 PPPoE（通常没有 via 网关地址）与 DHCP。
+		DEFAULT_LINE=$(ip -4 route show default 2>/dev/null | head -1)
+		WAN_IF=$(printf '%s\\n' "$DEFAULT_LINE" | awk '{for (i=1; i<=NF; i++) if ($i == "dev") {print $(i+1); exit}}')
+		gw_ok=false; gw_ms="未检测到可用的 IPv4 默认路由"
+		if [ -n "$DEFAULT_LINE" ] && [ -n "$WAN_IF" ]; then
+			IF_IP=$(ip -4 -o addr show dev "$WAN_IF" 2>/dev/null | awk 'NR==1 {print $4}')
+			if [ -n "$IF_IP" ]; then
+				gw_ok=true; gw_ms="默认路由经 $WAN_IF（$IF_IP）"
+			else
+				gw_ms="默认路由存在，但接口 $WAN_IF 未获取 IPv4 地址"
+			fi
 		fi
+
 		# 外网连通：以 HTTP 为准（v1.2.52）
 		# 真机实测：重庆联通线路 ping 114.114.114.114 100% 丢包、ping 223.5.5.5 正常，
 		# 也就是说 ICMP 会被个别目标拦截，用它判"能不能上网"会误报。这里改用 HTTP 200/30x。
@@ -81,7 +87,7 @@ case "$CMD" in
 		[ -n "$r" ] && { icmp_ok=true; icmp_msg="223.5.5.5 · ${r} ms"; }
 		cat <<EOF
 {"ok":true,"items":[
-{"key":"gateway","name":"网关连通","ok":$gw_ok,"msg":"${gw:-未检测到默认网关} · ${gw_ms}"},
+{"key":"gateway","name":"默认路由","ok":$gw_ok,"msg":"$gw_ms"},
 {"key":"wan","name":"外网连通","ok":$wan_ok,"msg":"$wan_msg"},
 {"key":"dns","name":"DNS 解析","ok":$dns_ok,"msg":"$dns_msg"},
 {"key":"icmp","name":"ICMP 探测","ok":$icmp_ok,"msg":"$icmp_msg","info":true}
