@@ -119,7 +119,7 @@ jobs:
           install -m 0600 /tmp/athena-private-key.pem immortalwrt/private-key.pem
           install -m 0644 /tmp/athena-public-key.pem immortalwrt/public-key.pem
           install -d luci-app-athena-src/frontend/luci-app-athena/root/etc/apk/keys
-          install -m 0644 /tmp/athena-public-key.pem luci-app-athena-src/frontend/luci-app-athena/root/etc/apk/keys/athenawrt-build-signing.pem
+          install -m 0644 /tmp/athena-public-key.pem luci-app-athena-src/frontend/luci-app-athena/root/etc/apk/keys/athenawrt-fixed-signing.pem
           sha256sum /tmp/athena-public-key.pem | tee /tmp/athena-public-key.sha256
 
       - name: Prepare package-only build
@@ -181,8 +181,8 @@ jobs:
           install -m 0644 immortalwrt/public-key.pem output/keys/public-key.pem
           "$apk_host" verify --keys-dir output/keys "${apks[0]}"
           cp "${apks[0]}" output/
-          install -m 0644 immortalwrt/public-key.pem output/athenawrt-build-signing.pem
-          openssl pkey -pubin -in output/athenawrt-build-signing.pem -noout
+          install -m 0644 immortalwrt/public-key.pem output/athenawrt-fixed-signing.pem
+          openssl pkey -pubin -in output/athenawrt-fixed-signing.pem -noout
           sha256sum output/*.apk output/*.pem | tee output/SHA256SUMS.txt
           stat -c '%n %s bytes' output/*.apk output/*.pem | tee output/size.txt
           file output/*.apk | tee output/file-type.txt
