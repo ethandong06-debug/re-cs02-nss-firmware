@@ -407,7 +407,7 @@ neigh_cmd.close();
 for (let line in split(neigh_txt, '\n')) {
 	let mm = match(line, /lladdr (([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})/);
 	if (!mm) continue;
-	let st = split(trim(line), ' ');
+	let st = split(trim(line), /[ \t]+/);
 	let state = st[length(st) - 1];
 	if (state != 'REACHABLE' && state != 'STALE' && state != 'DELAY' && state != 'PROBE' && state != 'PERMANENT' && state != 'NOARP') continue;
 	let mac = lower_hex(mm[1]);
