@@ -369,7 +369,11 @@ for (let phy in fs.lsdir('/var/run/hostapd')) {
 	h.close();
 	let bm = match(info, /(2\.4[0-9]* GHz|5\.[0-9]* GHz)/);
 	if (bm) band = bm[1];
-	for (let line in split(rd(path), '\n')) {
+	// hostapd 目录内是控制 socket，不能直接读取文件内容；用 iwinfo assoclist 获取真实关联客户端。
+	let a = fs.popen('iwinfo "' + phy + '" assoclist 2>/dev/null');
+	let assoc = a.read('all');
+	a.close();
+	for (let line in split(assoc, '\n')) {
 		let mm = match(line, /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}/);
 		if (!mm) continue;
 		let mac = lower_hex(mm[0]);
@@ -396,6 +400,21 @@ let arp = arp_list();
 let arp_online = {};
 for (let a in arp) arp_online[a.mac] = true;
 
+// 11.2.1 内核邻居表补充：STALE/DELAY/PROBE 仍代表近期存在的二层邻居，不只依赖 /proc/net/arp。
+let neigh_online = {};
+let neigh_cmd = fs.popen('ip neigh show 2>/dev/null');
+let neigh_txt = neigh_cmd.read('all');
+neigh_cmd.close();
+for (let line in split(neigh_txt, '\n')) {
+	let mm = match(line, /lladdr (([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2})/);
+	if (!mm) continue;
+	let st = split(trim(line), ' ');
+	let state = st[length(st) - 1];
+	if ([ 'REACHABLE', 'STALE', 'DELAY', 'PROBE', 'PERMANENT', 'NOARP' ].index(state) < 0) continue;
+	let mac = lower_hex(mm[1]);
+	if (mac != '00:00:00:00:00:00') neigh_online[mac] = true;
+}
+
 // 11.3 在线时长状态文件（tmpfs，重启清空）
 let dev_old = {};
 for (let line in split(rd(DEVSTATE), '\n')) {
@@ -416,7 +435,8 @@ function devstate(mac, on) {
 		upt = now_ts - first;
 	}
 	else {
-		if (first > 0) down = now_ts;
+		// 只记录第一次确认失联的时间，不能在每次轮询时覆盖成“刚离线”。
+		if (first > 0 && down <= 0) down = now_ts;
 		upt = 0;
 	}
 	push(dev_new, mac + ' ' + first + ' ' + down);
@@ -457,12 +477,12 @@ for (let line in split(lease_txt, '\n')) {
 	let ip = f[2];
 	let host = (f[3] == '*') ? '' : f[3];
 	if (mac == '') continue;
-	let online = wifi_online[mac] || arp_online[mac] ? true : false;
+	let online = wifi_online[mac] || arp_online[mac] || neigh_online[mac] ? true : false;
 	let ds = devstate(mac, online ? 1 : 0);
 	let band = band_map[mac];
 	if (band == null || band == '') band = '有线';
 	push(clients, {
-		ip: ip, mac: mac, hostname: host, band: band, online: online,
+		ip: ip, mac: mac, hostname: host, band: band, online: online, status: online ? 'online' : 'unknown',
 		uptime_s: ds.upt, last_down: ds.down, vendor: vendor_of(mac)
 	});
 	seen[mac] = true;
@@ -473,7 +493,7 @@ for (let a in arp) {
 	if (seen[a.mac]) continue;
 	let ds = devstate(a.mac, 1);
 	push(clients, {
-		ip: a.ip, mac: a.mac, hostname: '', band: '有线', online: true,
+		ip: a.ip, mac: a.mac, hostname: '', band: '有线', online: true, status: 'online',
 		uptime_s: ds.upt, last_down: ds.down, vendor: vendor_of(a.mac)
 	});
 	seen[a.mac] = true;
