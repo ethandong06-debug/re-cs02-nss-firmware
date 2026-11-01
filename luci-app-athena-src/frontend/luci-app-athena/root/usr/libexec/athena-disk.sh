@@ -20,7 +20,26 @@ valid_usb_partition() {
 	[ -f "/sys/class/block/$base/partition" ] || return 1
 	return 0
 }
-is_mounted() { grep -Fq " $1 " /proc/mounts 2>/dev/null; }
+is_mounted() {
+	grep -Fq " $1 " /proc/mounts 2>/dev/null && return 0
+	grep -Fq "$1 " /proc/swaps 2>/dev/null && return 0
+	return 1
+}
+is_system_partition() {
+	local target src resolved rootarg
+	target=$(readlink -f "$1" 2>/dev/null)
+	[ -n "$target" ] || return 1
+	for src in $(awk '$2=="/" || $2=="/rom" || $2=="/overlay" {print $1}' /proc/mounts 2>/dev/null); do
+		resolved=$(readlink -f "$src" 2>/dev/null)
+		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
+	done
+	rootarg=$(sed -n 's/.*root=\\([^ ]*\\).*/\\1/p' /proc/cmdline 2>/dev/null)
+	if [ -n "$rootarg" ]; then
+		resolved=$(readlink -f "$rootarg" 2>/dev/null)
+		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
+	fi
+	return 1
+}
 json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
 case "$CMD" in
@@ -101,7 +120,8 @@ case "$CMD" in
 		DEV="${2:-}"; FS="${3:-ext4}"
 		[ -z "$DEV" ] && { echo '{"ok":false,"msg":"缺少设备"}'; exit 1; }
 		valid_usb_partition "$DEV" || { echo '{"ok":false,"msg":"格式化已拒绝：只允许真实 USB 分区（例如 /dev/sda1），禁止整盘、eMMC、NVMe 和系统分区"}'; exit 1; }
-		is_mounted "$DEV" && { echo '{"ok":false,"msg":"格式化已拒绝：请先确认并卸载该 USB 分区"}'; exit 1; }
+		is_mounted "$DEV" && { echo '{"ok":false,"msg":"格式化已拒绝：该分区正在挂载或作为交换分区使用"}'; exit 1; }
+		is_system_partition "$DEV" && { echo '{"ok":false,"msg":"格式化已拒绝：目标分区属于系统启动或根文件系统"}'; exit 1; }
 		case "$FS" in
 			ext4) mkfs.ext4 "$DEV" >/dev/null 2>&1 ;;
 			vfat) mkfs.vfat -F 32 "$DEV" >/dev/null 2>&1 ;;
