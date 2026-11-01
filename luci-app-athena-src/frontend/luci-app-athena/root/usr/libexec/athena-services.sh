@@ -8,7 +8,8 @@
 #   ucode 不可用或输出异常时自动回退 athena-services-legacy.sh，页面不会空。
 
 case "$1" in
-set)
+set|restart)
+	# 启停和重启都必须进入实际执行脚本；ucode 入口只负责无参数服务清单。
 	exec /usr/libexec/athena-services-legacy.sh "$@"
 	;;
 esac
