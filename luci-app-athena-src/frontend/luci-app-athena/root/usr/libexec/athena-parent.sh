@@ -25,6 +25,7 @@ gen_rules() {
 		end=$(uci -q get "athena.parent.$mac.end" 2>/dev/null)
 		[ -z "$days" ] && continue
 		[ -z "$start" ] || [ -z "$end" ] && continue
+		[ "$start" = "$end" ] && continue
 
 		# 组装 day_of_week 集合（0-6 白名单）
 		dw=""
@@ -50,6 +51,13 @@ chain athena_parent_$chn {
 }
 EOF
 		else
+			# 跨午夜的后半段属于次日，星期集合必须整体向后平移一天（周六后为周日）。
+			dw_next=""
+			for d in $(echo "$days" | tr ',' ' '); do
+				case "$d" in 0|1|2|3|4|5|6) ;; *) continue ;; esac
+				nd=$(((d + 1) % 7))
+				case ",$dw_next," in *,"$nd",*) ;; *) [ -n "$dw_next" ] && dw_next="$dw_next,"; dw_next="$dw_next$nd" ;; esac
+			done
 			cat >> "$RULE_FILE" <<EOF
 chain athena_parent_$chn {
 	type filter hook forward priority 0; policy accept;
@@ -57,7 +65,7 @@ chain athena_parent_$chn {
 }
 chain athena_parent_${chn}_b {
 	type filter hook forward priority 0; policy accept;
-	ether saddr $mac meta day_of_week {$dw} meta hour "00:00"-"$end" drop
+	ether saddr $mac meta day_of_week {$dw_next} meta hour "00:00"-"$end" drop
 }
 EOF
 		fi
@@ -118,15 +126,14 @@ case "$1" in
 			esac
 		done
 
-		# 时间校验 HH:MM
-		case "$START" in
-			[0-2][0-9]:[0-5][0-9]) ;;
-			*) echo '{"ok":false,"msg":"开始时间格式错误，应为 HH:MM"}'; exit 1 ;;
-		esac
-		case "$END" in
-			[0-2][0-9]:[0-5][0-9]) ;;
-			*) echo '{"ok":false,"msg":"结束时间格式错误，应为 HH:MM"}'; exit 1 ;;
-		esac
+		# 时间校验 HH:MM（严格限制 00:00-23:59）
+		case "$START" in [0-9][0-9]:[0-9][0-9]) ;; *) echo '{"ok":false,"msg":"开始时间格式错误，应为 HH:MM"}'; exit 1 ;; esac
+		case "$END" in [0-9][0-9]:[0-9][0-9]) ;; *) echo '{"ok":false,"msg":"结束时间格式错误，应为 HH:MM"}'; exit 1 ;; esac
+		sh=$(echo "$START" | cut -d: -f1); sm=$(echo "$START" | cut -d: -f2)
+		eh=$(echo "$END" | cut -d: -f1); em=$(echo "$END" | cut -d: -f2)
+		[ "$sh" -le 23 ] 2>/dev/null && [ "$sm" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"开始时间超出有效范围"}'; exit 1; }
+		[ "$eh" -le 23 ] 2>/dev/null && [ "$em" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"结束时间超出有效范围"}'; exit 1; }
+		[ "$START" != "$END" ] || { echo '{"ok":false,"msg":"开始时间和结束时间不能相同"}'; exit 1; }
 
 		uci set "athena.parent.$MAC.days=$DAYS"
 		uci set "athena.parent.$MAC.start=$START"
