@@ -248,7 +248,7 @@ config_ap() {
 }
 
 config_single() {
-	local vlan_inner="${2:-1}" vlan_wan="${3:-2044}" vlan_iptv="${4:-3066}"
+	local vlan_inner="${2:-1}" vlan_wan="${3:-2044}" vlan_iptv="${4-3066}"
 	local proto="${5:-pppoe}" user="${6:-}" pass="${7:-}"
 	local nss="${8:-on}" iptv_port="${9:-lan4}"
 	# 归一化 IPTV 参数：off/none/关闭/留空 一律视为不开启（前端旧版曾传 'off' 字符串）
@@ -529,17 +529,24 @@ case "$MODE" in
 		prog_reset
 		pstep "单臂路由配置开始…"
 		# 参数校验前移到前台，错误立即返回（避免后台失败无反馈）
-		for v in "${2:-1}" "${3:-2044}" "${4:-3066}"; do
-			if [ -n "$v" ] && ! valid_vlan "$v"; then
-				echo '{"ok":false,"msg":"VLAN ID 必须为 1-4094 的纯数字"}'
+		inner_vlan="${2:-1}"
+		wan_vlan="${3:-2044}"
+		iptv_vlan="${4-3066}"
+		for v in "$inner_vlan" "$wan_vlan"; do
+			if ! valid_vlan "$v"; then
+				echo '{"ok":false,"msg":"内网和拨号 VLAN 必须为 1-4094 的纯数字"}'
 				exit 1
 			fi
 		done
-		[ "${2:-1}" != "${3:-2044}" ] || { echo '{"ok":false,"msg":"内网 VLAN 与拨号 VLAN 不能重复"}'; exit 1; }
-		if [ -n "${4:-3066}" ] && [ "${4:-3066}" != "off" ] && [ "${4:-3066}" != "none" ]; then
-			[ "${4:-3066}" != "${2:-1}" ] && [ "${4:-3066}" != "${3:-2044}" ] || { echo '{"ok":false,"msg":"IPTV VLAN 不能与内网或拨号 VLAN 重复"}'; exit 1; }
-			[ "${9:-lan4}" = "lan4" ] || { echo '{"ok":false,"msg":"当前网桥布局仅支持 lan4 作为 IPTV 透传口"}'; exit 1; }
-		fi
+		[ "$inner_vlan" != "$wan_vlan" ] || { echo '{"ok":false,"msg":"内网 VLAN 与拨号 VLAN 不能重复"}'; exit 1; }
+		case "$iptv_vlan" in
+			off|none|OFF|NONE|"关闭"|"无"|"") iptv_vlan="" ;;
+			*)
+				if ! valid_vlan "$iptv_vlan"; then echo '{"ok":false,"msg":"IPTV VLAN 必须为 1-4094 的纯数字或留空关闭"}'; exit 1; fi
+				[ "$iptv_vlan" != "$inner_vlan" ] && [ "$iptv_vlan" != "$wan_vlan" ] || { echo '{"ok":false,"msg":"IPTV VLAN 不能与内网或拨号 VLAN 重复"}'; exit 1; }
+				[ "${9:-lan4}" = "lan4" ] || { echo '{"ok":false,"msg":"当前网桥布局仅支持 lan4 作为 IPTV 透传口"}'; exit 1; }
+				;;
+		esac
 		(
 			# 保留原始 VLAN 参数，供重载后的真实链路自检使用。
 			inner_vlan="${2:-1}"
