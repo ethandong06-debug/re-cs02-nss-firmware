@@ -19,14 +19,20 @@ add() {
 	ITEMS="$ITEMS{\"key\":\"$k\",\"status\":\"$status\",\"ok\":$ok,\"name\":\"$(printf '%s' "$name" | json_str)\",\"detail\":\"$(printf '%s' "$detail" | json_str)\"}"
 }
 
-# 1. WAN 连接
+# 1. WAN 连接：优先按默认路由接口取地址，兼容 PPPoE、DHCP 与 VLAN 子接口。
 WAN_DEV=$(uci -q get network.wan.device 2>/dev/null)
 WAN_PROTO=$(uci -q get network.wan.proto 2>/dev/null)
-WAN_IP=$(ip -4 addr show 2>/dev/null | grep -E "inet .* ${WAN_DEV:-wan}" | awk '{print $2}' | head -1)
+WAN_IF=$(ip -4 route show default 2>/dev/null | awk 'NR==1 {for (i=1; i<=NF; i++) if ($i == "dev") {print $(i+1); exit}}')
+WAN_IP=""
+for ifc in "$WAN_IF" pppoe-wan wan "$WAN_DEV"; do
+	[ -n "$ifc" ] || continue
+	WAN_IP=$(ip -4 -o addr show dev "$ifc" 2>/dev/null | awk 'NR==1 {print $4}')
+	[ -n "$WAN_IP" ] && break
+done
 if [ -n "$WAN_IP" ]; then
-	add wan ok "WAN 连接" "已获取 IP：$WAN_IP（$WAN_PROTO）"
+	add wan ok "WAN 连接" "接口 ${WAN_IF:-$WAN_DEV} 已获取 IP：$WAN_IP（$WAN_PROTO）"
 else
-	add wan warn "WAN 连接" "未获取到外网 IP（协议 $WAN_PROTO），请检查拨号"
+	add wan warn "WAN 连接" "未检测到 WAN IPv4 地址（协议 $WAN_PROTO），请检查拨号或上联"
 fi
 
 # 2. DNS
@@ -41,25 +47,23 @@ RADIO_UP=0; RADIO_TOTAL=0
 for r in $(uci -q show wireless 2>/dev/null | sed -n 's/^wireless\.\(radio[0-9]*\)=wifi-device$/\1/p'); do
 	RADIO_TOTAL=$((RADIO_TOTAL+1))
 	# 未设置 disabled（空）= 启用；显式 0 = 启用；仅显式 1 才算关闭
-	local dis
 	dis=$(uci -q get "wireless.$r.disabled" 2>/dev/null)
 	{ [ -z "$dis" ] || [ "$dis" = "0" ]; } && RADIO_UP=$((RADIO_UP+1))
 done
 if [ "$RADIO_TOTAL" -eq 0 ]; then
 	add wifi warn "无线网络" "未检测到 radio，请检查无线驱动"
 else
-	add wifi ok "无线网络" "三频已启用 $RADIO_UP/$RADIO_TOTAL"
+	add wifi ok "无线网络" "已启用 $RADIO_UP/$RADIO_TOTAL 个射频"
 fi
 
-# 4. NSS 加速
-if [ -x /etc/init.d/qca-nss-ecm ] || [ -x /etc/init.d/nss ]; then
-	# 内核模块（nss_ecm / nss-dp）或用户态 ecm 进程任一存在即视为运行
-	NSS_STATE=warn
-	grep -qE 'nss_ecm|nss-dp' /proc/modules 2>/dev/null && NSS_STATE=ok
-	pgrep -f 'qca-nss|/ecm|nss-ecm' >/dev/null 2>&1 && NSS_STATE=ok
-	[ "$NSS_STATE" = "ok" ] && add nss ok "NSS 硬件加速" "加速引擎运行中" || add nss warn "NSS 硬件加速" "加速模块存在但未运行"
+# 4. NSS/ECM 模块状态：只报告模块是否加载，不虚构实时硬件卸载命中率。
+NSS_DP=0; ECM_LOADED=0
+grep -q '^qca_nss_dp ' /proc/modules 2>/dev/null && NSS_DP=1
+grep -qE '^(ecm|qca_nss_ecm) ' /proc/modules 2>/dev/null && ECM_LOADED=1
+if [ "$NSS_DP" = "1" ] && [ "$ECM_LOADED" = "1" ]; then
+	add nss ok "NSS/ECM 模块" "NSS-DP 与 ECM 核心模块已加载；此项不代表每条流量均命中硬件卸载"
 else
-	add nss warn "NSS 硬件加速" "未检测到 NSS 模块（可能未集成）"
+	add nss warn "NSS/ECM 模块" "未同时检测到 NSS-DP 与 ECM 核心模块，请检查固件模块状态"
 fi
 
 # 5. 存储（eMMC / USB 挂载）
