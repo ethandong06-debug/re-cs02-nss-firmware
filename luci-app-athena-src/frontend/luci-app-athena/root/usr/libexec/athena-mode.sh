@@ -595,6 +595,8 @@ case "$MODE" in
 				done
 				for cfg in network wireless dhcp firewall athena; do uci commit "$cfg" 2>/dev/null; done
 				/etc/init.d/network restart >/dev/null 2>&1
+				wifi reload >/dev/null 2>&1
+				/etc/init.d/firewall restart >/dev/null 2>&1
 				echo "已自动回滚 network/wireless/dhcp/firewall/athena 配置：$latest_ts" >> "$PROG_FILE"
 			else
 				echo "自检通过：管理地址、内网 VLAN、拨号 VLAN及 IPTV VLAN（如启用）均已出现" >> "$PROG_FILE"
