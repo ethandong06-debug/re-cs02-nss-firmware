@@ -3419,19 +3419,37 @@ window.runSpeed=function(){
 /* ---- 存储 ---- */
 window.refreshDisks=function(){ loadDisks(); };
 window.fmtDisk=function(dev){
-  openBkModal('<h3>格式化 '+esc(dev)+'？</h3><div class="m-sub">将清空磁盘全部数据，无法恢复。请确认已备份。</div><div class="limit-row"><div><label>文件系统</label><select id="fmtFs"><option>ext4</option><option>vfat</option><option>exfat</option><option>f2fs</option></select></div></div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="fmtDiskDo(\''+dev+'\')">格式化</button></div>',true);
+  if(dev!=='usb'){ toast('为保护系统存储，eMMC 格式化入口已禁用'); return; }
+  var disk=EXT_DISKS[0];
+  var parts=(disk&&disk.parts||[]).filter(function(p){ return p&&p.name&&!p.mount; });
+  if(!parts.length){ toast('没有可格式化的未挂载 USB 分区；请先确认分区状态'); return; }
+  var opts=parts.map(function(p){ return '<option value="/dev/'+esc(p.name)+'">'+esc(p.name)+' · '+Math.round(p.size_mb||0)+' MB · '+esc(p.fs||'未知文件系统')+'</option>'; }).join('');
+  openBkModal('<h3>格式化 USB 分区？</h3><div class="m-sub">只允许选择真实、未挂载的 USB 分区。格式化将清空该分区全部数据，不能恢复。</div><div class="limit-row"><div><label>目标分区</label><select id="fmtPart">'+opts+'</select></div><div><label>文件系统</label><select id="fmtFs"><option>ext4</option><option>vfat</option><option>exfat</option><option>f2fs</option></select></div></div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="fmtDiskDo()">我已确认，格式化所选分区</button></div>',true);
 };
-window.fmtDiskDo=function(dev){
-  var fs=document.getElementById('fmtFs').value;
-  athenaRPC.exec('athena-disk.sh',['format',dev,fs]).then(function(){ toast('格式化完成'); window.closeModal(); loadDisks(); }).catch(function(e){ toast('格式化失败：'+(e.message||'')); });
+window.fmtDiskDo=function(){
+  var part=document.getElementById('fmtPart'), fs=document.getElementById('fmtFs');
+  if(!part||!fs||!/^\/dev\/sd[a-z][0-9]+$/.test(part.value)){ toast('目标分区无效，已取消'); return; }
+  if(!window.confirm('最后确认：将永久清空 '+part.value+'，是否继续？')) return;
+  athenaRPC.exec('athena-disk.sh',['format',part.value,fs.value]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端拒绝格式化');
+    toast('分区格式化完成'); window.closeModal(); loadDisks();
+  }).catch(function(e){ toast('格式化失败：'+(e.message||'')); });
 };
 window.umountUsb=function(){
-  var dev=EXT_DISKS[0]; if(!dev){ toast('没有已挂载的 USB 设备'); return; }
-  athenaRPC.exec('athena-disk.sh',['umount',dev.name]).then(function(){ toast('已卸载'); loadDisks(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); });
+  var disk=EXT_DISKS[0], part=disk&&(disk.parts||[]).find(function(p){return p&&p.mount;});
+  if(!part){ toast('没有已挂载的 USB 分区'); return; }
+  athenaRPC.exec('athena-disk.sh',['umount','/dev/'+part.name]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'卸载失败');
+    toast('已卸载'); loadDisks();
+  }).catch(function(e){ toast('卸载失败：'+(e.message||'')); });
 };
 window.mountUsb=function(){
-  var dev=EXT_DISKS[0]; if(!dev){ toast('没有可挂载的 USB 设备'); return; }
-  athenaRPC.exec('athena-disk.sh',['mount',dev.name,'/mnt/usb']).then(function(){ toast('已挂载'); loadDisks(); }).catch(function(e){ toast('挂载失败：'+(e.message||'')); });
+  var disk=EXT_DISKS[0], part=disk&&(disk.parts||[]).find(function(p){return p&&p.name&&!p.mount;});
+  if(!part){ toast('没有可挂载的 USB 分区'); return; }
+  athenaRPC.exec('athena-disk.sh',['mount','/dev/'+part.name,'/mnt/usb']).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'挂载失败');
+    toast('已挂载'); loadDisks();
+  }).catch(function(e){ toast('挂载失败：'+(e.message||'')); });
 };
 window.openFbModal=function(){
   openBkModal('<h3>文件共享</h3><div class="m-sub">通过网页访问 U 盘文件（上传 / 下载 / 播放）</div>'
