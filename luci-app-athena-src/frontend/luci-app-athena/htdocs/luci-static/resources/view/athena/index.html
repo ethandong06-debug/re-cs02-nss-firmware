@@ -3027,11 +3027,11 @@ async function loadTheme(){
   }catch(e){}
   /* 明暗模式持久化：路由器级优先（athena.theme.dark），localStorage 仅兜底 */
   var dm=(d&&(d.dark==='light'||d.dark==='dark'||d.dark==='auto'))?d.dark:null;
-  window._athenaThemeMode=dm;
   if(dm==null){
     var ls=sGet('athena_dark');
     dm=(ls==null||ls==='auto')?'auto':(ls==='1'?'dark':'light');
   }
+  window._athenaThemeMode=dm;
   if(dm==='auto'){ document.documentElement.dataset.theme=(matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
   else{ document.documentElement.dataset.theme=dm; }
 }
