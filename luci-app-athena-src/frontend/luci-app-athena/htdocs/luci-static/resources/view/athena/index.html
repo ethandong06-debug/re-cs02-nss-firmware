@@ -3824,8 +3824,9 @@ function dlB64(file){
   }).catch(function(e){ toast('下载失败：'+(e.message||'')); });
 }
 window.restoreBackup=function(file){
-  openBkModal('<h3>恢复 '+esc(file)+'？</h3><div class="m-sub">将覆盖当前全部配置并重启设备。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();athenaRPC.exec(\'athena-backup.sh\',[\'restore\',\''+file+'\']).then(function(){toast(\'恢复完成，设备重启中\');setTimeout(function(){location.reload();},8000);}).catch(function(e){toast(\'恢复失败：\'+e.message);})">确认恢复</button></div>');
+  openBkModal('<h3>恢复 '+esc(file)+'？</h3><div class="m-sub">将覆盖当前全部配置并重启设备。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="athenaRPC.exec(\\'athena-backup.sh\\',[\\'restore\\',\\''+file+'\\']).then(function(d){if(!d||d.ok!==true)throw new Error((d&&d.msg)||\\'后端未确认恢复成功\\');closeModal();toast(\\'恢复完成，设备重启中\\');setTimeout(function(){location.reload();},8000);}).catch(function(e){toast(\\'恢复失败：\\'+e.message);})">确认恢复</button></div>');
 };
+
 
 /* ---- 高级 ---- */
 window.pickRes=function(t){ resTab=t; renderResBox(); };
