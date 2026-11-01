@@ -38,6 +38,17 @@ split_pv() {
 	}'
 }
 
+valid_pkg() {
+	case "$1" in ''|*[!a-zA-Z0-9+._-]*) return 1 ;; esac
+	return 0
+}
+protected_pkg() {
+	case "$1" in
+		base-files|busybox|apk-tools|libc|musl|kernel|procd|ubus|ubusd|ucode|netifd|ppp|ppp-mod-pppoe|firewall4|nftables|dnsmasq|odhcpd|odhcpd-ipv6only|odhcp6c|rpcd|uhttpd|dropbear|luci|luci-base|luci-mod-admin-full|luci-app-athena|luci-app-openclash|openclash|mihomo|clash|smartdns|kmod-*|qca-nss-*|qca-ssdk|kmod-qca-ssdk|kmod-ecm)
+			return 0 ;;
+		*) return 1 ;;
+	esac
+}
 installed_pkgs() { apk list -I 2>/dev/null | split_pv | sort; }
 available_pkgs() { apk list 2>/dev/null | split_pv | sort; }
 
@@ -138,11 +149,15 @@ case "$CMD" in
 		fi
 		;;
 	install)
-		PKG="${2:-}"; [ -z "$PKG" ] && { echo '{"ok":false,"msg":"缺少包名"}'; exit 1; }
+		PKG="${2:-}"; valid_pkg "$PKG" || { echo '{"ok":false,"msg":"包名格式无效"}'; exit 1; }
 		apk add "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 安装成功\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 安装失败\"}"
 		;;
 	remove)
-		PKG="${2:-}"; [ -z "$PKG" ] && { echo '{"ok":false,"msg":"缺少包名"}'; exit 1; }
+		PKG="${2:-}"; valid_pkg "$PKG" || { echo '{"ok":false,"msg":"包名格式无效"}'; exit 1; }
+		if protected_pkg "$PKG"; then
+			echo "{\"ok\":false,\"msg\":\"$PKG 属于系统、网络、OpenClash 或 NSS/ECM 关键组件，已禁止从此页面卸载\"}"
+			exit 1
+		fi
 		apk del "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 已卸载\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 卸载失败\"}"
 		;;
 	update)
@@ -153,7 +168,11 @@ case "$CMD" in
 		;;
 	upgrade)
 		PKG="${2:-}"
-		if [ -z "$PKG" ]; then echo '{"ok":false,"msg":"为安全起见不支持全量升级，请指定单个包"}'; exit 1; fi
+		valid_pkg "$PKG" || { echo '{"ok":false,"msg":"包名格式无效"}'; exit 1; }
+		if protected_pkg "$PKG"; then
+			echo "{\"ok\":false,\"msg\":\"$PKG 属于系统、网络、OpenClash 或 NSS/ECM 关键组件，已禁止从此页面单独升级\"}"
+			exit 1
+		fi
 		apk upgrade "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 已更新\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 更新失败\"}"
 		;;
 	*)
