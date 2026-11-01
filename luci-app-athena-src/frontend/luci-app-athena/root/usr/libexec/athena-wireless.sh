@@ -227,7 +227,7 @@ do_reset_defaults() {
 		esac
 		uci -q delete "wireless.radio${r}.disabled" 2>/dev/null
 		uci -q delete "wireless.radio${r}.channel" 2>/dev/null
-		iface=$(uci -q show wireless 2>/dev/null | grep -E "\.device='radio${r}'$" | head -1 | sed "s/\.device=.*//")
+		iface=$(find_iface "radio${r}")
 		if [ -n "$iface" ]; then
 			uci -q set "${iface}.ssid=$SSID"
 			uci -q set "${iface}.encryption=psk2"
