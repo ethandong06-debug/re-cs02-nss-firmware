@@ -3346,12 +3346,12 @@ window.saveApply=function(){
     if(wp==='pppoe'){
       var su=document.getElementById('wanUser').value.trim(), sp=document.getElementById('wanPwd').value;
       if(!su){ toast('请填写宽带账号'); return; }
-      args=['single',inner,wan,iptv||'',wp,su,sp,'on',port];
+      args=['single',inner,wan,iptv||'',wp,su,sp,port];
     } else if(wp==='static'){
       var sip=document.getElementById('stIp').value.trim(), smask=document.getElementById('stMask').value.trim(), sgw=document.getElementById('stGw').value.trim(), sdns=document.getElementById('stDns').value.trim();
       if(!sip||!smask||!sgw){ toast('静态 IP、掩码、网关必填'); return; }
-      args=['single',inner,wan,iptv||'',wp,[sip,smask,sgw,sdns].join('/'),'','on',port];
-    } else { args=['single',inner,wan,iptv||'',wp,'','','on',port]; }
+      args=['single',inner,wan,iptv||'',wp,[sip,smask,sgw,sdns].join('/'),'',port];
+    } else { args=['single',inner,wan,iptv||'',wp,'','',port]; }
   }
   else {
     var bip=document.getElementById('bpIp').value.trim(), bgw=document.getElementById('bpGw').value.trim(), bdns=document.getElementById('bpDns').value.trim();
