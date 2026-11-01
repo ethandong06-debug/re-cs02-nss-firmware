@@ -60,16 +60,16 @@ case "$CMD" in
 		if verify_file "$FILE"; then
 			umask 077
 			MARKER_TMP="/tmp/athena-fw-upload.sha256.tmp.$$"
-			if ! printf '%s\\n' "$SHA" > "$MARKER_TMP" || ! chmod 600 "$MARKER_TMP" || ! mv -f "$MARKER_TMP" /tmp/athena-fw-upload.sha256; then
+			if ! printf '%s\n' "$SHA" > "$MARKER_TMP" || ! chmod 600 "$MARKER_TMP" || ! mv -f "$MARKER_TMP" /tmp/athena-fw-upload.sha256; then
 				rm -f "$MARKER_TMP" /tmp/athena-fw-upload.sha256
 				echo '{"ok":false,"compatible":false,"msg":"无法保存固件预校验凭据"}'
 				exit 1
 			fi
-			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":true,"pkg":"%s","reason":""}\\n' "$SIZE" "$SHA" "$DIR"
+			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":true,"pkg":"%s","reason":""}\n' "$SIZE" "$SHA" "$DIR"
 		else
 			rm -f /tmp/athena-fw-upload.sha256
-			SAFE_REASON=$(printf '%s' "$REASON" | sed 's/\\\\/\\\\\\\\/g; s/"/\\\\"/g')
-			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":false,"pkg":"%s","reason":"%s"}\\n' "${SIZE:-0}" "$SHA" "$DIR" "$SAFE_REASON"
+			SAFE_REASON=$(printf '%s' "$REASON" | sed 's/\\/\\\\/g; s/"/\\"/g')
+			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":false,"pkg":"%s","reason":"%s"}\n' "${SIZE:-0}" "$SHA" "$DIR" "$SAFE_REASON"
 		fi
 		;;
 	flash)
@@ -84,7 +84,11 @@ case "$CMD" in
 			exit 1
 		fi
 		VERIFIED_SHA=$(cat /tmp/athena-fw-upload.sha256 2>/dev/null)
-		[ -n "$VERIFIED_SHA" ] && [ "$VERIFIED_SHA" = "$SHA" ] || { echo '{"ok":false,"msg":"固件未完成预校验或文件在校验后发生变化，请重新验证"}'; exit 1; }
+		if [ -z "$VERIFIED_SHA" ] || [ "$VERIFIED_SHA" != "$SHA" ]; then
+			rm -f /tmp/athena-fw-upload.sha256
+			echo '{"ok":false,"msg":"固件未完成预校验或文件在校验后发生变化，请重新验证"}'
+			exit 1
+		fi
 		rm -f /tmp/athena-fw-upload.sha256
 		if [ "$KEEP" = "0" ]; then
 			echo '{"ok":true,"msg":"固件已通过机型与结构校验，开始全新刷写，设备即将重启"}'
