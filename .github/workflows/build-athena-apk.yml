@@ -147,9 +147,14 @@ jobs:
             exit 1
           fi
           cp "${apks[0]}" output/
+          # Preserve only the public half of the exact ephemeral key used by this build.
+          # The private key remains inside the disposable GitHub Actions runner.
+          test -s immortalwrt/public-key.pem
+          cp immortalwrt/public-key.pem output/athenawrt-build-signing.pub
+          openssl pkey -pubin -in output/athenawrt-build-signing.pub -noout
           file output/*.apk | tee output/file-type.txt
-          sha256sum output/*.apk | tee output/SHA256SUMS.txt
-          stat -c '%n %s bytes' output/*.apk | tee output/size.txt
+          sha256sum output/*.apk output/*.pub | tee output/SHA256SUMS.txt
+          stat -c '%n %s bytes' output/*.apk output/*.pub | tee output/size.txt
           tar -czf output/athena-source-build-metadata.tar.gz \
             luci-app-athena-src/frontend/luci-app-athena/Makefile \
             luci-app-athena-src/README.md
