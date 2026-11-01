@@ -7,7 +7,7 @@ V="${3:-}"
 umask 077
 
 valid_key() {
-	case "$1" in kpi_order|res_kth|ui_zoom) return 0 ;; *) return 1 ;; esac
+	case "$1" in kpi_order|res_kth|ui_zoom|ui_mode|ui_last) return 0 ;; *) return 1 ;; esac
 }
 valid_value() {
 	case "$K" in
@@ -17,6 +17,12 @@ valid_value() {
 			;;
 		res_kth)
 			case "$V" in 0|1) return 0 ;; *) return 1 ;; esac
+			;;
+		ui_mode)
+			case "$V" in athena|native|last) return 0 ;; *) return 1 ;; esac
+			;;
+		ui_last)
+			case "$V" in athena|native) return 0 ;; *) return 1 ;; esac
 			;;
 		kpi_order)
 			[ -n "$V" ] && [ "${#V}" -le 32 ] || return 1
