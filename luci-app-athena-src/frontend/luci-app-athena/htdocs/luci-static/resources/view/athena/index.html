@@ -1340,7 +1340,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       +'<div class="theme-sec">液态玻璃色板</div>'
       +'<div class="theme-presets">'+GLASS_PRESETS.map(function(pr){return '<button class="theme-preset '+(GLASS_THEME.palette===pr.id?'on':'')+'" data-p="'+pr.id+'" onclick="pickPalette(\''+pr.id+'\')"><span class="tp-ic"><i class="tp-dot" style="background:'+pr.dot+'"></i></span><span class="tp-name">'+pr.name+'</span><span class="tp-desc">'+pr.desc+'</span></button>';}).join('')+'</div>'
       +'<div class="theme-sec">参数调节</div>'
-      +'<div class="theme-row"><label>光斑强度</label><input type="range" min="20" max="200" value="'+GLASS_THEME.blob+'" oninput="setGlassParam(\'blob\',this.value)"><span class="tr-val">'+GLASS_THEME.blob+'</span></div>'
+      +'<div class="theme-row"><label>光斑强度</label><input type="range" min="0" max="100" value="'+GLASS_THEME.blob+'" oninput="setGlassParam(\'blob\',this.value)"><span class="tr-val">'+GLASS_THEME.blob+'</span></div>'
       +'<div class="theme-row"><label>玻璃不透明</label><input type="range" min="30" max="90" value="'+GLASS_THEME.glass+'" oninput="setGlassParam(\'glass\',this.value)"><span class="tr-val">'+GLASS_THEME.glass+'</span></div>'
       +'<div class="theme-row"><label>模糊程度</label><input type="range" min="4" max="40" value="'+GLASS_THEME.blur+'" oninput="setGlassParam(\'blur\',this.value)"><span class="tr-val">'+GLASS_THEME.blur+'</span></div>'
       +'<div class="theme-row"><label>光晕强度</label><input type="range" min="20" max="100" value="'+GLASS_THEME.iri+'" oninput="setGlassParam(\'iri\',this.value)"><span class="tr-val">'+GLASS_THEME.iri+'</span></div>'
