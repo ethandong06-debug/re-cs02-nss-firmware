@@ -39,6 +39,10 @@ exit 0
 endef
 
 define Package/luci-app-athena/install
+	# ---- 固定 APK 签名公钥 ----
+	$(INSTALL_DIR) $(1)/etc/apk/keys
+	$(INSTALL_DATA) ./root/etc/apk/keys/athenawrt-build-signing.pem $(1)/etc/apk/keys/athenawrt-build-signing.pem
+
 	# ---- 后端脚本（shell / ucode）----
 	$(INSTALL_DIR) $(1)/usr/libexec
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status.sh $(1)/usr/libexec/athena-status.sh
