@@ -787,21 +787,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <div class="row2">
       <div class="card">
         <h3>家庭网络拓扑 <span class="sub">示意</span></h3>
-        <div class="topo" id="topoBox">
-          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">已连接</span></div>
-          <div class="topo-line">光猫 · 桥接模式</div>
-          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">pppoe-wan · VLAN 2044</span></div>
-          <div class="topo-line">内网 br-lan · 192.168.10.0/24</div>
-          <div class="topo-branch">
-            <div class="leaf"><b>LAN1–LAN3</b>有线设备 4 台</div>
-            <div class="leaf"><b>WiFi</b>2.4G / 5.2G / 5.8G · 5 台</div>
-          </div>
-          <div class="topo-line">IPTV br-iptv · VLAN 3066</div>
-          <div class="topo-branch">
-            <div class="leaf"><b>LAN4</b>IPTV 机顶盒</div>
-            <div class="leaf" style="opacity:.45"><b>—</b>未接入</div>
-          </div>
-        </div>
+        <div class="topo" id="topoBox"><div class="apps-empty">正在采集实际网络与设备信息…</div></div>
       </div>
       <div class="card">
         <h3>快捷操作</h3>
@@ -826,7 +812,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <div class="grid">
       <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px">
         <div><div class="ct">WiFi 总开关</div><div data-k="wifiAllTxt" style="font-size:12px;color:var(--text3);margin-top:4px">正在读取无线状态</div></div>
-        <div class="switch on" data-k="wifiAll" onclick="toggleWifiAll()"></div>
+        <div class="switch" data-k="wifiAll" onclick="toggleWifiAll()"></div>
       </div>
       <div class="band">
         <div class="band-card" data-band="b24" onclick="editBand('b24')">
@@ -925,12 +911,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div style="margin-top:18px">
           <div data-modeTitle style="font-size:13px;font-weight:700;margin-bottom:12px">正在读取当前网络配置…</div>
-          <div id="modeFormBox"><div class="apps-empty">正在读取现有网络参数；未读取完成前不会显示可提交的配置表单。</div>
-          <div class="field"><label>PPPoE 宽带密码</label><div class="pwd-wrap"><input type="text" data-pwd="1" value="········" onchange="done('宽带密码已更新')"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>
-          <div class="field"><label>外网 VLAN（拨号）</label><input type="text" value="2044"></div>
-          <div class="field"><label>内网回传 VLAN</label><input type="text" value="10"></div>
-          <div class="field"><label>IPTV VLAN</label><input type="text" value="3066"></div>
-          </div>
+          <div id="modeFormBox"><div class="apps-empty">正在读取现有网络参数；未读取完成前不会显示可提交的配置表单。</div></div>
           <button data-applyBtn class="btn primary" onclick="saveApply()" style="display:none" disabled>保存并应用</button>
         </div>
       </div>
@@ -942,12 +923,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>网口状态 <span class="sub">LAN 口接入示意</span></h3>
-        <div class="port-grid" id="portBox"><div class="apps-empty">正在读取物理网口链路状态…</div><div class="pn">WAN 2.5G</div><div class="ptag">已连接</div><div class="pd">PPPoE 拨号 · 1000M 全双工</div></div>
-          <div class="port-card"><div class="pg"><i class="on"></i><i class="link"></i><i class="on"></i><i class="link"></i></div><div class="pn">LAN1</div><div class="ptag">已连接</div><div class="pd">内网 · 交换机上行</div></div>
-          <div class="port-card"><div class="pg"><i class="on"></i><i class="on"></i><i class="link"></i><i class="on"></i></div><div class="pn">LAN2</div><div class="ptag">已连接</div><div class="pd">内网 · 小米电视</div></div>
-          <div class="port-card"><div class="pg"><i></i><i></i><i></i><i></i></div><div class="pn">LAN3</div><div class="ptag">空闲</div><div class="pd">未接入设备</div></div>
-          <div class="port-card"><div class="pg"><i class="on"></i><i class="link"></i><i class="link"></i><i class="on"></i></div><div class="pn">LAN4</div><div class="ptag">IPTV</div><div class="pd">IPTV · VLAN 3066</div></div>
-        </div>
+        <div class="port-grid" id="portBox"><div class="apps-empty">正在读取物理网口链路状态…</div></div>
       </div>
       <div class="row2">
         <div class="card">
@@ -1108,27 +1084,12 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>资源占用</h3>
         <div class="res-head"><div class="tabs"><button class="on" data-restab="cpu" onclick="pickRes('cpu')">CPU 占用</button><button data-restab="mem" onclick="pickRes('mem')">内存占用</button></div><span class="res-kth" onclick="toggleResKth()" title="内核线程（kworker / ksoftirqd / irq / sugov 等）默认不显示，排查时再打开"><span>显示内核线程</span><div class="switch" id="resKthSw"></div></span></div>
         <div class="res-hint" id="resHint"></div>
-        <div data-resCpu>
-        <div class="proc-row"><div class="proc-name">odhcpd</div><div class="proc-bar"><i style="width:38%"></i></div><div class="proc-m">38.2% · 12 MB</div><button class="btn sm" onclick="procAct('odhcpd','stop')">停止</button></div>
-        <div class="proc-row"><div class="proc-name">OpenClash</div><div class="proc-bar"><i style="width:21%"></i></div><div class="proc-m">21.4% · 96 MB</div><button class="btn sm" onclick="procAct('OpenClash','restart')">重启</button><button class="btn sm danger" onclick="procAct('OpenClash','stop')">停止</button></div>
-        <div class="proc-row"><div class="proc-name">filebrowser</div><div class="proc-bar"><i style="width:7%"></i></div><div class="proc-m">7.1% · 18 MB</div><button class="btn sm" onclick="procAct('filebrowser','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">dnsmasq</div><div class="proc-bar"><i style="width:4%"></i></div><div class="proc-m">3.8% · 2 MB</div><button class="btn sm" onclick="procAct('dnsmasq','restart')">重启</button></div>
-      </div>
-      <div data-resMem style="display:none">
-        <div class="proc-row"><div class="proc-name">OpenClash</div><div class="proc-bar"><i style="width:46%;background:var(--warn)"></i></div><div class="proc-m">96 MB</div><button class="btn sm" onclick="procAct('OpenClash','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">filebrowser</div><div class="proc-bar"><i style="width:9%"></i></div><div class="proc-m">18 MB</div><button class="btn sm" onclick="procAct('filebrowser','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">odhcpd</div><div class="proc-bar"><i style="width:6%"></i></div><div class="proc-m">12 MB</div><button class="btn sm" onclick="procAct('odhcpd','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">dnsmasq</div><div class="proc-bar"><i style="width:1%"></i></div><div class="proc-m">2 MB</div><button class="btn sm" onclick="procAct('dnsmasq','restart')">重启</button></div>
-      </div>
+        <div data-resCpu><div class="apps-empty">正在读取进程占用…</div></div>
+      <div data-resMem style="display:none"><div class="apps-empty">正在读取内存占用…</div></div>
       </div>
       <div class="card">
         <h3>运行中的服务 <span class="sub">第三方应用服务</span></h3>
-        <div id="svcBox"><div class="apps-empty">正在读取第三方服务状态…</div><div class="svc-desc">DNS 广告过滤</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('agh')">打开</button><button class="btn sm danger" onclick="svcAct('agh','toggle')">停止</button><button class="btn sm" onclick="svcAct('agh','restart')">重启</button></div>
-        <div class="svc-row" data-svc="clash"><div class="svc-info" onclick="openSvcWin('clash')"><div class="svc-name">OpenClash</div><div class="svc-desc">代理分流</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('clash')">打开</button><button class="btn sm danger" onclick="svcAct('clash','toggle')">停止</button><button class="btn sm" onclick="svcAct('clash','restart')">重启</button></div>
-        <div class="svc-row" data-svc="fb"><div class="svc-info" onclick="openSvcWin('fb')"><div class="svc-name">filebrowser</div><div class="svc-desc">网页文件管理 · 端口 8081</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('fb')">打开</button><button class="btn sm danger" onclick="svcAct('fb','toggle')">停止</button></div>
-        <div class="svc-row" data-svc="ddns"><div class="svc-info" onclick="openSvcWin('ddns')"><div class="svc-name">DDNS</div><div class="svc-desc">动态域名解析</div></div><span class="svc-status off">已停止</span><button class="btn sm primary" onclick="svcAct('ddns','toggle')">启动</button></div>
-        <div class="svc-row" data-svc="webdav"><div class="svc-info" onclick="openSvcWin('webdav')"><div class="svc-name">阿里云盘 WebDAV</div><div class="svc-desc">网盘挂载</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('webdav')">打开</button><button class="btn sm danger" onclick="svcAct('webdav','toggle')">停止</button><button class="btn sm" onclick="svcAct('webdav','restart')">重启</button></div>
-        </div>
+        <div id="svcBox"><div class="apps-empty">正在读取第三方服务状态…</div></div>
       </div>
       <div class="row2">
         <div class="card">
@@ -2013,7 +1974,7 @@ var KPI_ITEMS=[
 </style>
 <script>
 /* =========================================================================
-   AthenaWrt 后端注入层 · v1.2.39（预览稿基座适配版）
+   AthenaWrt 后端注入层 · v1.2.61（预览稿基座适配版）
    在静态设计稿之上注入固件全部后端能力：luci RPC 会话、athena-*.sh 调用、
    真实数据渲染、操作函数覆盖；单臂入口已移除；主题持久化走 athena-theme.sh。
    ========================================================================= */
@@ -2026,7 +1987,7 @@ window.ATHENA_BACKEND=true;   /* 阻止预览稿假数据 tick/animate */
   var lg=document.createElement('div'); lg.className='login'; lg.id='login';
   lg.innerHTML='<div class="login-card">'
     +'<div class="login-logo"><span class="ll"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/></svg></span>AthenaWrt</div>'
-    +'<div class="login-sub">RE-CS-02 · IPQ6018 · v1.2.39</div>'
+    +'<div class="login-sub">RE-CS-02 · IPQ6018 · v1.2.61</div>'
     +'<div class="field"><label>用户名</label><input id="user" type="text" value="root" autocomplete="username"></div>'
     +'<div class="field"><label>密码</label><div class="pwd-wrap"><input id="pwd" type="text" data-pwd="1" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')doLogin()"></div></div>'
     +'<div class="login-err" id="loginErr"></div>'
@@ -2096,7 +2057,7 @@ function appAlias(id,name){
   return name||k;
 }
 
-/* ---------------- RPC 适配层（rpcd file.exec + ubus，v1.2.39） ---------------- */
+/* ---------------- RPC 适配层（rpcd file.exec + ubus，v1.2.61） ---------------- */
 var athenaRPC={
   session:null, live:false, user:'root',
   async _call(sid,obj,method,params,timeoutMs){
