@@ -413,7 +413,7 @@ for (let line in split(neigh_txt, '\n')) {
 	if (state != 'REACHABLE' && state != 'STALE' && state != 'DELAY' && state != 'PROBE' && state != 'PERMANENT' && state != 'NOARP') continue;
 	let mac = lower_hex(mm[1]);
 	if (mac == '00:00:00:00:00:00') continue;
-	neigh_online[mac] = true;
+	if (state == 'REACHABLE' || state == 'DELAY' || state == 'PROBE') neigh_online[mac] = true;
 	// 补充 IPv6 SLAAC 设备：只采集内网桥上的全局 IPv6 邻居，不把 WAN 邻居或 link-local 地址当作终端。
 	let ipaddr = st[0], dev = '';
 	for (let i = 0; i < length(st) - 1; i++) if (st[i] == 'dev' && i + 1 < length(st)) dev = st[i + 1];
