@@ -29,7 +29,7 @@ case "$CMD" in
 		M=$(norm_mac "$MAC")
 		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
 		# 优先使用 fw4/nftables；规则已存在时视为成功，避免重复插入。
-		if nft -a list chain inet fw4 forward 2>/dev/null | grep -Fq "ether saddr $M"; then
+		if nft -a list chain inet fw4 forward 2>/dev/null | grep -F "ether saddr $M" | grep -q " drop"; then
 			RULE_OK=1
 		elif nft add rule inet fw4 forward ether saddr "$M" counter drop 2>/dev/null; then
 			RULE_OK=1
@@ -44,17 +44,17 @@ case "$CMD" in
 		[ "$RULE_OK" -eq 1 ] || { echo '{"ok":false,"msg":"防火墙规则添加失败，设备未拉黑"}'; exit 1; }
 		# 记录到 uci（持久化，首启脚本可恢复）
 		uci -q add_list athena.client.blocked="$M"
-		uci commit athena 2>/dev/null
+		uci commit athena 2>/dev/null || { echo '{"ok":false,"msg":"已添加临时防火墙规则，但保存拉黑名单失败"}'; exit 1; }
 		echo "{\"ok\":true,\"mac\":\"$M\"}"
 		;;
 	unblock)
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		M=$(norm_mac "$MAC")
 		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
-		nft -a list ruleset 2>/dev/null | grep "saddr $M" | awk '{print $NF}' | while read h; do nft delete rule inet fw4 forward handle "$h" 2>/dev/null; done
+		nft -a list chain inet fw4 forward 2>/dev/null | grep "saddr $M" | awk '{print $NF}' | while read h; do nft delete rule inet fw4 forward handle "$h" 2>/dev/null; done
 		iptables -D FORWARD -m mac --mac-source "$M" -j DROP 2>/dev/null
 		uci -q del_list athena.client.blocked="$M"
-		uci commit athena 2>/dev/null
+		uci commit athena 2>/dev/null || { echo '{"ok":false,"msg":"已解除当前规则，但保存名单失败"}'; exit 1; }
 		echo "{\"ok\":true,\"mac\":\"$M\"}"
 		;;
 	rename)
@@ -74,16 +74,18 @@ case "$CMD" in
 			uci set dhcp.@host[-1].mac="$M"
 			uci set dhcp.@host[-1].name="$NAME"
 		fi
-		uci commit dhcp 2>/dev/null
+		uci commit dhcp 2>/dev/null || { echo '{"ok":false,"msg":"设备名称保存失败"}'; exit 1; }
 		# 让 DHCP 主机名立即生效，否则改名只写配置、页面无变化（"无效果"）
-		/etc/init.d/dnsmasq restart >/dev/null 2>&1
-		echo "{\"ok\":true,\"mac\":\"$M\",\"name\":\"$NAME\"}"
+		/etc/init.d/dnsmasq restart >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"名称已保存，但 DHCP 服务重载失败"}'; exit 1; }
+		echo "{\"ok\":true,\"mac\":\"$M\",\"name\":\"$(printf '%s' "$NAME" | json_str)\"}"
 		;;
 	restore)
 		# 开机/手动恢复持久化的拉黑规则（nft 规则重启后不保留）
 		BLOCKED=$(uci -q get athena.client.blocked 2>/dev/null)
 		for M in $BLOCKED; do
-			nft add rule inet fw4 forward ether saddr "$M" counter drop 2>/dev/null
+			M=$(norm_mac "$M")
+			valid_mac "$M" || continue
+			nft -a list chain inet fw4 forward 2>/dev/null | grep -F "$M" | grep -q " drop" || nft add rule inet fw4 forward ether saddr "$M" counter drop 2>/dev/null
 		done
 		echo '{"ok":true,"restored":true}'
 		;;
