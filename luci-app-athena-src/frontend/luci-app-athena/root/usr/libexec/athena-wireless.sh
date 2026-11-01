@@ -225,7 +225,6 @@ do_reset_defaults() {
 				;;
 			*) continue ;;
 		esac
-		uci -q set "wireless.radio${r}.country=CN"
 		uci -q delete "wireless.radio${r}.disabled" 2>/dev/null
 		uci -q delete "wireless.radio${r}.channel" 2>/dev/null
 		iface=$(uci -q show wireless 2>/dev/null | grep -E "\.device='radio${r}'$" | head -1 | sed "s/\.device=.*//")
@@ -266,8 +265,11 @@ guest_get() {
 guest_enable() {
 	local ssid="${1:-$GUEST_SSID}" pwd="${2:-}"
 	local radio="radio1"
-	[ "${#ssid}" -ge 1 ] && [ "${#ssid}" -le 32 ] || { echo '{"ok":false,"msg":"访客 WiFi 名称长度必须为 1-32 字节"}'; exit 1; }
-	[ -n "$pwd" ] && [ "${#pwd}" -ge 8 ] && [ "${#pwd}" -le 63 ] || { echo '{"ok":false,"msg":"请设置 8-63 位访客 WiFi 密码，不再使用通用默认密码"}'; exit 1; }
+	SSID_BYTES=$(printf '%s' "$ssid" | wc -c | tr -d ' ')
+	PWD_BYTES=$(printf '%s' "$pwd" | wc -c | tr -d ' ')
+	[ "$SSID_BYTES" -ge 1 ] && [ "$SSID_BYTES" -le 32 ] || { echo '{"ok":false,"msg":"访客 WiFi 名称长度必须为 1-32 字节"}'; exit 1; }
+	[ -n "$pwd" ] && [ "$PWD_BYTES" -ge 8 ] && [ "$PWD_BYTES" -le 63 ] || { echo '{"ok":false,"msg":"请设置 8-63 字节访客 WiFi 密码，不再使用通用默认密码"}'; exit 1; }
+	printf '%s' "$ssid$pwd" | LC_ALL=C grep -q '[[:cntrl:]]' && { echo '{"ok":false,"msg":"访客 WiFi 名称或密码不能包含控制字符"}'; exit 1; }
 	[ "$(uci -q get "wireless.$radio" 2>/dev/null)" = "wifi-device" ] || { echo '{"ok":false,"msg":"2.4G 无线设备不存在"}'; exit 1; }
 	guest_clear_internal
 	uci set "wireless.$GUEST_IFACE=wifi-iface"
