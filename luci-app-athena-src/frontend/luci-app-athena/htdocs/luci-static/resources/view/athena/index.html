@@ -3755,7 +3755,7 @@ window.backupNow=function(){
   athenaRPC.exec('athena-backup.sh',['create']).then(function(d){ toast('备份完成：'+(d&&d.file||'')); loadBackupList(); }).catch(function(e){ toast('备份失败：'+(e.message||'')); });
 };
 window.openRestore=function(){
-  openBkModal('<h3>恢复配置</h3><div class="m-sub">上传备份文件（.tar.gz / .json）并恢复，将覆盖当前配置</div>'
+  openBkModal('<h3>恢复配置</h3><div class="m-sub">上传 OpenWrt 配置备份（.tar.gz）并恢复，将覆盖当前配置</div>'
     +'<div class="limit-row"><div><label>上传备份文件</label><div style="display:flex;gap:8px;align-items:center"><input type="file" id="bkFile" accept=".tar.gz,.gz" style="display:none" onchange="var s=document.getElementById(\'bkName\'); if(s){s.textContent=this.files&&this.files[0]?this.files[0].name:\'未选择文件\';}"><button type="button" class="btn" onclick="document.getElementById(\'bkFile\').click()">选择文件</button><span id="bkName" style="font-size:12px;color:var(--text3)">未选择文件</span></div></div></div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="doRestore()">上传并恢复</button></div>');
 };
@@ -3763,12 +3763,13 @@ window.onRestorePick=function(){};
 window.doRestore=function(){
   var f=document.getElementById('bkFile').files[0];
   if(!f){ toast('请先选择备份文件'); return; }
+  if(!/\.tar\.gz$/i.test(f.name)&&!/\.gz$/i.test(f.name)){ toast('只接受 .tar.gz 配置备份文件'); return; }
   var fr=new FileReader();
   fr.onload=function(){
     var b64=fr.result.split(',')[1];
     toast('上传备份中…');
     athenaRPC._writeChunked('/tmp/athena-restore.b64',b64).then(function(){
-      athenaRPC.exec('athena-backup.sh',['restore-upload']).then(function(){ toast('配置已恢复，设备即将重启'); setTimeout(function(){ location.reload(); },8000); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+      athenaRPC.exec('athena-backup.sh',['restore-upload']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复成功'); toast('配置已恢复，设备即将重启'); setTimeout(function(){ location.reload(); },8000); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
     }).catch(function(e){ toast('上传失败：'+(e.message||'')); });
   };
   fr.readAsDataURL(f);
