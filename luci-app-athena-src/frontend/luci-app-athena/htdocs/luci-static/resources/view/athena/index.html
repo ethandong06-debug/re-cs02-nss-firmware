@@ -1088,7 +1088,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div data-resMem style="display:none"><div class="apps-empty">正在读取内存占用…</div></div>
       </div>
       <div class="card">
-        <h3>运行中的服务 <span class="sub">第三方应用服务</span></h3>
+        <h3>服务管理 <span class="sub">开机启用状态 · 安全启停与重启</span></h3>
         <div id="svcBox"><div class="apps-empty">正在读取第三方服务状态…</div></div>
       </div>
       <div class="row2">
@@ -2703,7 +2703,7 @@ function svcRowHTML(s){
   var openable=!!(s.path||s.url||s.port);
   return '<div class="svc-row" data-svc="'+esc(s.id)+'">'
     +'<div class="svc-info" onclick="openSvcWin(\''+esc(s.id)+'\')"><div class="svc-name">'+esc(nm)+'</div><div class="svc-desc">'+esc(s.desc||'')+'</div></div>'
-    +'<span class="svc-status '+(s.on?'on':'')+'">'+(s.on?'运行中':'已停止')+'</span>'
+    +'<span class="svc-status '+(s.on?'on':'')+'">'+(s.on?'已启用':'未启用')+'</span>'
     +(s.toggle!==false?'<button class="btn sm '+(s.on?'danger':'primary')+'" onclick="svcAct(\''+esc(s.id)+'\',\'toggle\')">'+(s.on?'停止':'启动')+'</button>':'')
     +(s.on&&s.toggle!==false?'<button class="btn sm" onclick="svcAct(\''+esc(s.id)+'\',\'restart\')">重启</button>':'')
     +(openable?'<button class="btn sm" onclick="openSvcPage(\''+esc(s.id)+'\')">打开</button>':'')
@@ -3846,14 +3846,18 @@ window.doProcAction=function(pid,action){
 };
 window.svcAct=function(id,act){
   var s=SERVICES.find(function(x){return x.id===id;}); if(!s) return;
-  if(act==='toggle'){
-    var target=s.on?'0':'1';
-    athenaRPC.exec('athena-services.sh',['set',id,target]).then(function(){ s.on=target==='1'; toast((target==='1'?'已启动 ':'已停止 ')+s.name); loadServices(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
-  } else {
-    athenaRPC.exec('athena-services.sh',['set',id,'0']).then(function(){
-      setTimeout(function(){ athenaRPC.exec('athena-services.sh',['set',id,'1']).then(function(){ s.on=true; toast(s.name+' 已重启'); loadServices(); }).catch(function(e){ toast('重启失败：'+(e.message||'')); }); },600);
+  if(act==='restart'){
+    athenaRPC.exec('athena-services.sh',['restart',id]).then(function(d){
+      if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认重启');
+      toast(s.name+' 已重启'); loadServices();
     }).catch(function(e){ toast('重启失败：'+(e.message||'')); });
+    return;
   }
+  var target=s.on?'0':'1';
+  athenaRPC.exec('athena-services.sh',['set',id,target]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认服务状态');
+    s.on=target==='1'; toast((target==='1'?'已启用 ':'已停止 ')+s.name); loadServices();
+  }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.openSvcWin=function(id){
   if(!id) return;
