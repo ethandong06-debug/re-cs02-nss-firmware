@@ -1,7 +1,7 @@
 #!/usr/bin/env ucode
 'use strict';
 /*
- * athena-resources.uc - AthenaWrt 资源采集器（ucode 版，v1.2.44）
+ * athena-resources.uc - AthenaWrt 资源采集器（ucode 版，v1.2.59）
  *
  * 为什么换成 ucode：
  *   v1.2.42 的 shell 版一次采样触发 459 次 execve（146 个进程 × 3 个外部命令），
@@ -43,6 +43,57 @@ function i(n) {
 
 function f1(n) {
 	return sprintf('%.1f', n ?? 0);
+}
+
+/* ---------- 0. 结果缓存与并发合并（v1.2.59） ----------
+ * 资源页不是实时控制面：2 秒内复用同一份快照，避免连续切页、
+ * 重复点击或多个浏览器请求同时遍历整个 /proc。
+ * stop/restart 操作由外层 shell 入口处理，不经过此采集缓存。
+ */
+const RESULT_CACHE = '/tmp/athena-resources.json';
+const RESULT_STAMP = '/tmp/athena-resources.stamp';
+const RESULT_LOCK = '/var/run/athena-resources.lock';
+const RESULT_TTL = 2;
+
+function uptime_s() {
+	let m = match(try_readfile('/proc/uptime') ?? '', /^(\\d+)/);
+	return m ? int(m[1]) : 0;
+}
+
+function read_fresh_result() {
+	let body = try_readfile(RESULT_CACHE);
+	let stamp = try_readfile(RESULT_STAMP);
+	if (!body || !stamp) return null;
+	let age = uptime_s() - int(trim(stamp));
+	return (age >= 0 && age < RESULT_TTL) ? body : null;
+}
+
+/* 先读缓存，再竞争锁。锁等待者最多等 1 秒，优先复用首个采集者结果。 */
+let result_hit = read_fresh_result();
+if (result_hit) {
+	print(result_hit);
+	exit(0);
+}
+
+let result_lock_own = false;
+let result_lock_stat = fs.stat(RESULT_LOCK);
+if (result_lock_stat && (time() - result_lock_stat.mtime) > 15)
+	fs.rmdir(RESULT_LOCK);
+
+if (fs.mkdir(RESULT_LOCK)) {
+	result_lock_own = true;
+}
+else {
+	let wait = fs.popen('sleep 1');
+	wait.read('all');
+	wait.close();
+	result_hit = read_fresh_result();
+	if (result_hit) {
+		print(result_hit);
+		exit(0);
+	}
+	/* 极端情况下首个采集者异常退出或耗时过长，允许本次继续采集，
+	 * 但不删除其他实例持有的锁。 */
 }
 
 /* ---------- 1. CPU 总量 / 核数 / uptime ---------- */
@@ -314,5 +365,14 @@ for (let p in procs) {
 		p.kth ? ',"kth":true' : '');
 }
 out += ']}';
+
+/* 原子写入快照；缓存失败不影响本次采集结果返回。 */
+try {
+	fs.writefile(RESULT_CACHE + '.tmp', out + '\\n');
+	fs.rename(RESULT_CACHE + '.tmp', RESULT_CACHE);
+	fs.writefile(RESULT_STAMP, '' + now_up);
+} catch (e) { }
+if (result_lock_own)
+	fs.rmdir(RESULT_LOCK);
 
 print(out, '\n');
