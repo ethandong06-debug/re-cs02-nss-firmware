@@ -3496,6 +3496,7 @@ window.toggleMatrixNight=function(){ setMatrix('night',MATRIX.night?'0':'1'); };
 window.setNightTime=function(){ var s=document.getElementById('nightStart').value, e=document.getElementById('nightEnd').value; if(s) setMatrix('night_start',s); if(e) setMatrix('night_end',e); };
 window.setNightLevel=function(v){ setMatrix('night_level',v); };
 function setMatrix(key,val){
+  if(!MATRIX.loaded){ toast('点阵屏配置尚未读取完成，暂不允许修改'); return; }
   athenaRPC.exec('athena-matrix.sh',['set',key,String(val)]).then(function(d){
     if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认保存');
     if(key==='enabled') MATRIX.enabled=(val==='1');
@@ -3521,6 +3522,7 @@ function openSvcFrame(name,path){
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button></div>', true);
 }
 window.toggleBreath=function(){
+  if(!LED.loaded){ toast('状态灯状态尚未读取完成，暂不允许修改'); return; }
   var target=LED.breathing?'0':'1';
   athenaRPC.exec('athena-led.sh',['set','breath',target]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置'); LED.breathing=target==='1'; toast(target==='1'?'呼吸灯已开启':'呼吸灯已关闭'); renderLedPanel(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
