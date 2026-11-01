@@ -2703,7 +2703,7 @@ function svcRowHTML(s){
     +'<div class="svc-info" onclick="openSvcWin(\''+esc(s.id)+'\')"><div class="svc-name">'+esc(nm)+'</div><div class="svc-desc">'+esc(s.desc||'')+'</div></div>'
     +'<span class="svc-status '+(s.on?'on':'')+'">'+(s.on?'已启用':'未启用')+'</span>'
     +(s.toggle!==false?'<button class="btn sm '+(s.on?'danger':'primary')+'" onclick="svcAct(\''+esc(s.id)+'\',\'toggle\')">'+(s.on?'停止':'启动')+'</button>':'')
-    +(s.on&&(s.toggle!==false||s.restart===true)?'<button class="btn sm" onclick="svcAct(\\''+esc(s.id)+'\\',\\'restart\\')">重启</button>':'')
+    +(s.on&&(s.toggle!==false||s.restart===true)?'<button class="btn sm" onclick="svcAct(\''+esc(s.id)+'\',\'restart\')">重启</button>':'')
     +(openable?'<button class="btn sm" onclick="openSvcPage(\''+esc(s.id)+'\')">打开</button>':'')
     +'</div>';
 }
