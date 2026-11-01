@@ -35,20 +35,21 @@ case "$CMD" in
 		case "$HHMM" in [0-9][0-9]:[0-9][0-9]) ;; *) echo '{"ok":false,"msg":"时间格式应为 HH:MM"}'; exit 1 ;; esac
 		[ "$HH" -le 23 ] 2>/dev/null && [ "$MM" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"时间必须在 00:00-23:59"}'; exit 1; }
 		[ -n "$DOW" ] || { echo '{"ok":false,"msg":"星期值不能为空"}'; exit 1; }
-		case "$DOW" in
-			*) if [ "$DOW" != "*" ]; then
-				for d in $(echo "$DOW" | tr ',' ' '); do case "$d" in 0|1|2|3|4|5|6) ;; *) echo '{"ok":false,"msg":"星期值必须为 * 或 0-6"}'; exit 1 ;; esac; done
-			fi ;;
-		esac
-		# 先移除旧条目
-		sed -i '/# athena-reboot/d' "$CRON_FILE" 2>/dev/null
-		echo "$MM $HH * * $DOW reboot # athena-reboot" >> "$CRON_FILE"
-		/etc/init.d/cron restart >/dev/null 2>&1 || /etc/init.d/crond restart >/dev/null 2>&1
+		if [ "$DOW" != "*" ]; then
+			case "$DOW" in *[!0-6,]*|,*|*,|*,,*) echo '{"ok":false,"msg":"星期格式无效，只能为 * 或 0-6 并以逗号分隔"}'; exit 1 ;; esac
+			for d in $(echo "$DOW" | tr ',' ' '); do case "$d" in 0|1|2|3|4|5|6) ;; *) echo '{"ok":false,"msg":"星期值必须为 * 或 0-6"}'; exit 1 ;; esac; done
+		fi
+		# 先移除旧条目，再写入新条目；失败时不报告成功。
+		mkdir -p /etc/crontabs
+		touch "$CRON_FILE"
+		sed -i '/# athena-reboot/d' "$CRON_FILE" 2>/dev/null || { echo '{"ok":false,"msg":"无法更新定时任务文件"}'; exit 1; }
+		echo "$MM $HH * * $DOW reboot # athena-reboot" >> "$CRON_FILE" || { echo '{"ok":false,"msg":"写入定时任务失败"}'; exit 1; }
+		/etc/init.d/cron restart >/dev/null 2>&1 || /etc/init.d/crond restart >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"定时任务已保存，但 cron 服务重启失败"}'; exit 1; }
 		echo "{\"ok\":true,\"msg\":\"已设置 $DOW $HH:$MM 定时重启\"}"
 		;;
 	disable)
-		sed -i '/# athena-reboot/d' "$CRON_FILE" 2>/dev/null
-		/etc/init.d/cron restart >/dev/null 2>&1 || /etc/init.d/crond restart >/dev/null 2>&1
+		sed -i '/# athena-reboot/d' "$CRON_FILE" 2>/dev/null || { echo '{"ok":false,"msg":"无法更新定时任务文件"}'; exit 1; }
+		/etc/init.d/cron restart >/dev/null 2>&1 || /etc/init.d/crond restart >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"定时任务已删除，但 cron 服务重启失败"}'; exit 1; }
 		echo '{"ok":true,"msg":"定时重启已关闭"}'
 		;;
 	now)
