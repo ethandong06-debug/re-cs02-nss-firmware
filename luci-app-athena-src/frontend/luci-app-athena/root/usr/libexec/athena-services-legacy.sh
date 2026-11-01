@@ -90,6 +90,9 @@ EOF
 		# 已安装即显示；enabled（开机自启）视为"运行中"，未启用显示为关闭
 		if /etc/init.d/$base enabled >/dev/null 2>&1; then on=true; else on=false; fi
 		toggle=true
+		restart=false
+		# OpenClash 在降级/回退到 shell 清单时也必须保持“只允许重启”，不暴露停止开关。
+		if [ "$base" = "openclash" ]; then toggle=false; restart=true; fi
 		dpath=""
 		# 在 LuCI 菜单注册文件里找同名应用的菜单路径（menu.d 的 key 行带 TAB 缩进，
 		# 必须容忍前导空白，否则永远探不到 → 服务只能显示"无独立界面"、无法打开）
@@ -116,6 +119,7 @@ EOF
 			"$(printf '%s' "$base" | json_esc)" \
 			"$(if $core; then echo '系统核心服务（受保护，不建议启停）'; else echo '第三方服务'; fi | json_esc)" \
 			"$on" "$toggle"
+		[ "$restart" = true ] && printf ',"restart":true'
 		if [ -n "$dpath" ]; then
 			printf ',"path":"%s"' "$(printf '%s' "$dpath" | json_esc)"
 		fi
