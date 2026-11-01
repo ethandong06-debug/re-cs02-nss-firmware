@@ -410,7 +410,7 @@ for (let line in split(neigh_txt, '\n')) {
 	if (!mm) continue;
 	let st = split(trim(line), ' ');
 	let state = st[length(st) - 1];
-	if ([ 'REACHABLE', 'STALE', 'DELAY', 'PROBE', 'PERMANENT', 'NOARP' ].index(state) < 0) continue;
+	if (state != 'REACHABLE' && state != 'STALE' && state != 'DELAY' && state != 'PROBE' && state != 'PERMANENT' && state != 'NOARP') continue;
 	let mac = lower_hex(mm[1]);
 	if (mac != '00:00:00:00:00:00') neigh_online[mac] = true;
 }
