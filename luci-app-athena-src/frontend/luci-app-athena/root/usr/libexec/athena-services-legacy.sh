@@ -39,6 +39,8 @@ svc_on() {
 svc_toggle() {
 	local uci_key="$1" init="$2"
 	case " $CORE_INIT " in *" $init "*) echo false; return ;; esac
+	# OpenClash 必须保持可用：允许重启，但不提供停止/禁用开关。
+	[ "$init" = "openclash" ] && { echo false; return; }
 	if { [ -n "$uci_key" ] && [ "$uci_key" != "none" ]; } || { [ -n "$init" ] && [ "$init" != "none" ]; }; then
 		echo true
 	else
@@ -139,6 +141,10 @@ set_svc() {
 		init=$(printf '%s' "$line" | cut -d'|' -f5)
 	fi
 	[ "$en" = "1" ] && val=1
+	if [ "$init" = "openclash" ] && [ "$en" != "1" ]; then
+		echo '{"ok":false,"msg":"OpenClash 已设为受保护服务，只允许启动或重启，不允许停止/禁用"}'
+		return 1
+	fi
 
 	if [ -n "$uci_key" ] && [ "$uci_key" != "none" ]; then
 		uci set "$uci_key=$val" 2>/dev/null
@@ -158,7 +164,23 @@ set_svc() {
 	echo "{\"ok\":true,\"id\":\"$id\",\"on\":$on}"
 }
 
+
+restart_svc() {
+	local id="$1" line init
+	case "$id" in ''|*[!A-Za-z0-9_-]*) echo '{"ok":false,"msg":"服务标识无效"}'; return 1 ;; esac
+	line=$(printf '%s\n' "$SERVICES" | grep "^$id|" | head -n1)
+	if [ -n "$line" ]; then
+		init=$(printf '%s' "$line" | cut -d'|' -f5)
+	else
+		init="$id"
+	fi
+	[ -n "$init" ] && [ "$init" != "none" ] && [ -x "/etc/init.d/$init" ] || { echo '{"ok":false,"msg":"服务不存在或没有 init 脚本"}'; return 1; }
+	case " $CORE_INIT " in *" $init "*) echo '{"ok":false,"msg":"核心系统服务受保护，不允许从此处重启"}'; return 1 ;; esac
+	/etc/init.d/"$init" restart >/dev/null 2>&1 || { echo '{"ok":false,"msg":"服务重启失败"}'; return 1; }
+	echo "{\"ok\":true,\"id\":\"$id\",\"msg\":\"服务已重启\"}"
+}
 case "$1" in
 	set) set_svc "$2" "$3" ;;
+	restart) restart_svc "$2" ;;
 	*) emit_list ;;
 esac
