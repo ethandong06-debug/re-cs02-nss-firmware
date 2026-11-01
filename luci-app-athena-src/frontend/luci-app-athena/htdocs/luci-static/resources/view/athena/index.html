@@ -1572,61 +1572,6 @@ var KPI_ITEMS=[
     inp.type=show?"text":"password";
     btn.classList.toggle("on",show);
   };
-  /* ===== 主题化自定义下拉（增强所有 select，含动态弹窗）===== */
-  function buildCsel(sel){
-    if(sel._csel) return;
-    sel._csel=true;
-    var wrap=document.createElement("div"); wrap.className="csel";
-    var head=document.createElement("div"); head.className="csel-head";
-    head.setAttribute("tabindex","0");
-    head.innerHTML='<span class="csel-val"></span><svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-    var pop=document.createElement("div"); pop.className="csel-pop";
-    function sync(){
-      var v=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].text:"";
-      head.querySelector(".csel-val").textContent=v;
-      pop.innerHTML="";
-      var opts=sel.querySelectorAll("option");
-      for(var j=0;j<opts.length;j++){
-        (function(j,o){
-          var d=document.createElement("div"); d.className="csel-opt"+(o.selected?" on":"");
-          d.textContent=o.textContent;
-          d.onclick=function(){
-            sel.selectedIndex=j;
-            try{ sel.dispatchEvent(new Event("change",{bubbles:true})); }catch(e){}
-            pop.classList.remove("open"); head.classList.remove("on");
-            sync();
-          };
-          pop.appendChild(d);
-        })(j,opts[j]);
-      }
-    }
-    function toggle(force){
-      var open=force!=null?force:!pop.classList.contains("open");
-      pop.classList.toggle("open",open); head.classList.toggle("on",open);
-      if(open) sync();
-    }
-    head.onclick=function(e){ e.stopPropagation(); toggle(); };
-    head.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } };
-    document.addEventListener("click",function(e){ if(!wrap.contains(e.target)) toggle(false); });
-    sel.classList.add("sel-real");
-    wrap.appendChild(head); wrap.appendChild(pop);
-    sel.parentNode.insertBefore(wrap,sel.nextSibling);
-    sync();
-  }
-  function enhanceSelects(root){
-    var sels=(root&&root.querySelectorAll?root:document).querySelectorAll("select");
-    for(var i=0;i<sels.length;i++){ buildCsel(sels[i]); }
-  }
-  try{
-    var selMO=new MutationObserver(function(muts){
-      for(var i=0;i<muts.length;i++){
-        var nodes=muts[i].addedNodes;
-        for(var j=0;j<nodes.length;j++){ if(nodes[j].querySelectorAll) enhanceSelects(nodes[j]); }
-      }
-    });
-    selMO.observe(document.body,{childList:true,subtree:true});
-  }catch(e){}
-
   /* ---- 网络 ---- */
   window.pickMode=function(m){
     S.mode=m;
@@ -3982,7 +3927,7 @@ window.toggleTheme=function(){
   window.setThemeMode(cur==='dark'?'light':'dark');
 };
 
-/* ---- 动态增强：select 下拉 / 密码眼睛 / 自动接管动态弹窗 ---- */
+/* ---- 动态控件增强：单一观察器 + 下拉事件委托 ---- */
 window.togglePwd=function(btn){
   var inp=btn.previousElementSibling;
   if(!inp||inp.tagName!=='INPUT'){ var w=btn.closest('.pwd-wrap'); inp=w?w.querySelector('input'):null; }
@@ -3991,75 +3936,138 @@ window.togglePwd=function(btn){
   inp.type=show?'text':'password';
   btn.classList.toggle('on',show);
 };
+var _openCsel=null;
+function closeCsel(wrap){
+  if(!wrap) return;
+  var pop=wrap.querySelector('.csel-pop');
+  var head=wrap.querySelector('.csel-head');
+  if(pop) pop.classList.remove('open');
+  if(head){ head.classList.remove('on'); head.setAttribute('aria-expanded','false'); }
+  if(_openCsel===wrap) _openCsel=null;
+}
+function toggleCsel(wrap){
+  if(!wrap) return;
+  var pop=wrap.querySelector('.csel-pop');
+  var head=wrap.querySelector('.csel-head');
+  if(!pop||!head) return;
+  if(pop.classList.contains('open')){ closeCsel(wrap); return; }
+  if(_openCsel&&_openCsel!==wrap) closeCsel(_openCsel);
+  if(wrap._cselSync) wrap._cselSync();
+  pop.classList.add('open');
+  head.classList.add('on');
+  head.setAttribute('aria-expanded','true');
+  _openCsel=wrap;
+}
 function buildCsel(sel){
-  if(sel._csel) return;
+  if(!sel||sel._csel||!sel.parentNode) return;
   sel._csel=true;
   var wrap=document.createElement('div'); wrap.className='csel';
-  if(sel.getAttribute('style')){ wrap.setAttribute('style',sel.getAttribute('style')); }
-  var head=document.createElement('div'); head.className='csel-head'; head.setAttribute('tabindex','0');
+  if(sel.getAttribute('style')) wrap.setAttribute('style',sel.getAttribute('style'));
+  var head=document.createElement('div');
+  head.className='csel-head'; head.setAttribute('tabindex','0');
+  head.setAttribute('role','button'); head.setAttribute('aria-haspopup','listbox'); head.setAttribute('aria-expanded','false');
   head.innerHTML='<span class="csel-val"></span><svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-  var pop=document.createElement('div'); pop.className='csel-pop';
+  var valueNode=head.querySelector('.csel-val');
+  var pop=document.createElement('div'); pop.className='csel-pop'; pop.setAttribute('role','listbox');
+  var optionSignature=null;
   function sync(){
-    var v=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].text:'';
-    head.querySelector('.csel-val').textContent=v;
-    pop.innerHTML='';
-    var opts=sel.querySelectorAll('option');
-    for(var j=0;j<opts.length;j++){
-      (function(j,o){
-        var d=document.createElement('div'); d.className='csel-opt'+(o.selected?' on':'');
-        d.textContent=o.textContent;
-        d.onclick=function(){
-          sel.selectedIndex=j;
-          try{ sel.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
-          pop.classList.remove('open'); head.classList.remove('on');
-          sync();
-        };
-        pop.appendChild(d);
-      })(j,opts[j]);
+    var opts=sel.options;
+    var selected=opts[sel.selectedIndex];
+    var value=selected?selected.textContent:'';
+    if(valueNode.textContent!==value) valueNode.textContent=value;
+    var signature=Array.prototype.map.call(opts,function(o){
+      return [o.textContent,o.value,o.disabled?1:0,o.hidden?1:0].join('\u001f');
+    }).join('\u001e');
+    if(signature!==optionSignature){
+      optionSignature=signature;
+      pop.textContent='';
+      var frag=document.createDocumentFragment();
+      for(var i=0;i<opts.length;i++){
+        var item=document.createElement('div');
+        item.className='csel-opt';
+        item.textContent=opts[i].textContent;
+        item.dataset.index=String(i);
+        item.setAttribute('role','option');
+        item.setAttribute('aria-selected','false');
+        if(opts[i].disabled){ item.classList.add('disabled'); item.setAttribute('aria-disabled','true'); }
+        frag.appendChild(item);
+      }
+      pop.appendChild(frag);
+    }
+    for(var j=0;j<pop.children.length;j++){
+      var active=j===sel.selectedIndex;
+      pop.children[j].classList.toggle('on',active);
+      pop.children[j].setAttribute('aria-selected',active?'true':'false');
     }
   }
-  function toggle(force){
-    var open=force!=null?force:!pop.classList.contains('open');
-    pop.classList.toggle('open',open); head.classList.toggle('on',open);
-    if(open) sync();
-  }
-  head.onclick=function(e){ e.stopPropagation(); toggle(); };
-  head.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } };
-  document.addEventListener('click',function(e){ if(!wrap.contains(e.target)) toggle(false); });
+  wrap._cselSync=sync;
+  sel.addEventListener('change',sync);
+  pop.addEventListener('click',function(e){
+    var item=e.target.closest?e.target.closest('.csel-opt'):null;
+    if(!item||!pop.contains(item)) return;
+    var index=parseInt(item.dataset.index,10);
+    if(isNaN(index)||!sel.options[index]||sel.options[index].disabled) return;
+    sel.selectedIndex=index;
+    try{ sel.dispatchEvent(new Event('change',{bubbles:true})); }catch(err){}
+    closeCsel(wrap);
+  });
+  head.addEventListener('keydown',function(e){
+    if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){
+      e.preventDefault(); toggleCsel(wrap);
+    }else if(e.key==='Escape'){ closeCsel(wrap); }
+  });
   sel.classList.add('sel-real');
   wrap.appendChild(head); wrap.appendChild(pop);
   sel.parentNode.insertBefore(wrap,sel.nextSibling);
   sync();
 }
 function enhanceSelects(root){
-  var sels=(root&&root.querySelectorAll?root:document).querySelectorAll('select');
+  var scope=root&&root.querySelectorAll?root:document;
+  if(scope.nodeType===1&&scope.matches&&scope.matches('select')) buildCsel(scope);
+  var sels=scope.querySelectorAll('select');
   for(var i=0;i<sels.length;i++){ try{ buildCsel(sels[i]); }catch(e){} }
 }
 function enhancePwds(root){
   var scope=root&&root.querySelectorAll?root:document;
-  var ins=scope.querySelectorAll('input[data-pwd="1"]');
-  for(var i=0;i<ins.length;i++){
-    var p=ins[i];
+  var inputs=[];
+  if(scope.nodeType===1&&scope.matches&&scope.matches('input[data-pwd="1"]')) inputs.push(scope);
+  var found=scope.querySelectorAll('input[data-pwd="1"]');
+  for(var i=0;i<found.length;i++) inputs.push(found[i]);
+  for(var j=0;j<inputs.length;j++){
+    var p=inputs[j];
     if(p.closest('.pwd-wrap')) continue;
     var wrap=document.createElement('div'); wrap.className='pwd-wrap';
-    p.parentNode.insertBefore(wrap,p);
-    wrap.appendChild(p);
-    var eye=document.createElement('button'); eye.type='button'; eye.className='pwd-eye'; eye.title='显示/隐藏密码';
+    p.parentNode.insertBefore(wrap,p); wrap.appendChild(p);
+    var eye=document.createElement('button');
+    eye.type='button'; eye.className='pwd-eye'; eye.title='显示/隐藏密码';
+    eye.setAttribute('aria-label','显示或隐藏密码');
     eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    eye.onclick=function(e){ e.preventDefault(); window.togglePwd(eye); };
+    eye.addEventListener('click',function(e){ e.preventDefault(); window.togglePwd(this); });
     wrap.appendChild(eye);
   }
 }
+function enhanceControls(root){
+  enhanceSelects(root);
+  enhancePwds(root);
+}
+document.addEventListener('click',function(e){
+  var head=e.target&&e.target.closest?e.target.closest('.csel-head'):null;
+  if(head){ toggleCsel(head.parentNode); return; }
+  if(_openCsel&&!_openCsel.contains(e.target)) closeCsel(_openCsel);
+});
 try{
   var selMO=new MutationObserver(function(muts){
     for(var i=0;i<muts.length;i++){
       var nodes=muts[i].addedNodes;
-      for(var j=0;j<nodes.length;j++){ if(nodes[j].querySelectorAll){ enhanceSelects(nodes[j]); enhancePwds(nodes[j]); } }
+      for(var j=0;j<nodes.length;j++){
+        var node=nodes[j];
+        if(node&&node.nodeType===1) enhanceControls(node);
+      }
     }
   });
   selMO.observe(document.body,{childList:true,subtree:true});
 }catch(e){}
-enhanceSelects(document); enhancePwds(document);
+enhanceControls(document);
 /* 灯光页按钮引用的 window 级函数 */
 window.loadMatrixAll=loadMatrixAll;
 window.loadLed=loadLed;
