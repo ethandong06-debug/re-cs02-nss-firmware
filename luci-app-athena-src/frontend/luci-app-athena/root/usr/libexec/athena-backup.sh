@@ -98,8 +98,14 @@ case "$CMD" in
 		[ -z "$FILE" ] && { echo '{"ok":false,"msg":"缺少备份文件名"}'; exit 1; }
 		FP="$BACKUP_DIR/$FILE"
 		[ -f "$FP" ] || { echo '{"ok":false,"msg":"备份文件不存在"}'; exit 1; }
-		sysupgrade -r "$FP" >/dev/null 2>&1
-		echo '{"ok":true,"msg":"配置已恢复，设备即将重启"}'
+		tar -tzf "$FP" >/dev/null 2>&1 || { echo '{"ok":false,"msg":"备份文件不是有效的 tar.gz 配置归档"}'; exit 1; }
+		if sysupgrade -r "$FP" >/dev/null 2>&1; then
+			echo '{"ok":true,"msg":"配置已恢复，设备即将重启"}'
+		else
+			rc=$?
+			echo '{"ok":false,"msg":"sysupgrade 拒绝恢复该配置备份"}'
+			exit "$rc"
+		fi
 		;;
 	download)
 		FILE="${2:-}"
