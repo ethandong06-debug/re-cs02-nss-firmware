@@ -4068,14 +4068,17 @@ function enhancePwds(root){
   var scope=root&&root.querySelectorAll?root:document;
   var ins=scope.querySelectorAll('input[data-pwd="1"]');
   for(var i=0;i<ins.length;i++){
-    var p=ins[i];
-    if(p.closest('.pwd-wrap')) continue;
-    var wrap=document.createElement('div'); wrap.className='pwd-wrap';
-    p.parentNode.insertBefore(wrap,p);
-    wrap.appendChild(p);
-    var eye=document.createElement('button'); eye.type='button'; eye.className='pwd-eye'; eye.title='显示/隐藏密码';
+    var p=ins[i], wrap=p.closest('.pwd-wrap');
+    if(!wrap){
+      wrap=document.createElement('div'); wrap.className='pwd-wrap';
+      p.parentNode.insertBefore(wrap,p); wrap.appendChild(p);
+    }
+    if(p.type!=='password') p.type='password';
+    if(wrap.querySelector('.pwd-eye')) continue;
+    var eye=document.createElement('button');
+    eye.type='button'; eye.className='pwd-eye'; eye.title='显示/隐藏密码';
     eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    eye.onclick=function(e){ e.preventDefault(); window.togglePwd(eye); };
+    eye.onclick=function(e){ e.preventDefault(); window.togglePwd(this); };
     wrap.appendChild(eye);
   }
 }
