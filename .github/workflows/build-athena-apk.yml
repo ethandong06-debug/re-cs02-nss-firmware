@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - athenawrt/phase1-p0-fixes
+      - athenawrt/apk-fixed-signing
     paths:
       - "luci-app-athena-src/frontend/luci-app-athena/**"
       - "luci-app-athena-src/configs/jdcloud_re-cs-02.seed"
