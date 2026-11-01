@@ -683,7 +683,6 @@ let out = '{"system":{"hostname":"' + jstr(hostname) + '"' +
 	',"mode":"' + jstr(mode) + '"' +
 	',"wan":{"proto":"' + jstr(wan_proto) + '"' +
 	',"username":"' + jstr(wan_user) + '"' +
-	',"password":"' + jstr(wan_pwd) + '"' +
 	',"device":"' + jstr(wan_device) + '"' +
 	',"ip":"' + jstr(wan_ip) + '"' +
 	',"peer":"' + jstr(wan_peer) + '"' +
