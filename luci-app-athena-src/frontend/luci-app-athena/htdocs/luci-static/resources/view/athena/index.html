@@ -2130,7 +2130,7 @@ var athenaRPC={
     }catch(e){}
   },
   _authFail(){
-    try{ this.live=false; this.session=null; sSet('athena_session',''); }catch(e){}
+    try{ this.live=false; this.session=null; sSet('athena_session',''); var pill=document.getElementById('rpcStatus'); if(pill) pill.innerHTML='<span class="dot"></span>登录会话失效'; }catch(e){}
     /* v1.2.55：遮罩弹回时必须复位登录按钮，否则界面永远停在「登录中…」，看不出真实状态 */
     try{
       var b=document.querySelector('.login-btn');
