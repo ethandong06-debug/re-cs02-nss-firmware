@@ -25,6 +25,9 @@ case "$CMD" in
 		;;
 	ping)
 		HOST="${2:-114.114.114.114}"; CNT="${3:-4}"
+		case "$HOST" in ''|-*|*[!A-Za-z0-9.:-]*) echo '{"ok":false,"msg":"目标地址格式无效"}'; exit 1 ;; esac
+		case "$CNT" in ''|*[!0-9]*) echo '{"ok":false,"msg":"次数必须是 1 到 10 的整数"}'; exit 1 ;; esac
+		[ "$CNT" -ge 1 ] 2>/dev/null && [ "$CNT" -le 10 ] 2>/dev/null || { echo '{"ok":false,"msg":"次数必须是 1 到 10 的整数"}'; exit 1; }
 		raw=$(ping -c "$CNT" -W 2 "$HOST" 2>/dev/null)
 		[ -z "$raw" ] && { echo "{\"ok\":false,\"msg\":\"ping 失败或无响应\"}"; exit 1; }
 	# 提取丢包率 / 平均时延 / 抖动（mdev）
@@ -37,6 +40,9 @@ case "$CMD" in
 		;;
 	dns)
 		DOMAIN="${2:-www.qq.com}"; DNS="${3:-}"
+		case "$DOMAIN" in ''|*[!A-Za-z0-9.-]*) echo '{"ok":false,"msg":"域名格式无效"}'; exit 1 ;; esac
+		[ "${#DOMAIN}" -le 253 ] || { echo '{"ok":false,"msg":"域名长度无效"}'; exit 1; }
+		case "$DNS" in *[!A-Za-z0-9.:-]*) echo '{"ok":false,"msg":"DNS 地址格式无效"}'; exit 1 ;; esac
 		if [ -n "$DNS" ]; then
 			out=$(nslookup "$DOMAIN" "$DNS" 2>/dev/null)
 		else
