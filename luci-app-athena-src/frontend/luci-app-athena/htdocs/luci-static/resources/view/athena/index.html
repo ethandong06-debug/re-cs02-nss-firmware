@@ -2706,7 +2706,12 @@ function renderDisksRows(){
     if(dm2) dm2.textContent=d0?(d0.name+' · '+esc(d0.fs||'exfat')+' · '+(d0.mounted!==false&&d0.mount?'已挂载 /mnt/usb':'未挂载')):'外接硬盘插入后自动识别';
     if(dv2) dv2.textContent=d0?(d0.mounted!==false&&d0.mount?('已用 '+fmtDiskSize(d0.used_mb)+' / '+fmtDiskSize(d0.size_mb)+'（'+Math.round((d0.used_mb/(d0.size_mb||1))*100)+'%）'):('容量 '+fmtDiskSize(d0.size_mb)+' · 未挂载')):'—';
     if(bar2) bar2.style.width=d0?(d0.mounted!==false&&d0.mount?Math.min(100,(d0.used_mb/(d0.size_mb||1))*100)+'%':'0%'):'0%';
-    if(ops&&d0){ ops.innerHTML='<button class="btn sm" onclick="umountUsb()">卸载</button><button class="btn sm danger" onclick="fmtDisk(\'usb\')">格式化</button>'; }
+    if(ops&&d0){
+      var mountedPart=(d0.parts||[]).find(function(p){return p&&p.mount;});
+      var freePart=(d0.parts||[]).find(function(p){return p&&p.name&&!p.mount;});
+      var mountOp=mountedPart?'<button class="btn sm" onclick="umountUsb()">卸载</button>':(freePart?'<button class="btn sm" onclick="mountUsb()">挂载</button>':'');
+      ops.innerHTML=mountOp+'<button class="btn sm danger" onclick="fmtDisk(\\'usb\\')">格式化</button>';
+    }
     else if(ops){ ops.innerHTML=''; }
   }
 }
