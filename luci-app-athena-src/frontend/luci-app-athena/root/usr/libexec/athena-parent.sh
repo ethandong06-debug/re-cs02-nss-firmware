@@ -137,12 +137,12 @@ case "$1" in
 		[ "$eh" -le 23 ] 2>/dev/null && [ "$em" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"结束时间超出有效范围"}'; exit 1; }
 		[ "$START" != "$END" ] || { echo '{"ok":false,"msg":"开始时间和结束时间不能相同"}'; exit 1; }
 
-		uci set "athena.parent.$MAC.days=$DAYS"
-		uci set "athena.parent.$MAC.start=$START"
-		uci set "athena.parent.$MAC.end=$END"
-		uci commit athena
+		uci set "athena.parent.$MAC.days=$DAYS" || { echo '{"ok":false,"msg":"家长控制规则写入失败"}'; exit 1; }
+		uci set "athena.parent.$MAC.start=$START" || { echo '{"ok":false,"msg":"开始时间写入失败"}'; exit 1; }
+		uci set "athena.parent.$MAC.end=$END" || { echo '{"ok":false,"msg":"结束时间写入失败"}'; exit 1; }
+		uci commit athena || { echo '{"ok":false,"msg":"家长控制规则保存失败"}'; exit 1; }
 		gen_rules
-		/etc/init.d/firewall reload >/dev/null 2>&1
+		/etc/init.d/firewall reload >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"规则已保存，但防火墙重载失败"}'; exit 1; }
 		echo "{\"ok\":true,\"mac\":\"$MAC\"}"
 		;;
 
@@ -152,10 +152,14 @@ case "$1" in
 			exit 1
 		fi
 		MAC=$(echo "$2" | tr 'A-F' 'a-f')
-		uci -q delete "athena.parent.$MAC"
-		uci commit athena
+		case "$MAC" in
+			[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]) ;;
+			*) echo '{"ok":false,"msg":"MAC 地址格式错误"}'; exit 1 ;;
+		esac
+		uci -q delete "athena.parent.$MAC" || { echo '{"ok":false,"msg":"删除家长控制规则失败"}'; exit 1; }
+		uci commit athena || { echo '{"ok":false,"msg":"家长控制规则保存失败"}'; exit 1; }
 		gen_rules
-		/etc/init.d/firewall reload >/dev/null 2>&1
+		/etc/init.d/firewall reload >/dev/null 2>&1 || { echo '{"ok":false,"saved":true,"msg":"规则已删除，但防火墙重载失败"}'; exit 1; }
 		echo "{\"ok\":true}"
 		;;
 
