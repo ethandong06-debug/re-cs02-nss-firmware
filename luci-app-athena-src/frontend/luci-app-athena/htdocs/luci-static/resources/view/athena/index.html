@@ -3539,7 +3539,11 @@ window.disableRebootSched=function(){
 window.saveRebootSched=function(){
   var dow=document.getElementById('rbDow').value;
   var time=document.getElementById('rbTime').value||'03:30';
-  athenaRPC.exec('athena-reboot.sh',['enable',time,dow]).then(function(){ REBOOT_SCHED.enabled=true; REBOOT_SCHED.dow=dow; REBOOT_SCHED.hour=time; window.closeModal(); toast('定时重启已设置：每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[dow]||'每天')+' '+time); renderRebootSched(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
+  var day=dow==='*'?'每天':'每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[dow]||'');
+  athenaRPC.exec('athena-reboot.sh',['enable',time,dow]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置成功');
+    REBOOT_SCHED.enabled=true; REBOOT_SCHED.dow=dow; REBOOT_SCHED.hour=time; window.closeModal(); toast('定时重启已设置：'+day+' '+time); renderRebootSched();
+  }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
 window.openUpgradeConfirm=function(){
   openBkModal('<h3>固件升级</h3><div class="m-sub">升级需要先上传固件文件（.bin）。升级会原样保留全部配置（账号密码、WiFi、单臂等）。设备将自动重启，请勿断电。</div>'
