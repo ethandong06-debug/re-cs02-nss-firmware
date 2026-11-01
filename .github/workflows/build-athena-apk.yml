@@ -52,11 +52,11 @@ jobs:
               if rel.endswith('.json'):
                   json.loads(p.read_text())
           html = (root / 'htdocs/luci-static/resources/view/athena/index.html').read_text()
-          scripts = re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>', html, re.S | re.I)
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, re.S | re.I)
           if not scripts:
               raise SystemExit('No inline JavaScript blocks found')
           out = pathlib.Path('/tmp/athena-inline.js')
-          out.write_text('\\n;\\n'.join(scripts))
+          out.write_text('\n;\n'.join(scripts))
           print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
           PY
           node --check /tmp/athena-inline.js
