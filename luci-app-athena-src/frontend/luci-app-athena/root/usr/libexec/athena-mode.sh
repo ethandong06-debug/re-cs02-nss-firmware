@@ -3,9 +3,9 @@
 # 用法:
 #   athena-mode.sh router [pppoe|dhcp|static] [username] [password]  主路由
 #   athena-mode.sh ap                                     AP 桥接
-#   athena-mode.sh single <inner_vlan> <wan_vlan> <iptv_vlan> [proto] [username] [password] [nss] [iptv_port]  单臂路由
+#   athena-mode.sh single <inner_vlan> <wan_vlan> <iptv_vlan> [proto] [username] [password] [iptv_port]  单臂路由
 #   athena-mode.sh bypass <ip> <gateway> <dns>           旁路由
-# 单臂路由参数：<内网 VLAN(默认1)> <拨号 VLAN(默认2044)> <IPTV VLAN(默认3066, off=关闭)> [proto] [账号] [密码] [nss: on|off] [iptv_port: lan1-lan4]
+# 单臂路由参数：<内网 VLAN(默认1)> <拨号 VLAN(默认2044)> <IPTV VLAN(默认3066, off=关闭)> [proto] [账号] [密码] [iptv_port: lan4]
 # 进度上报：single-bg 后台模式写进度到 /tmp/athena-mode-progress（前端弹窗轮询），
 #           athena-mode.sh progress 读取当前进度文本（含步骤：备份→VLAN创建→网桥重建→拨号挂接→IPTV透传→回写→提交重启）
 # 单臂路由（三层 VLAN 子接口方案，保 NSS）：
@@ -252,10 +252,12 @@ config_ap() {
 config_single() {
 	local vlan_inner="${2:-1}" vlan_wan="${3:-2044}" vlan_iptv="${4-3066}"
 	local proto="${5:-pppoe}" user="${6:-}" pass="${7:-}"
-	local nss="${8:-on}" iptv_port="${9:-lan4}"
+	local port_arg="${8:-}" iptv_port="lan4"
+	# 兼容旧版前端曾传入的 NSS on/off 占位参数；单臂模式始终保持 NSS/ECM 启用。
+	case "$port_arg" in on|off) iptv_port="${9:-lan4}" ;; '') iptv_port="lan4" ;; *) iptv_port="$port_arg" ;; esac
 	# 归一化 IPTV 参数：off/none/关闭/留空 一律视为不开启（前端旧版曾传 'off' 字符串）
 	case "$vlan_iptv" in off|none|OFF|NONE|"关闭"|"无") vlan_iptv='' ;; esac
-	log "配置为 单臂路由（内网VLAN=$vlan_inner, 拨号VLAN=$vlan_wan, IPTV=${vlan_iptv:-无}, proto=$proto, NSS=$nss, IPTV口=$iptv_port）"
+	log "配置为 单臂路由（内网VLAN=$vlan_inner, 拨号VLAN=$vlan_wan, IPTV=${vlan_iptv:-无}, proto=$proto, IPTV口=$iptv_port）"
 
 	# ---- 参数校验（误配会直接打断网络，先拦）----
 	for v in "$vlan_inner" "$vlan_wan" "$vlan_iptv"; do
@@ -269,7 +271,6 @@ config_single() {
 		[ "$vlan_iptv" != "$vlan_inner" ] && [ "$vlan_iptv" != "$vlan_wan" ] || { echo '{"ok":false,"msg":"IPTV VLAN 不能与内网或拨号 VLAN 重复"}'; exit 1; }
 		[ "$iptv_port" = "lan4" ] || { echo '{"ok":false,"msg":"当前网桥布局仅支持 lan4 作为 IPTV 透传口"}'; exit 1; }
 	fi
-	case "$nss" in on|off) ;; *) echo '{"ok":false,"msg":"NSS 参数必须是 on|off"}'; exit 1 ;; esac
 
 	# ---- 清理旧方案残留：bridge-vlan filtering 段、旧 wan.X 子接口、单臂专用接口 ----
 	clear_bridge_vlan
@@ -382,13 +383,9 @@ config_single() {
 	uci -q set athena.single.iptv_port="$iptv_port"
 	pstep "参数已回写 athena.single（wan_vlan/ret_vlan/iptv_vlan/iptv_port）"
 
-	if [ "$nss" = "off" ]; then
-		nss_off
-		log "单臂兼容模式：已关闭 ECM offload（hairpin 走 CPU 软转）"
-	else
-		nss_on
-	fi
-	pstep "NSS 硬件加速状态已设置"
+	# 单臂模式不提供 NSS 开关：沿用固件默认策略，确保 ECM/NSS 保持启用。
+	nss_on
+	pstep "NSS/ECM 硬件加速保持启用"
 }
 
 # ---- 单臂配置检测（提交后核对是否真正写入后台；参数缺省读 athena.single 回写值）----
