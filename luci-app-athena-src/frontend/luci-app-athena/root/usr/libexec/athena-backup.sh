@@ -26,7 +26,7 @@ valid_archive() {
 	tar -tzf "$file" >/dev/null 2>&1 || return 1
 	while IFS= read -r entry; do
 		case "$entry" in etc|etc/*|./etc|./etc/*) ;; *) return 1 ;; esac
-		case "$entry" in /*|*../*|../*) return 1 ;; esac
+		case "$entry" in /*|..|../*|*/..|*../*) return 1 ;; esac
 		found=1
 	done <<EOF
 $(tar -tzf "$file" 2>/dev/null)
