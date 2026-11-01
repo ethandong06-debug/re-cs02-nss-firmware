@@ -3135,12 +3135,12 @@ window.done=function(msg){ toast(msg); };
 window.toggleWifiAll=function(){
   var target=WIFI_ON?'disable':'enable';
   WIFI_ON=!WIFI_ON;
-  athenaRPC.exec('athena-wireless.sh',[target,'all']).then(function(){ toast(WIFI_ON?'WiFi 已开启':'WiFi 已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ WIFI_ON=!WIFI_ON; toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',[target,'all']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认操作成功'); toast(WIFI_ON?'WiFi 已开启':'WiFi 已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ WIFI_ON=!WIFI_ON; toast('操作失败：'+(e.message||'')); });
 };
 window.toggleBand=function(id){
   var b=WIFI_BANDS.find(function(x){return x.id===id;}); if(!b) return;
   var target=b.on?'disable':'enable';
-  athenaRPC.exec('athena-wireless.sh',[target,id]).then(function(){ b.on=!b.on; toast(target==='enable'?'已开启 '+b.n:'已关闭 '+b.n); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',[target,id]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认操作成功'); b.on=!b.on; toast(target==='enable'?'已开启 '+b.n:'已关闭 '+b.n); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 function bandChList(id){
   return (id==='b24'?'auto,1,2,3,4,5,6,7,8,9,10,11,12,13':id==='b52'?'auto,36,40,44,48,52,56,60,64':'auto,149,153,157,161,165').split(',');
@@ -3204,7 +3204,7 @@ window.saveGuest=function(){
 window.toggleGuest=function(){
   if(!GUEST.loaded){ if(athenaRPC.live){ loadGuest(); toast('正在读取访客配置…'); } else { toast('登录后可用'); } return; }
   if(!GUEST.enabled){ window.openGuestModal(); return; }
-  athenaRPC.exec('athena-wireless.sh',['guest','disable']).then(function(){ GUEST.enabled=false; toast('访客网络已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',['guest','disable']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭访客网络'); GUEST.enabled=false; toast('访客网络已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.resetWifi=function(){
   openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：<b>12345678</b><br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
@@ -3502,7 +3502,8 @@ window.toggleMatrixNight=function(){ setMatrix('night',MATRIX.night?'0':'1'); };
 window.setNightTime=function(){ var s=document.getElementById('nightStart').value, e=document.getElementById('nightEnd').value; if(s) setMatrix('night_start',s); if(e) setMatrix('night_end',e); };
 window.setNightLevel=function(v){ setMatrix('night_level',v); };
 function setMatrix(key,val){
-  athenaRPC.exec('athena-matrix.sh',['set',key,String(val)]).then(function(){
+  athenaRPC.exec('athena-matrix.sh',['set',key,String(val)]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认保存');
     if(key==='enabled') MATRIX.enabled=(val==='1');
     else if(key==='light_level') MATRIX.light_level=parseInt(val,10);
     else if(key==='night_start') MATRIX.night_start=val;
@@ -3527,7 +3528,7 @@ function openSvcFrame(name,path){
 }
 window.toggleBreath=function(){
   var target=LED.breathing?'0':'1';
-  athenaRPC.exec('athena-led.sh',['set','breath',target]).then(function(){ LED.breathing=target==='1'; toast(target==='1'?'呼吸灯已开启':'呼吸灯已关闭'); renderLedPanel(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-led.sh',['set','breath',target]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置'); LED.breathing=target==='1'; toast(target==='1'?'呼吸灯已开启':'呼吸灯已关闭'); renderLedPanel(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
 
 /* ---- 维护 ---- */
