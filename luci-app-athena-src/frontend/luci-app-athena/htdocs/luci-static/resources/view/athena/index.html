@@ -3105,7 +3105,18 @@ async function loadPkgSummary(){
     PKGS=inst.map(function(p){ p.installed=true; return p; }).concat(av);
     renderPkgSummary();
   }catch(e){}
+}
+/* v1.2.59：高级页重型采集串行执行，并合并快速重复进入产生的请求。 */
+var _advancedLoadPromise=null;
+function loadAdvancedPanels(){
+  if(_advancedLoadPromise) return _advancedLoadPromise;
+  _advancedLoadPromise=loadResources()
+    .then(function(){ return loadServices(); })
+    .then(function(){ return loadPkgSummary(); })
+    .finally(function(){ _advancedLoadPromise=null; });
+  return _advancedLoadPromise;
 }
+
 
 /* ================= 操作函数（覆盖预览稿模拟版） ================= */
 /* ---- 弹窗工具（预览稿 mask 结构） ---- */
@@ -4063,7 +4074,7 @@ function renderForPage(id){
   else if(id==='st'){ loadDisks(); }
   else if(id==='light'){ loadMatrixAll(); loadLed(); }
   else if(id==='keep'){ loadBackupList(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
-  else if(id==='adv'){ loadResources(); loadServices(); loadPkgSummary(); }
+  else if(id==='adv'){ loadAdvancedPanels(); }
 }
 window.navGo=function(id,el){
   try{ if(_origNavGo) _origNavGo(id,el); }catch(e){}
