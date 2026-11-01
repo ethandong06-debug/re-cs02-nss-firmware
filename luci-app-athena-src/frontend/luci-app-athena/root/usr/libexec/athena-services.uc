@@ -370,7 +370,8 @@ for (let base in inits) {
 	if (in_core(base)) continue;                               // 系统底层服务不展示
 	push(items, {
 		id: base, name: base, desc: '第三方服务',
-		on: init_enabled(base), toggle: true,
+		on: init_enabled(base), toggle: base == 'openclash' ? false : true,
+		restart: base == 'openclash' ? true : false,
 		plugin: 0, path: detect_path(base),
 		port: detect_port(base)
 	});
