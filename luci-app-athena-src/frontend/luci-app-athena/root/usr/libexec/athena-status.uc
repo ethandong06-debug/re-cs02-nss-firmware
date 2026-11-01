@@ -397,8 +397,6 @@ function arp_list() {
 	return out;
 }
 let arp = arp_list();
-let arp_seen = {};
-for (let a in arp) arp_seen[a.mac] = true;
 
 // 11.2.1 内核邻居表补充：STALE/DELAY/PROBE 仍代表近期存在的二层邻居，不只依赖 /proc/net/arp。
 let neigh_online = {};
@@ -496,12 +494,13 @@ for (let line in split(lease_txt, '\n')) {
 	seen[mac] = true;
 }
 
-// 11.6 补充：ARP 在线但不在租约里（静态 IP / 光猫回传口设备）
+// 11.6 补充：ARP / IPv6 邻居中未出现在 DHCP 租约里的设备。
 for (let a in arp) {
 	if (seen[a.mac]) continue;
-	let ds = devstate(a.mac, 1);
+	let online = !!neigh_online[a.mac];
+	let ds = devstate(a.mac, online ? 1 : 0);
 	push(clients, {
-		ip: a.ip, mac: a.mac, hostname: '', band: '有线', online: true, status: 'online',
+		ip: a.ip, mac: a.mac, hostname: '', band: '有线', online: online, status: online ? 'online' : 'unknown',
 		uptime_s: ds.upt, last_down: ds.down, vendor: vendor_of(a.mac)
 	});
 	seen[a.mac] = true;
