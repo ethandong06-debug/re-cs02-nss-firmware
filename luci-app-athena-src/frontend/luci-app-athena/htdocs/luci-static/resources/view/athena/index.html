@@ -649,7 +649,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <button class="theme-toggle" id="nativeBtn" title="打开原生 LuCI 后台（逃生通道）" onclick="openNativeLuCI()">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
     </button>
-    <span class="pill"><span class="dot"></span>运行正常</span>
+    <span class="pill" id="rpcStatus"><span class="dot"></span>等待后端连接</span>
   </div>
 </div>
 
@@ -663,7 +663,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div class="speed-head">
         <div class="ttl">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
-          实时网速 <span style="font-weight:400;color:var(--text3)">· 大数字为近 10 秒平均</span>
+          实时网速 <span style="font-weight:400;color:var(--text3)">· 大数字为近 10 秒平滑值</span>
         </div>
         <div class="legend">
           <span><i style="background:var(--down)"></i>下载</span>
@@ -676,12 +676,12 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="speed-cols">
           <div class="speed-col down">
             <div class="lab"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5"/></svg>下载</div>
-            <div><span class="val" id="dnV">0.0</span><span class="unit" id="dnU">Mbps</span></div>
+            <div><span class="val" id="dnV">—</span><span class="unit" id="dnU">Mbps</span></div>
             <div class="pk">峰值 —</div>
           </div>
           <div class="speed-col up">
             <div class="lab"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 15V3M7 8l5-5 5 5"/></svg>上传</div>
-            <div><span class="val" id="upV">0.0</span><span class="unit" id="upU">Mbps</span></div>
+            <div><span class="val" id="upV">—</span><span class="unit" id="upU">Mbps</span></div>
             <div class="pk">峰值 —</div>
           </div>
         </div>
