@@ -7,9 +7,10 @@ on:
       - main
       - athenawrt/phase1-p0-fixes
       - athenawrt/apk-fixed-signing
+      - athenawrt/1.2.61-full-optimization
     paths:
       - "luci-app-athena-src/frontend/luci-app-athena/**"
-      - "luci-app-athena-src/configs/jdcloud_re-cs-02.seed"
+      - "config.txt"
       - ".github/workflows/build-athena-apk.yml"
 
 permissions:
@@ -21,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build luci-app-athena for Athena IPQ60xx
+    name: Build signed Athena APK for Athena IPQ60xx
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -47,17 +48,13 @@ jobs:
           import json, pathlib, re
           root = pathlib.Path('luci-app-athena-src/frontend/luci-app-athena')
           for rel in ('root/usr/share/luci/menu.d/luci-app-athena.json',
-                      'root/usr/share/rpcd/acl.d/luci-app-athena.json',
-                      'root/etc/config/athena'):
-              p = root / rel
-              if rel.endswith('.json'):
-                  json.loads(p.read_text())
+                      'root/usr/share/rpcd/acl.d/luci-app-athena.json'):
+              json.loads((root / rel).read_text())
           html = (root / 'htdocs/luci-static/resources/view/athena/index.html').read_text()
           scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, re.S | re.I)
           if not scripts:
               raise SystemExit('No inline JavaScript blocks found')
-          out = pathlib.Path('/tmp/athena-inline.js')
-          out.write_text('\n;\n'.join(scripts))
+          pathlib.Path('/tmp/athena-inline.js').write_text('\n;\n'.join(scripts))
           print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
           PY
           node --check /tmp/athena-inline.js
@@ -102,18 +99,46 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Install the fixed APK signing key
+        shell: bash
+        env:
+          ATHENAWRT_APK_SIGNING_KEY: ${{ secrets.ATHENAWRT_APK_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ATHENAWRT_APK_SIGNING_KEY:-}" ]; then
+            echo "::error::Missing repository secret ATHENAWRT_APK_SIGNING_KEY. Add the existing P-256 PEM private key; do not generate a new key for each build."
+            exit 1
+          fi
+          umask 077
+          printf '%s\n' "$ATHENAWRT_APK_SIGNING_KEY" > /tmp/athena-private-key.pem
+          openssl pkey -in /tmp/athena-private-key.pem -noout
+          openssl pkey -in /tmp/athena-private-key.pem -pubout -out /tmp/athena-public-key.pem
+          openssl pkey -pubin -in /tmp/athena-public-key.pem -noout
+          openssl pkey -pubin -in /tmp/athena-public-key.pem -text -noout | grep -q 'prime256v1'
+          install -m 0600 /tmp/athena-private-key.pem immortalwrt/private-key.pem
+          install -m 0644 /tmp/athena-public-key.pem immortalwrt/public-key.pem
+          sha256sum /tmp/athena-public-key.pem | tee /tmp/athena-public-key.sha256
+
       - name: Prepare package-only build
         shell: bash
         run: |
           set -euo pipefail
           cp -a luci-app-athena-src/frontend/luci-app-athena immortalwrt/package/luci-app-athena
-          cp luci-app-athena-src/configs/jdcloud_re-cs-02.seed immortalwrt/.config
-          printf '\nCONFIG_PACKAGE_luci-app-athena=m\n' >> immortalwrt/.config
+          cp config.txt immortalwrt/.config
+          printf '\nCONFIG_PACKAGE_luci-app-athena=m\nCONFIG_USE_APK=y\nCONFIG_SIGN_EACH_PACKAGE=y\n' >> immortalwrt/.config
           cd immortalwrt
           make defconfig
           grep -q '^CONFIG_TARGET_qualcommax=y' .config
           grep -q '^CONFIG_TARGET_qualcommax_ipq60xx=y' .config
           grep -q '^CONFIG_PACKAGE_luci-app-athena=m' .config
+          grep -q '^CONFIG_USE_APK=y' .config
+          grep -q '^CONFIG_SIGN_EACH_PACKAGE=y' .config
+          test -s private-key.pem
+          test -s public-key.pem
+          if grep -q '^CONFIG_BUILDBOT=y' .config; then
+            echo 'CONFIG_BUILDBOT must remain disabled so the public key is installed in the image.' >&2
+            exit 1
+          fi
 
       - name: Build required host tools
         shell: bash
@@ -136,7 +161,7 @@ jobs:
           cd immortalwrt
           make package/luci-app-athena/compile V=s -j2 2>&1 | tee ../athena-package-build.log
 
-      - name: Verify APK and calculate SHA-256
+      - name: Verify signed APK and calculate SHA-256
         shell: bash
         run: |
           set -euo pipefail
@@ -147,15 +172,15 @@ jobs:
             find immortalwrt/bin/packages -type f -name '*.apk' -print >&2 || true
             exit 1
           fi
+          apk_host=immortalwrt/staging_dir/host/bin/apk
+          test -x "$apk_host"
+          "$apk_host" verify --keys-dir immortalwrt "${apks[0]}"
           cp "${apks[0]}" output/
-          # Preserve only the public half of the exact ephemeral key used by this build.
-          # The private key remains inside the disposable GitHub Actions runner.
-          test -s immortalwrt/public-key.pem
-          cp immortalwrt/public-key.pem output/athenawrt-build-signing.pub
-          openssl pkey -pubin -in output/athenawrt-build-signing.pub -noout
+          install -m 0644 immortalwrt/public-key.pem output/athenawrt-build-signing.pem
+          openssl pkey -pubin -in output/athenawrt-build-signing.pem -noout
+          sha256sum output/*.apk output/*.pem | tee output/SHA256SUMS.txt
+          stat -c '%n %s bytes' output/*.apk output/*.pem | tee output/size.txt
           file output/*.apk | tee output/file-type.txt
-          sha256sum output/*.apk output/*.pub | tee output/SHA256SUMS.txt
-          stat -c '%n %s bytes' output/*.apk output/*.pub | tee output/size.txt
           tar -czf output/athena-source-build-metadata.tar.gz \
             luci-app-athena-src/frontend/luci-app-athena/Makefile \
             luci-app-athena-src/README.md
@@ -163,7 +188,7 @@ jobs:
       - name: Upload APK and build evidence
         uses: actions/upload-artifact@v4
         with:
-          name: luci-app-athena-apk
+          name: luci-app-athena-1.2.61-fixed-signing
           path: |
             output/*
             athena-package-build.log
