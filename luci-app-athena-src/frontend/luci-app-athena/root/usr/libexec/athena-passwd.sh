@@ -11,8 +11,9 @@ CUR="${1:-}"; NEW="${2:-}"; SYNC="${3:-1}"
 [ ${#NEW} -lt 8 ] && { echo '{"ok":false,"msg":"新密码至少 8 位"}'; exit 1; }
 [ ${#NEW} -gt 128 ] && { echo '{"ok":false,"msg":"新密码不能超过 128 位"}'; exit 1; }
 case "$NEW" in *:*) echo '{"ok":false,"msg":"新密码不能包含冒号"}'; exit 1 ;; esac
-case "$NEW" in *"
-"*|*""*) echo '{"ok":false,"msg":"新密码不能包含换行符"}'; exit 1 ;; esac
+NL=$(printf '\\nX'); NL=${NL%X}
+CR=$(printf '\\r')
+case "$NEW" in *"$NL"*|*"$CR"*) echo '{"ok":false,"msg":"新密码不能包含换行符"}'; exit 1 ;; esac
 case "$SYNC" in 0|1) ;; *) echo '{"ok":false,"msg":"SSH 同步参数无效"}'; exit 1 ;; esac
 
 # ---- 校验当前密码 ----
