@@ -20,6 +20,9 @@ if [ "$1" = "stop" ] || [ "$1" = "restart" ]; then
 	# 内核线程（comm 形如 [kworker/x]）与核心进程保护
 	case "$NAME" in *"["*) echo '{"ok":false,"msg":"内核线程受保护，不允许操作"}'; exit 1 ;; esac
 	[ "$PID" -le 2 ] && { echo '{"ok":false,"msg":"系统核心进程受保护"}'; exit 1; }
+	if [ "$1" = "restart" ] && [ ! -x "/etc/init.d/$NAME" ]; then
+		echo '{"ok":false,"msg":"未找到对应 init 脚本，拒绝停止该进程"}'; exit 1
+	fi
 	# 关键系统服务进程保护：误停会断网/丢 WiFi/失联（网络、无线、管理、拨号、DNS 等）
 	case "|$NAME|" in
 		*"|wpad|"*|*"|hostapd|"*|*"|hostapd_cli|"*|*"|netifd|"*|*"|dnsmasq|"*|*"|odhcpd|"*|*"|odhcp6c|"*|*"|ubusd|"*|*"|rpcd|"*|*"|uhttpd|"*|*"|lighttpd|"*|*"|dropbear|"*|*"|logd|"*|*"|syslogd|"*|*"|pppd|"*|*"|pppoe|"*|*"|openclash|"*|*"|OpenClash|"*|*"|clash|"*|*"|mihomo|"*|*"|mihomo-linux|"*|*"|smartdns|"*)
@@ -29,7 +32,6 @@ if [ "$1" = "stop" ] || [ "$1" = "restart" ]; then
 	sleep 1
 	if [ -d "/proc/$PID" ]; then kill -KILL "$PID" 2>/dev/null; fi
 	if [ "$1" = "restart" ]; then
-		[ -x "/etc/init.d/$NAME" ] || { echo '{"ok":false,"msg":"进程已停止，但未找到对应 init 脚本，无法自动重启"}'; exit 1; }
 		/etc/init.d/"$NAME" restart >/dev/null 2>&1 || { echo '{"ok":false,"msg":"进程已停止，但服务重启失败"}'; exit 1; }
 	fi
 	echo "{\"ok\":true,\"pid\":$PID,\"name\":\"$NAME\",\"action\":\"$1\"}"
