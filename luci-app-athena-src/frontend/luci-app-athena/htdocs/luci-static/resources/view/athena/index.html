@@ -3057,6 +3057,18 @@ async function loadBackupList(){
     if(d&&d.backups){ BACKUPS=d.backups; var el=document.getElementById('bkCount'); if(el) el.textContent=BACKUPS.length; }
   }catch(e){}
 }
+async function loadBackupSchedule(){
+  try{
+    var d=await athenaRPC.exec('athena-backup.sh',['schedule','get']);
+    if(d&&d.ok!==false){
+      AUTO_BACKUP=!!d.enabled;
+      BACKUP_FREQ=d.freq||'daily';
+      BACKUP_TIME=d.time||'02:00';
+      BACKUP_KEEP=parseInt(d.keep,10)||3;
+      renderAutoBackup();
+    }
+  }catch(e){}
+}
 async function loadParentRules(){
   PC_LOADED=false;
   try{
@@ -3712,7 +3724,7 @@ window.backupNow=function(){
 };
 window.openRestore=function(){
   openBkModal('<h3>恢复配置</h3><div class="m-sub">上传备份文件（.tar.gz / .json）并恢复，将覆盖当前配置</div>'
-    +'<div class="limit-row"><div><label>上传备份文件</label><div style="display:flex;gap:8px;align-items:center"><input type="file" id="bkFile" accept=".tar.gz,.gz,.json" style="display:none" onchange="var s=document.getElementById(\'bkName\'); if(s){s.textContent=this.files&&this.files[0]?this.files[0].name:\'未选择文件\';}"><button type="button" class="btn" onclick="document.getElementById(\'bkFile\').click()">选择文件</button><span id="bkName" style="font-size:12px;color:var(--text3)">未选择文件</span></div></div></div>'
+    +'<div class="limit-row"><div><label>上传备份文件</label><div style="display:flex;gap:8px;align-items:center"><input type="file" id="bkFile" accept=".tar.gz,.gz" style="display:none" onchange="var s=document.getElementById(\'bkName\'); if(s){s.textContent=this.files&&this.files[0]?this.files[0].name:\'未选择文件\';}"><button type="button" class="btn" onclick="document.getElementById(\'bkFile\').click()">选择文件</button><span id="bkName" style="font-size:12px;color:var(--text3)">未选择文件</span></div></div></div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="doRestore()">上传并恢复</button></div>');
 };
 window.onRestorePick=function(){};
@@ -3736,15 +3748,15 @@ window.toggleAutoBackup=function(){
 };
 window.openAutoBackupModal=function(){
   openBkModal('<h3>自动备份</h3><div class="m-sub">定期自动保存配置，设备异常时可快速恢复</div>'
-    +'<div class="limit-row"><div><label>频率</label><select id="abFreq"><option value="daily"'+(BACKUP_FREQ==='daily'?' selected':'')+'>每天</option><option value="weekly"'+(BACKUP_FREQ==='weekly'?' selected':'')+'>每周</option></select></div><div><label>时间</label><input type="time" id="abTime" value="'+BACKUP_TIME+'"></div></div>'
-    +'<div class="limit-row"><div><label>保留份数</label><input type="number" id="abKeep" value="'+BACKUP_KEEP+'" min="1" max="20"></div></div>'
+    +'<div class="limit-row"><div><label>频率</label><select id="abFreq"><option value="daily"'+(BACKUP_FREQ==='daily'?' selected':'')+'>每天</option><option value="weekly"'+(BACKUP_FREQ==='weekly'?' selected':'')+'>每周</option><option value="monthly"'+(BACKUP_FREQ==='monthly'?' selected':'')+'>每月</option></select></div><div><label>时间</label><input type="time" id="abTime" value="'+BACKUP_TIME+'"></div></div>'
+    +'<div class="limit-row"><div><label>保留份数</label><input type="number" id="abKeep" value="'+BACKUP_KEEP+'" min="1" max="30"></div></div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveAutoBackup()">保存</button></div>');
 };
 window.saveAutoBackup=function(){
   var freq=document.getElementById('abFreq').value;
   var time=document.getElementById('abTime').value||'02:00';
   var keep=parseInt(document.getElementById('abKeep').value,10)||3;
-  athenaRPC.exec('athena-backup.sh',['schedule','set',freq,time,String(keep)]).then(function(){ AUTO_BACKUP=true; BACKUP_FREQ=freq; BACKUP_TIME=time; BACKUP_KEEP=keep; window.closeModal(); toast('自动备份已开启'); renderAutoBackup(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-backup.sh',['schedule','set',freq,time,String(keep)]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置成功'); AUTO_BACKUP=true; BACKUP_FREQ=freq; BACKUP_TIME=time; BACKUP_KEEP=keep; window.closeModal(); toast('自动备份已开启'); renderAutoBackup(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
 window.openBackupList=function(){
   openBkModal('<h3>备份列表</h3><div class="m-sub">点击恢复可回滚到对应时间点的配置</div>'
@@ -4072,7 +4084,7 @@ function renderForPage(id){
   else if(id==='net'){ if(!_STATUS) _NET_PENDING=true; renderNetPage(); }
   else if(id==='st'){ loadDisks(); }
   else if(id==='light'){ loadMatrixAll(); loadLed(); }
-  else if(id==='keep'){ loadBackupList(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
+  else if(id==='keep'){ loadBackupList(); loadBackupSchedule(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
   else if(id==='adv'){ loadResources(); loadServices(); loadPkgSummary(); }
 }
 window.navGo=function(id,el){
