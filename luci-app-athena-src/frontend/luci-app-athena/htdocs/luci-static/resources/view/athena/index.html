@@ -3185,14 +3185,21 @@ window.saveBand=function(id){
   }).catch(function(e){ toast('保存失败：'+(e.message||'')); });
 };
 window.openGuestModal=function(){
-  openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，适合客人使用</div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
-    +'<div style="font-size:12px;color:var(--text3)">访客密码固定为 <b>12345678</b>（可在原生界面修改）。开启后访客无法访问内网设备。</div>'
+  openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，访客仅可上网</div>'
+    +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" maxlength="32" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
+    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="12345678"></div></div>'
+    +'<div style="font-size:12px;color:var(--text3)">默认密码为 12345678，可在此修改。开启后访客无法访问内网设备。</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
+  try{ enhancePwds(document.querySelector('.mask.show')); }catch(e){}
 };
 window.saveGuest=function(){
   var ssid=document.getElementById('gSsid').value.trim()||'Athena-Guest';
-  athenaRPC.exec('athena-wireless.sh',['guest','enable',ssid,'12345678']).then(function(){ GUEST.enabled=true; GUEST.ssid=ssid; window.closeModal(); toast('访客网络已开启（密码 12345678）'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  var pwd=document.getElementById('gPwd').value;
+  if(pwd.length<8||pwd.length>63){ toast('访客 WiFi 密码必须为 8-63 位'); return; }
+  athenaRPC.exec('athena-wireless.sh',['guest','enable',ssid,pwd]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认开启访客网络');
+    GUEST.enabled=true; GUEST.ssid=ssid; window.closeModal(); toast('访客网络已开启'); renderWifiCards(); renderOverview();
+  }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.toggleGuest=function(){
   if(!GUEST.loaded){ if(athenaRPC.live){ loadGuest(); toast('正在读取访客配置…'); } else { toast('登录后可用'); } return; }
