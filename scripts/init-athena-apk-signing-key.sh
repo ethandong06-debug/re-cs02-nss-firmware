@@ -20,6 +20,11 @@ umask 077
 mkdir -p "$KEY_DIR" /etc/apk/keys
 chmod 700 "$KEY_DIR"
 
+if [ ! -s "$PRIVATE_KEY" ] && [ -s "$PUBLIC_KEY" ]; then
+	echo "检测到公钥已存在但私钥文件缺失；为避免意外轮换签名密钥，已停止。请从 GitHub Secret 恢复原私钥。" >&2
+	exit 1
+fi
+
 if [ ! -s "$PRIVATE_KEY" ]; then
 	tmp="$KEY_DIR/private-key.pem.tmp"
 	rm -f "$tmp"
