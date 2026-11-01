@@ -35,14 +35,21 @@ schedule_get() {
 
 schedule_set() {
 	local freq="${2:-daily}" time="${3:-02:00}" keep="${4:-3}"
-	local hh="${time#*:}" mm="${time%:*}"
+	local hh="${time%%:*}" mm="${time#*:}"
 	case "$freq" in
 		daily) cron="$mm $hh * * *" ;;
 		weekly) cron="$mm $hh * * 0" ;;
 		monthly) cron="$mm $hh 1 * *" ;;
 		*) { echo '{"ok":false,"msg":"未知频率（daily|weekly|monthly）"}'; exit 1; } ;;
 	esac
-	[ -z "$mm" ] || [ -z "$hh" ] && { echo '{"ok":false,"msg":"时间格式错误（HH:MM）"}'; exit 1; }
+	case "$time" in
+		[0-9][0-9]:[0-9][0-9]) ;;
+		*) echo '{"ok":false,"msg":"时间格式必须为 HH:MM"}'; exit 1 ;;
+	esac
+	[ "$hh" -ge 0 ] 2>/dev/null && [ "$hh" -le 23 ] 2>/dev/null || { echo '{"ok":false,"msg":"小时必须为 00-23"}'; exit 1; }
+	[ "$mm" -ge 0 ] 2>/dev/null && [ "$mm" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"分钟必须为 00-59"}'; exit 1; }
+	case "$keep" in ''|*[!0-9]*) echo '{"ok":false,"msg":"保留份数必须为正整数"}'; exit 1 ;; esac
+	[ "$keep" -ge 1 ] 2>/dev/null && [ "$keep" -le 30 ] 2>/dev/null || { echo '{"ok":false,"msg":"保留份数范围为 1-30"}'; exit 1; }
 	sed -i '/athena-backup.sh autobackup/d' /etc/crontabs/root 2>/dev/null
 	echo "$cron /usr/libexec/athena-backup.sh autobackup $keep" >> /etc/crontabs/root
 	/etc/init.d/cron enable >/dev/null 2>&1
