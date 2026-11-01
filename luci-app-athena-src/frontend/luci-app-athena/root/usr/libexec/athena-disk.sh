@@ -8,6 +8,18 @@
 # 输出单行 JSON
 
 CMD="${1:-list}"
+
+# 只允许操作真实的 USB/SCSI 分区；拒绝整盘、别名（usb/emmc）、eMMC/NVMe 和系统分区。
+valid_usb_partition() {
+	local dev="$1" base
+	case "$dev" in /dev/sd[a-z][0-9]*) ;; *) return 1 ;; esac
+	base="${dev##*/}"
+	case "$base" in *[!a-zA-Z0-9]*) return 1 ;; esac
+	[ -b "$dev" ] || return 1
+	[ -f "/sys/class/block/$base/partition" ] || return 1
+	return 0
+}
+is_mounted() { grep -Fq " $1 " /proc/mounts 2>/dev/null; }
 json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
 case "$CMD" in
@@ -66,10 +78,14 @@ case "$CMD" in
 	mount)
 		DEV="${2:-}"; MP="${3:-}"; FS="${4:-auto}"
 		[ -z "$DEV" ] || [ -z "$MP" ] && { echo '{"ok":false,"msg":"缺少设备或挂载点"}'; exit 1; }
-		mkdir -p "$MP" 2>/dev/null
+		valid_usb_partition "$DEV" || { echo '{"ok":false,"msg":"仅允许挂载真实的 USB 分区（例如 /dev/sda1）"}'; exit 1; }
+		case "$MP" in /mnt/usb|/mnt/usb-*) ;; *) echo '{"ok":false,"msg":"挂载目录仅允许 /mnt/usb 或其子目录"}'; exit 1 ;; esac
+		is_mounted "$DEV" && { echo '{"ok":false,"msg":"该分区已经挂载"}'; exit 1; }
+		mkdir -p "$MP" 2>/dev/null || { echo '{"ok":false,"msg":"无法创建挂载目录"}'; exit 1; }
 		if [ "$FS" = "auto" ]; then
 			mount "$DEV" "$MP" >/dev/null 2>&1
 		else
+			case "$FS" in ext4|vfat|exfat|f2fs) ;; *) echo '{"ok":false,"msg":"不支持的文件系统"}'; exit 1 ;; esac
 			mount -t "$FS" "$DEV" "$MP" >/dev/null 2>&1
 		fi
 		[ $? -eq 0 ] && echo "{\"ok\":true,\"msg\":\"$DEV 已挂载到 $MP\"}" || echo "{\"ok\":false,\"msg\":\"挂载失败，检查分区或文件系统\"}"
@@ -77,18 +93,19 @@ case "$CMD" in
 	umount)
 		DEV="${2:-}"
 		[ -z "$DEV" ] && { echo '{"ok":false,"msg":"缺少设备"}'; exit 1; }
+		valid_usb_partition "$DEV" || { echo '{"ok":false,"msg":"仅允许卸载真实的 USB 分区（例如 /dev/sda1）"}'; exit 1; }
 		umount "$DEV" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$DEV 已卸载\"}" || echo "{\"ok\":false,\"msg\":\"卸载失败（可能正在使用）\"}"
 		;;
 	format)
 		DEV="${2:-}"; FS="${3:-ext4}"
 		[ -z "$DEV" ] && { echo '{"ok":false,"msg":"缺少设备"}'; exit 1; }
-		# 先卸载
-		umount "$DEV" >/dev/null 2>&1
+		valid_usb_partition "$DEV" || { echo '{"ok":false,"msg":"格式化已拒绝：只允许真实 USB 分区（例如 /dev/sda1），禁止整盘、eMMC、NVMe 和系统分区"}'; exit 1; }
+		is_mounted "$DEV" && { echo '{"ok":false,"msg":"格式化已拒绝：请先确认并卸载该 USB 分区"}'; exit 1; }
 		case "$FS" in
-			ext4) mkfs.ext4 -F "$DEV" >/dev/null 2>&1 ;;
+			ext4) mkfs.ext4 "$DEV" >/dev/null 2>&1 ;;
 			vfat) mkfs.vfat -F 32 "$DEV" >/dev/null 2>&1 ;;
 			exfat) mkfs.exfat "$DEV" >/dev/null 2>&1 ;;
-			f2fs) mkfs.f2fs -f "$DEV" >/dev/null 2>&1 ;;
+			f2fs) mkfs.f2fs "$DEV" >/dev/null 2>&1 ;;
 			*) echo "{\"ok\":false,\"msg\":\"不支持的文件系统 $FS\"}"; exit 1 ;;
 		esac
 		[ $? -eq 0 ] && echo "{\"ok\":true,\"msg\":\"$DEV 已格式化为 $FS\"}" || echo "{\"ok\":false,\"msg\":\"格式化失败\"}"
