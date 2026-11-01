@@ -1151,7 +1151,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>账号与全局设置</h3>
         <div class="info-row"><span>登录用户</span><span style="font-weight:600">root</span></div>
         <div class="info-row"><span>管理密码</span><button class="btn sm" onclick="openPwdModal()">修改密码</button></div>
-        <div class="info-row"><span>SSH 访问</span><span style="display:flex;align-items:center;gap:8px"><span class="tag green">已启用</span><div class="switch on" data-k="ssh" onclick="toggleSsh()"></div></span></div>
+        <div class="info-row"><span>SSH 访问</span><span class="tag green">已启用 · 由系统服务管理</span></div>
         <div class="info-row"><span>网速显示单位</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-unit="Mbps" onclick="setUnit('Mbps')">Mbps</button><button class="btn sm" data-unit="MB/s" onclick="setUnit('MB/s')">MB/s</button></span></div>
         <div class="info-row"><span>界面主题</span><button class="btn sm" onclick="openThemeModal()">主题设置（深浅 / 液态玻璃）</button></div>
         <div class="info-row"><span>默认界面</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-defaultui="athena" onclick="setDefaultUi('athena')">管理台</button><button class="btn sm" data-defaultui="native" onclick="setDefaultUi('native')">原生界面</button><button class="btn sm" data-defaultui="last" onclick="setDefaultUi('last')">跟随上次</button></span></div>
@@ -3952,7 +3952,12 @@ window.logRender=function(){
       +'<span class="lg" title="'+esc(l.msg||'')+'">'+esc(l.msg||'')+'</span></div>';
   }).join('')||'<div class="log-empty">没有匹配的日志</div>';
 };
-window.exportLog=function(){ athenaRPC.exec('athena-log.sh',['export']).then(function(d){ if(d&&d.url) window.open(d.url,'_blank'); else toast('正在导出…'); }).catch(function(e){ toast('导出失败：'+(e.message||'')); }); };
+window.exportLog=function(){
+  athenaRPC.exec('athena-log.sh',['export']).then(function(d){
+    if(d&&d.ok===true&&d.url) window.open(d.url,'_blank');
+    else toast('日志导出失败：'+((d&&d.msg)||'后端未返回下载地址'));
+  }).catch(function(e){ toast('导出失败：'+(e.message||'')); });
+};
 window.clearLog=function(){
   openBkModal('<h3>清空系统日志？</h3><div class="m-sub">将清空全部日志记录（dmesg 与 syslog）。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();athenaRPC.exec(\'athena-log.sh\',[\'clear\']).then(function(){toast(\'日志已清空\');}).catch(function(e){toast(\'清空失败：\'+e.message);})">确认清空</button></div>');
 };
