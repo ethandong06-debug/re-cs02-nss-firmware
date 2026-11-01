@@ -933,7 +933,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div class="card">
           <h3>网速测试 <span class="sub">当前宽带实测</span></h3>
-          <div class="field" style="margin-bottom:4px"><label>测速引擎</label><select id="speedNode" onchange="changeSpeedNode()"><option value="auto">自动（按运营商选源 + 信通院 iperf3）</option><option value="iperf3">中国信通院 iperf3</option><option value="mirrors">公共镜像多流（无 TLS）</option></select></div>
+          <div class="field" style="margin-bottom:4px"><label>测速引擎</label><select id="speedNode" onchange="changeSpeedNode()"><option value="auto">自动（iperf3 + 公共镜像多流）</option><option value="iperf3">公共 iperf3 节点</option><option value="mirrors">公共镜像多流（无 TLS）</option></select></div>
           <div style="font-size:12px;color:var(--text3);margin:0 0 12px">测速完成后显示实际节点与延迟</div>
           <div style="display:flex;gap:40px;margin:12px 0 14px">
             <div><div style="font-size:12px;color:var(--text3)">下载</div><div style="font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--down)"><span data-speedDn>--</span><span style="font-size:13px;color:var(--text3);font-weight:500"> Mbps</span></div></div>
@@ -2182,7 +2182,7 @@ var NET_MODES=[
   {id:'bypass',name:'旁路由',desc:'主路由不动，它只做增强 / 分流',tag:'适合折腾',tagCls:'mt'},
   {id:'ap',name:'AP 桥接',desc:'当无线 AP，由上级路由器分配 IP',tag:'适合当扩展',tagCls:'mt'}
 ];
-var SPEED_NODES=[{id:'auto',name:'自动（按运营商选源 + 信通院 iperf3）'},{id:'iperf3',name:'中国信通院 iperf3'},{id:'mirrors',name:'公共镜像多流（无 TLS）'}];
+var SPEED_NODES=[{id:'auto',name:'自动（iperf3 + 公共镜像多流）'},{id:'iperf3',name:'公共 iperf3 节点'},{id:'mirrors',name:'公共镜像多流（无 TLS）'}];
 var SPEED_NODE='auto';
 
 /* ===== v1.2.54 指标卡顺序：定义在 KPI 卡所在作用域，供 saveSort/loadKpiOrder 共用 ===== */
