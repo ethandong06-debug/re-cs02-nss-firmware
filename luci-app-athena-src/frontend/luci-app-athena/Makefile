@@ -2,7 +2,7 @@
 # Copyright (C) 2026 AthenaWrt
 # AthenaWrt 专属产品级管理界面（luci-app-athena）
 # 液态玻璃单页前端（htdocs/luci-static/resources/view/athena/index.html）
-# + 23 个后端 shell 脚本（root/usr/libexec/athena-*.sh）
+# + 后端 shell/ucode 脚本与 aarch64 File Browser 运行时
 #
 include $(TOPDIR)/rules.mk
 
@@ -14,12 +14,32 @@ PKG_RELEASE:=1
 PKG_LICENSE:=Apache-2.0
 
 LUCI_TYPE:=app
-LUCI_PKGARCH:=all
+LUCI_PKGARCH:=$(ARCH_PACKAGES)
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
+# UCI 用户配置在升级时必须保留，避免覆盖用户自定义的 LED、偏好和运行状态。
+define Package/luci-app-athena/conffiles
+/etc/config/athena
+endef
+
+# 旧版本曾把固件首启脚本随 APK 安装；升级时清除可能尚未执行的旧脚本，
+# 防止下次重启时覆盖 LAN IP、root 密码、WiFi 密码、国家码或 DNS 配置。
+define Package/luci-app-athena/postinst
+#!/bin/sh
+[ -n "${IPKG_INSTROOT}" ] && exit 0
+rm -f /etc/uci-defaults/99-athena-defaults \
+      /etc/uci-defaults/99-athena-custom.sh \
+      /etc/uci-defaults/99-zz-athena-wifi.sh \
+      /etc/uci-defaults/99-zz-athena-redirect \
+      /etc/uci-defaults/99-athena-apps-dns.sh \
+      /etc/uci-defaults/99-athena-uhttpd-timeout \
+      /etc/uci-defaults/99-athena-filebrowser.sh
+exit 0
+endef
+
 define Package/luci-app-athena/install
-	# ---- 后端脚本（23 个）----
+	# ---- 后端脚本（shell / ucode）----
 	$(INSTALL_DIR) $(1)/usr/libexec
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status.sh $(1)/usr/libexec/athena-status.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status-legacy.sh $(1)/usr/libexec/athena-status-legacy.sh
@@ -69,16 +89,7 @@ define Package/luci-app-athena/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./root/etc/config/athena $(1)/etc/config/athena
 
-	# ---- uci-defaults（LAN IP / 主机名密码 / 无线品牌覆盖）----
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-athena-defaults $(1)/etc/uci-defaults/99-athena-defaults
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-athena-custom.sh $(1)/etc/uci-defaults/99-athena-custom.sh
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-zz-athena-wifi.sh $(1)/etc/uci-defaults/99-zz-athena-wifi.sh
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-zz-athena-redirect $(1)/etc/uci-defaults/99-zz-athena-redirect
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-athena-filebrowser.sh $(1)/etc/uci-defaults/99-athena-filebrowser.sh
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-athena-apps-dns.sh $(1)/etc/uci-defaults/99-athena-apps-dns.sh
-	$(INSTALL_BIN) ./root/etc/uci-defaults/99-athena-uhttpd-timeout $(1)/etc/uci-defaults/99-athena-uhttpd-timeout
-
+	# 不随 APK 执行固件首启脚本，避免覆盖用户现有网络/无线/账号配置。
 	# ---- init.d（开机自恢复呼吸灯状态 / 界面模式入口同步 / filebrowser 文件共享 / 单臂冷启动修复 / 网络自检回退）----
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./root/etc/init.d/athena-boot $(1)/etc/init.d/athena-boot
@@ -87,7 +98,7 @@ define Package/luci-app-athena/install
 	$(INSTALL_BIN) ./root/etc/init.d/athena-vlan-pre $(1)/etc/init.d/athena-vlan-pre
 	$(INSTALL_BIN) ./root/etc/init.d/athena-netcheck $(1)/etc/init.d/athena-netcheck
 
-	# ---- filebrowser 预编译二进制（官方 release，aarch64 静态链接，34.5MB）----
+	# ---- filebrowser 预编译二进制（官方 release，aarch64 静态链接）----
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./root/usr/bin/filebrowser $(1)/usr/bin/filebrowser
 
