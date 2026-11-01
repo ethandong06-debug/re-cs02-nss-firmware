@@ -36,7 +36,7 @@ is_system_partition() {
 		resolved=$(readlink -f "$src" 2>/dev/null)
 		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
 	done
-	rootarg=$(sed -n 's/.*root=\\([^ ]*\\).*/\\1/p' /proc/cmdline 2>/dev/null)
+	rootarg=$(sed -n 's/.*root=\([^ ]*\).*/\1/p' /proc/cmdline 2>/dev/null)
 	if [ -n "$rootarg" ]; then
 		resolved=$(readlink -f "$rootarg" 2>/dev/null)
 		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
