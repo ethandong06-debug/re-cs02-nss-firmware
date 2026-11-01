@@ -97,3 +97,25 @@
 ## 7. 当前下一步
 
 先处理固定签名密钥的安全初始化。不要修改 AthenaWrt 前端页面、后端功能或路由器网络配置。
+
+## 8. 已确认的密钥初始化方式（2026-11-01）
+
+用户已同意改用 GitHub Codespaces 云端终端生成固定 APK 签名密钥，不使用临时 Artifact 传递私钥。
+
+密钥必须按 OpenWrt APK 构建系统要求生成：
+- 算法：ECDSA，NIST P-256 / prime256v1。
+- 私钥格式：SEC1 PEM，文件头应为 `-----BEGIN EC PRIVATE KEY-----`。
+- 生成方式对应 OpenWrt 构建系统：`openssl ecparam -name prime256v1 -genkey -noout`。
+- 不使用 RSA，也不要用会输出 PKCS#8 `BEGIN PRIVATE KEY` 的通用 EC keygen 替代。
+- 构建系统的固定路径已核实为 `private-key.pem` 和 `public-key.pem`；当前工作流使用的路径与其一致。
+
+Codespaces 操作步骤：
+1. 从仓库页面切换到 `athenawrt/apk-fixed-signing` 分支。
+2. Code -> Codespaces -> Create codespace on athenawrt/apk-fixed-signing。
+3. 在 Codespaces 终端生成 `private-key.pem` 与 `public-key.pem`，并验证 SEC1/P-256 格式。
+4. 用户只将私钥 PEM 完整内容粘贴到仓库 Settings -> Secrets and variables -> Actions -> New repository secret，名称为 `ATHENAWRT_APK_SIGNING_KEY`。
+5. 绝不可把私钥发送到 ChatGPT 对话、提交 Git 或放入 Artifact。
+6. 完成 Secret 配置后，删除 Codespace（或确保临时私钥文件不再保留）；公钥后续由正式构建 Artifact 输出。
+7. 然后再手动运行正式构建工作流。
+
+当前状态：方案已确认，尚未创建 Codespace、生成密钥或配置 Secret。
