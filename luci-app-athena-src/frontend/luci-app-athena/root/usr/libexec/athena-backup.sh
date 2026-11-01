@@ -14,12 +14,34 @@ json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 mkdir -p "$BACKUP_DIR" 2>/dev/null
 mkdir -p /etc/crontabs 2>/dev/null
 
+valid_backup_name() {
+	case "$1" in
+		config-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9].tar.gz) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+valid_archive() {
+	local file="$1" entry found=0
+	[ -s "$file" ] || return 1
+	tar -tzf "$file" >/dev/null 2>&1 || return 1
+	while IFS= read -r entry; do
+		case "$entry" in etc|etc/*|./etc|./etc/*) ;; *) return 1 ;; esac
+		case "$entry" in /*|*../*|../*) return 1 ;; esac
+		found=1
+	done <<EOF
+$(tar -tzf "$file" 2>/dev/null)
+EOF
+	[ "$found" -eq 1 ]
+}
+
 # 自动备份执行体：创建备份 + 只保留最近 keep 份
 autobackup() {
 	local keep="${1:-3}"
 	local TS=$(date +%Y%m%d-%H%M%S)
 	local FILE="$BACKUP_DIR/config-$TS.tar.gz"
-	sysupgrade -b "$FILE" >/dev/null 2>&1
+	sysupgrade -b "$FILE" >/dev/null 2>&1 || return 1
+	valid_archive "$FILE" || { rm -f "$FILE"; return 1; }
+	case "$keep" in ''|*[!0-9]*) keep=3 ;; esac
 	[ "$keep" -gt 0 ] 2>/dev/null && ls -1t "$BACKUP_DIR"/config-*.tar.gz 2>/dev/null | tail -n +$((keep+1)) | while read -r f; do rm -f "$f"; done
 }
 
@@ -74,7 +96,7 @@ case "$CMD" in
 		TS=$(date +%Y%m%d-%H%M%S)
 		FILE="$BACKUP_DIR/config-$TS.tar.gz"
 		sysupgrade -b "$FILE" >/dev/null 2>&1
-		if [ -f "$FILE" ]; then
+		if valid_archive "$FILE"; then
 			SIZE=$(du -k "$FILE" 2>/dev/null | awk '{print $1}')
 			echo "{\"ok\":true,\"file\":\"$(basename "$FILE")\",\"size_kb\":${SIZE:-0},\"time\":\"$TS\"}"
 		else
@@ -96,9 +118,10 @@ case "$CMD" in
 	restore)
 		FILE="${2:-}"
 		[ -z "$FILE" ] && { echo '{"ok":false,"msg":"缺少备份文件名"}'; exit 1; }
+		valid_backup_name "$FILE" || { echo '{"ok":false,"msg":"备份文件名无效"}'; exit 1; }
 		FP="$BACKUP_DIR/$FILE"
 		[ -f "$FP" ] || { echo '{"ok":false,"msg":"备份文件不存在"}'; exit 1; }
-		tar -tzf "$FP" >/dev/null 2>&1 || { echo '{"ok":false,"msg":"备份文件不是有效的 tar.gz 配置归档"}'; exit 1; }
+		valid_archive "$FP" || { echo '{"ok":false,"msg":"备份归档无效或包含非配置目录内容"}'; exit 1; }
 		if sysupgrade -r "$FP" >/dev/null 2>&1; then
 			echo '{"ok":true,"msg":"配置已恢复，设备即将重启"}'
 		else
@@ -131,10 +154,12 @@ case "$CMD" in
 		# 再调用本命令（无参）：大文件不能走 exec 命令行参数（rpcd 限制 1024B），避免恢复上传必失败
 		TMP="/tmp/athena-restore.b64"
 		[ -s "$TMP" ] || { echo '{"ok":false,"msg":"未找到上传的备份内容（请重新选择备份文件）"}'; exit 1; }
+	TMP_SIZE=$(wc -c < "$TMP" 2>/dev/null | tr -d ' ')
+	[ "${TMP_SIZE:-0}" -le 67108864 ] 2>/dev/null || { rm -f "$TMP"; echo '{"ok":false,"msg":"备份文件过大（最大 64 MiB）"}'; exit 1; }
 		OUT="/tmp/athena-restore.tar.gz"
 		base64 -d "$TMP" > "$OUT" 2>/dev/null
 		[ -s "$OUT" ] || { rm -f "$TMP" "$OUT" 2>/dev/null; echo '{"ok":false,"msg":"备份内容解码失败"}'; exit 1; }
-		tar -tzf "$OUT" >/dev/null 2>&1 || { rm -f "$TMP" "$OUT" 2>/dev/null; echo '{"ok":false,"msg":"文件不是有效的 OpenWrt 配置备份（tar.gz）"}'; exit 1; }
+		valid_archive "$OUT" || { rm -f "$TMP" "$OUT" 2>/dev/null; echo '{"ok":false,"msg":"备份归档无效或包含非配置目录内容"}'; exit 1; }
 		if sysupgrade -r "$OUT" >/dev/null 2>&1; then
 			rm -f "$TMP" "$OUT" 2>/dev/null
 			echo '{"ok":true,"msg":"配置已恢复，设备即将重启"}'
