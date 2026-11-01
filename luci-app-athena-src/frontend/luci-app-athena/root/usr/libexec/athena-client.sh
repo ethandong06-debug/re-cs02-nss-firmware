@@ -15,16 +15,33 @@ MAC="${2:-}"
 
 # MAC 规范化
 norm_mac() { echo "$1" | tr 'A-F' 'a-f'; }
+valid_mac() {
+	case "$1" in
+		[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]) return 0 ;;
+		*) return 1 ;;
+	esac
+}
 json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
 case "$CMD" in
 	block)
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		M=$(norm_mac "$MAC")
-		# 用 nft 添加转发丢弃规则（OpenWrt 22+ fw4）
-		nft add rule inet fw4 forward ether saddr "$M" counter drop 2>/dev/null
-		# 兼容 iptables（老版本）
-		iptables -I FORWARD -m mac --mac-source "$M" -j DROP 2>/dev/null
+		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
+		# 优先使用 fw4/nftables；规则已存在时视为成功，避免重复插入。
+		if nft -a list chain inet fw4 forward 2>/dev/null | grep -Fq "ether saddr $M"; then
+			RULE_OK=1
+		elif nft add rule inet fw4 forward ether saddr "$M" counter drop 2>/dev/null; then
+			RULE_OK=1
+		else
+			RULE_OK=0
+		fi
+		# 旧版系统回退到 iptables；只有实际添加成功或规则已存在才确认拉黑。
+		if [ "$RULE_OK" -ne 1 ]; then
+			iptables -C FORWARD -m mac --mac-source "$M" -j DROP 2>/dev/null || iptables -I FORWARD -m mac --mac-source "$M" -j DROP 2>/dev/null
+			[ $? -eq 0 ] && RULE_OK=1
+		fi
+		[ "$RULE_OK" -eq 1 ] || { echo '{"ok":false,"msg":"防火墙规则添加失败，设备未拉黑"}'; exit 1; }
 		# 记录到 uci（持久化，首启脚本可恢复）
 		uci -q add_list athena.client.blocked="$M"
 		uci commit athena 2>/dev/null
@@ -33,6 +50,7 @@ case "$CMD" in
 	unblock)
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		M=$(norm_mac "$MAC")
+		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
 		nft -a list ruleset 2>/dev/null | grep "saddr $M" | awk '{print $NF}' | while read h; do nft delete rule inet fw4 forward handle "$h" 2>/dev/null; done
 		iptables -D FORWARD -m mac --mac-source "$M" -j DROP 2>/dev/null
 		uci -q del_list athena.client.blocked="$M"
@@ -43,6 +61,10 @@ case "$CMD" in
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		NAME="${3:-}"
 		M=$(norm_mac "$MAC")
+		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
+		NAME_BYTES=$(printf '%s' "$NAME" | wc -c | tr -d ' ')
+		[ -n "$NAME" ] && [ "$NAME_BYTES" -le 32 ] || { echo '{"ok":false,"msg":"设备名称必须为 1-32 字节"}'; exit 1; }
+		printf '%s' "$NAME" | LC_ALL=C grep -q '[[:cntrl:]]' && { echo '{"ok":false,"msg":"设备名称不能包含控制字符"}'; exit 1; }
 		# 查找已存在该 MAC 的 host 段，有则更新名称，无则新增
 		existing=$(uci show dhcp 2>/dev/null | grep "\.mac='$M'$" | cut -d. -f1-2 | head -n1)
 		if [ -n "$existing" ]; then
@@ -85,6 +107,7 @@ case "$CMD" in
 	know)
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		M=$(norm_mac "$MAC")
+		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
 		# 已存在则不重复添加
 		EXISTS=$(uci -q get athena.client.known 2>/dev/null | grep -o "$M" | head -n1)
 		if [ -z "$EXISTS" ]; then
@@ -96,6 +119,7 @@ case "$CMD" in
 	unlearn)
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		M=$(norm_mac "$MAC")
+		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
 		uci -q del_list athena.client.known="$M"
 		uci commit athena 2>/dev/null
 		echo "{\"ok\":true,\"mac\":\"$M\"}"
@@ -104,6 +128,7 @@ case "$CMD" in
 		[ -z "$MAC" ] && { echo '{"ok":false,"msg":"缺少 MAC"}'; exit 1; }
 		TEXT="${3:-}"
 		M=$(norm_mac "$MAC")
+		valid_mac "$M" || { echo '{"ok":false,"msg":"MAC 地址格式无效"}'; exit 1; }
 		HEX=$(echo "$M" | tr -d ':')
 		[ -n "$HEX" ] || { echo '{"ok":false,"msg":"MAC 无效"}'; exit 1; }
 		# uci 选项名不能含冒号，用去掉冒号的 hex 作键，值即备注文本
