@@ -2605,6 +2605,15 @@ function modeFormHTML(){
   return '';
 }
 function renderNetPage(){
+  if(!NET_LOADED){
+    var waiting=document.getElementById('modeFormBox');
+    if(waiting) waiting.innerHTML='<div class="apps-empty">正在读取当前网络参数。读取成功前，网络模式切换与提交操作均已锁定。</div>';
+    var apply=document.querySelector('[data-applyBtn]');
+    if(apply){ apply.style.display='none'; apply.disabled=true; }
+    var pending=document.getElementById('modeBox');
+    if(pending) pending.querySelectorAll('button').forEach(function(b){b.disabled=true;});
+    return;
+  }
   var box=document.getElementById('modeBox');
   if(box){ box.innerHTML=NET_MODES.map(function(m){
     return '<button class="mode '+(m.id===curMode?'sel':'')+'" data-mode="'+m.id+'" onclick="pickMode(\''+m.id+'\')"><div class="mn">'+mIcon(m.id)+' '+m.name+'</div><div class="md">'+m.desc+'</div><span class="mt">'+(m.id===curMode?'当前使用':m.tag)+'</span></button>';
