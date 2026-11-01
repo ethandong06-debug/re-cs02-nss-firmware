@@ -905,9 +905,9 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div class="card">
         <h3>上网模式 <span class="sub">一键切换，自动完成底层配置</span></h3>
         <div class="modes" id="modeBox">
-          <button class="mode" data-mode="router" onclick="pickMode('router')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8a1 1 0 0 1-1 .8H5.6a1 1 0 0 1-1-.8z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M3 10v-1h18v1"/></svg> 主路由</div><div class="md">路由器拨号上网，全家设备都走它</div><span class="mt">读取中</span></button>
-          <button class="mode" data-mode="bypass" onclick="pickMode('bypass')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 8a4 4 0 1 1 8 0M12 12v6"/><circle cx="12" cy="8" r="1.2"/></svg> 旁路由</div><div class="md">主路由不动，它只做增强 / 分流</div><span class="mt">适合折腾</span></button>
-          <button class="mode" data-mode="ap" onclick="pickMode('ap')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg> AP 桥接</div><div class="md">当无线 AP，由上级路由器分配 IP</div><span class="mt">适合当扩展</span></button>
+          <button class="mode" data-mode="router" disabled onclick="pickMode('router')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18l-1.6 8a1 1 0 0 1-1 .8H5.6a1 1 0 0 1-1-.8z"/><path d="M7 10V7a5 5 0 0 1 10 0v3M3 10v-1h18v1"/></svg> 主路由</div><div class="md">路由器拨号上网，全家设备都走它</div><span class="mt">读取中</span></button>
+          <button class="mode" data-mode="bypass" disabled onclick="pickMode('bypass')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 8a4 4 0 1 1 8 0M12 12v6"/><circle cx="12" cy="8" r="1.2"/></svg> 旁路由</div><div class="md">主路由不动，它只做增强 / 分流</div><span class="mt">适合折腾</span></button>
+          <button class="mode" data-mode="ap" disabled onclick="pickMode('ap')"><div class="mn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg> AP 桥接</div><div class="md">当无线 AP，由上级路由器分配 IP</div><span class="mt">适合当扩展</span></button>
         </div>
         <div style="margin-top:18px">
           <div data-modeTitle style="font-size:13px;font-weight:700;margin-bottom:12px">正在读取当前网络配置…</div>
@@ -2168,7 +2168,7 @@ var EMMC_DISK=null,EXT_DISKS=[],hasExternalDisk=false;
 var _STORE_TOTAL=0,_STORE_USED=0,_STORE_NAME='',_STORE_IS_EXT=false;
 var WAN_PROTO='pppoe',WAN_USER='',WAN_PWD='',WAN_DEV='wan',WAN_IP='',WAN_VLAN='',INNER_VLAN='',IPTV_VLAN='',IPTV_PORT='lan4';
 var WAN_STATIC={ip:'',mask:'',gw:'',dns:''};
-var curMode='router',modeUserSet=false;
+var curMode='router',modeUserSet=false,NET_LOADED=false;
 var FIRMWARE_VER='v1.2.61',KERNEL_VER='',UPTIME_S=0,SYS_MODEL='JDCloud RE-CS-02 · IPQ6018';
 var REBOOT_SCHED={enabled:false,hour:'03:30',dow:'*',loaded:false};
 var BACKUPS=[],AUTO_BACKUP=false,BACKUP_FREQ='daily',BACKUP_TIME='02:00',BACKUP_KEEP=3;
@@ -2324,7 +2324,7 @@ function applyStatus(d){
     updateNewDevs();
   }
   if(d.wan){
-    WAN_PROTO=d.wan.proto||WAN_PROTO; WAN_USER=d.wan.username||''; WAN_PWD=d.wan.password||''; WAN_DEV=d.wan.device||WAN_DEV; WAN_IP=d.wan.ip||WAN_IP;
+    WAN_PROTO=d.wan.proto||WAN_PROTO; WAN_USER=d.wan.username||''; WAN_DEV=d.wan.device||WAN_DEV; WAN_IP=d.wan.ip||WAN_IP; NET_LOADED=!!(d.mode&&d.wan);
     if(d.wan.wan_vlan) WAN_VLAN=d.wan.wan_vlan;
     if(d.wan.ret_vlan) INNER_VLAN=d.wan.ret_vlan;
     IPTV_VLAN=d.wan.iptv_vlan||'';
@@ -2580,7 +2580,7 @@ function modeFormHTML(){
     // 主路由表单连接类型有效化：非法/未知值一律回退 PPPoE（保证账号密码输入框始终可用）
     var _rp=(WAN_PROTO==='pppoe'||WAN_PROTO==='dhcp'||WAN_PROTO==='static')?WAN_PROTO:'pppoe';
     return '<div class="field"><label>连接类型</label><select id="wanProtoSel" onchange="setWanProto(this.value)">'+[{id:'pppoe',name:'宽带拨号（PPPoE）'},{id:'dhcp',name:'自动获取（DHCP）'},{id:'static',name:'静态 IP'}].map(function(p){return '<option value="'+p.id+'"'+(_rp===p.id?' selected':'')+'>'+p.name+'</option>';}).join('')+'</select></div>'
-      +(_rp==='pppoe'?'<div class="limit-row"><div><label>宽带账号</label><input id="wanUser" value="'+esc(WAN_USER)+'"></div><div><label>宽带密码</label><div class="pwd-wrap"><input type="text" data-pwd="1" id="wanPwd" value="'+esc(WAN_PWD)+'"></div></div></div>'
+      +(_rp==='pppoe'?'<div class="limit-row"><div><label>宽带账号</label><input id="wanUser" value="'+esc(WAN_USER)+'"></div><div><label>宽带密码</label><div class="pwd-wrap"><input type="password" data-pwd="1" id="wanPwd" placeholder="留空表示保留当前 PPPoE 密码"></div></div></div>'
       :_rp==='dhcp'?'<div style="font-size:13px;color:var(--text2);padding:8px 0">路由器将自动从光猫获取 IP（光猫已拨号）</div>'
       :'<div class="limit-row"><div><label>IP 地址</label><input id="stIp" value="'+esc(WAN_STATIC.ip)+'"></div><div><label>掩码</label><input id="stMask" value="'+esc(WAN_STATIC.mask)+'"></div></div><div class="limit-row"><div><label>网关</label><input id="stGw" value="'+esc(WAN_STATIC.gw)+'"></div><div><label>DNS</label><input id="stDns" value="'+esc(WAN_STATIC.dns)+'"></div></div>')
       +'<button class="btn primary" style="margin-top:10px" onclick="saveApply()">保存并应用</button>';
@@ -2589,7 +2589,7 @@ function modeFormHTML(){
     // 单臂表单连接类型有效化：非法/未知值一律回退 PPPoE（保证账号密码输入框始终可用）
     var _wp=(WAN_PROTO==='pppoe'||WAN_PROTO==='dhcp'||WAN_PROTO==='static')?WAN_PROTO:'pppoe';
     return '<div class="field"><label>连接类型</label><select id="wanProtoSel" onchange="setWanProto(this.value)">'+[{id:'pppoe',name:'宽带拨号（PPPoE）'},{id:'dhcp',name:'自动获取（DHCP）'},{id:'static',name:'静态 IP'}].map(function(p){return '<option value="'+p.id+'"'+(_wp===p.id?' selected':'')+'>'+p.name+'</option>';}).join('')+'</select></div>'
-      +(_wp==='pppoe'?'<div class="limit-row"><div><label>宽带账号</label><input id="wanUser" value="'+esc(WAN_USER)+'"></div><div><label>宽带密码</label><div class="pwd-wrap"><input type="text" data-pwd="1" id="wanPwd" value="'+esc(WAN_PWD)+'"></div></div></div>'
+      +(_wp==='pppoe'?'<div class="limit-row"><div><label>宽带账号</label><input id="wanUser" value="'+esc(WAN_USER)+'"></div><div><label>宽带密码</label><div class="pwd-wrap"><input type="password" data-pwd="1" id="wanPwd" placeholder="留空表示保留当前 PPPoE 密码"></div></div></div>'
       :_wp==='dhcp'?'<div style="font-size:13px;color:var(--text2);padding:8px 0">路由器将自动从光猫获取 IP（光猫已拨号）</div>'
       :'<div class="limit-row"><div><label>IP 地址</label><input id="stIp" value="'+esc(WAN_STATIC.ip)+'"></div><div><label>掩码</label><input id="stMask" value="'+esc(WAN_STATIC.mask)+'"></div></div><div class="limit-row"><div><label>网关</label><input id="stGw" value="'+esc(WAN_STATIC.gw)+'"></div><div><label>DNS</label><input id="stDns" value="'+esc(WAN_STATIC.dns)+'"></div></div>')
       +'<div class="limit-row"><div><label>内网回传 VLAN</label><input id="sgInner" value="'+esc(INNER_VLAN||'1')+'"></div><div><label>拨号 VLAN</label><input id="sgWan" value="'+esc(WAN_VLAN||'2044')+'"></div></div>'
@@ -3292,7 +3292,7 @@ window.cancelParent=function(mac){
 };
 
 /* ---- 网络 ---- */
-window.pickMode=function(m){ curMode=m; modeUserSet=true; renderNetPage(); };
+window.pickMode=function(m){ if(!NET_LOADED){ toast('当前网络配置尚未读取完成，暂不允许切换模式'); return; } curMode=m; modeUserSet=true; renderNetPage(); };
 window.setWanProto=function(p){ WAN_PROTO=p; renderNetPage(); };
 window.saveApply=function(){
   var args=[];
