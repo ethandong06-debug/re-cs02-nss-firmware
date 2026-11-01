@@ -32,6 +32,11 @@ case "$CMD" in
 		PASS=$(cat "$PASS_FILE" 2>/dev/null)
 		[ -n "$PASS" ] || { echo '{"ok":false,"msg":"未能读取 filebrowser 密码"}'; exit 1; }
 		if [ "$CMD" = "credentials" ]; then
+			# 用户主动打开文件共享面板时启动服务；默认不对外自启动，避免无意中长期开放文件入口。
+			if ! pidof filebrowser >/dev/null 2>&1; then
+				/etc/init.d/filebrowser start >/dev/null 2>&1 || { echo '{"ok":false,"msg":"文件共享启动失败，请确认 LAN 地址与服务状态"}'; exit 1; }
+				sleep 1
+			fi
 			if pidof filebrowser >/dev/null 2>&1; then RUNNING=true; else RUNNING=false; fi
 			printf '{"ok":true,"username":"root","password":"%s","running":%s,"root":"/mnt/usb"}\n' "$PASS" "$RUNNING"
 		fi
