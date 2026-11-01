@@ -2854,7 +2854,8 @@ function renderPkgSummary(){
 }
 function renderRebootSched(){
   var b=document.querySelector('[data-rebootSched]');
-  if(b) b.textContent=REBOOT_SCHED.enabled?('已设置 '+REBOOT_SCHED.hour+'（每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[REBOOT_SCHED.dow]||'天')+'）'):'设置';
+  var day=REBOOT_SCHED.dow==='*'?'每天':('每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[REBOOT_SCHED.dow]||''));
+  if(b) b.textContent=REBOOT_SCHED.enabled?('已设置 '+REBOOT_SCHED.hour+'（'+day+'）'):'设置';
 }
 function renderAutoBackup(){
   var freqLabel={daily:'每天',weekly:'每周',monthly:'每月'}[BACKUP_FREQ]||'定时';
@@ -3525,9 +3526,15 @@ window.doReboot=function(){
   athenaRPC.exec('athena-reboot.sh',['now']).catch(function(e){ toast('重启指令已下发：'+(e.message||'')); });
 };
 window.openRebootSched=function(){
-  openBkModal('<h3>定时重启</h3><div class="m-sub">每周固定时间自动重启，清理长期运行的内存占用</div>'
-    +'<div class="limit-row"><div><label>每周几</label><select id="rbDow">'+[['*','每天'],['0','周日'],['1','周一'],['2','周二'],['3','周三'],['4','周四'],['5','周五'],['6','周六']].map(function(x){return '<option value="'+x[0]+'"'+(String(REBOOT_SCHED.dow)===String(x[0])?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div><div><label>时间</label><input type="time" id="rbTime" value="'+REBOOT_SCHED.hour+'"></div></div>'
-    +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveRebootSched()">保存</button></div>');
+  openBkModal('<h3>定时重启</h3><div class="m-sub">按设定星期和时间自动重启；也可以关闭现有计划</div>'
+    +'<div class="limit-row"><div><label>执行日期</label><select id="rbDow">'+[['*','每天'],['0','周日'],['1','周一'],['2','周二'],['3','周三'],['4','周四'],['5','周五'],['6','周六']].map(function(x){return '<option value="'+x[0]+'"'+(String(REBOOT_SCHED.dow)===String(x[0])?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div><div><label>时间</label><input type="time" id="rbTime" value="'+REBOOT_SCHED.hour+'"></div></div>'
+    +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button>'+(REBOOT_SCHED.enabled?'<button class="btn danger" onclick="disableRebootSched()">关闭计划</button>':'')+'<button class="btn primary" onclick="saveRebootSched()">保存</button></div>');
+};
+window.disableRebootSched=function(){
+  athenaRPC.exec('athena-reboot.sh',['disable']).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭');
+    REBOOT_SCHED.enabled=false; REBOOT_SCHED.loaded=true; window.closeModal(); toast('定时重启已关闭'); renderRebootSched();
+  }).catch(function(e){ toast('关闭失败：'+(e.message||'')); });
 };
 window.saveRebootSched=function(){
   var dow=document.getElementById('rbDow').value;
