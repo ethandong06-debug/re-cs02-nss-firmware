@@ -26,7 +26,34 @@ jobs:
       - name: Checkout Athena source
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref }}
+
+      - name: Static syntax and metadata checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkg='luci-app-athena-src/frontend/luci-app-athena'
+          find "$pkg/root/usr/libexec" -type f -name '*.sh' -print0 | while IFS= read -r -d '' f; do
+            sh -n "$f"
+          done
+          python3 - <<'PY'
+          import json, pathlib, re
+          root = pathlib.Path('luci-app-athena-src/frontend/luci-app-athena')
+          for rel in ('root/usr/share/luci/menu.d/luci-app-athena.json',
+                      'root/usr/share/rpcd/acl.d/luci-app-athena.json',
+                      'root/etc/config/athena'):
+              p = root / rel
+              if rel.endswith('.json'):
+                  json.loads(p.read_text())
+          html = (root / 'htdocs/luci-static/resources/view/athena/index.html').read_text()
+          scripts = re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>', html, re.S | re.I)
+          if not scripts:
+              raise SystemExit('No inline JavaScript blocks found')
+          out = pathlib.Path('/tmp/athena-inline.js')
+          out.write_text('\\n;\\n'.join(scripts))
+          print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
+          PY
+          node --check /tmp/athena-inline.js
 
       - name: Fetch pinned File Browser binary
         shell: bash
