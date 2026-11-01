@@ -3027,6 +3027,7 @@ async function loadTheme(){
   }catch(e){}
   /* 明暗模式持久化：路由器级优先（athena.theme.dark），localStorage 仅兜底 */
   var dm=(d&&(d.dark==='light'||d.dark==='dark'||d.dark==='auto'))?d.dark:null;
+  window._athenaThemeMode=dm;
   if(dm==null){
     var ls=sGet('athena_dark');
     dm=(ls==null)?'auto':(ls==='1'?'dark':'light');
@@ -3992,19 +3993,27 @@ window.toggleSsh=function(){ toast('SSH 服务由系统安全策略管理，始�
    它把上面真正的排序弹窗顶掉成"固定顺序、保留入口"的说明框，导致「自定义排序」是假的。 */
 
 /* ---- 主题持久化（覆盖预览稿 localStorage 版） ---- */
-window.setThemeMode=function(mode){
+window.setThemeMode=function(mode,silent){
   var r=document.documentElement;
   var active=(mode==='auto')?((matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'):mode;
+  window._athenaThemeMode=mode;
   r.dataset.theme=active;
-  sSet('athena_dark',active==='dark'?'1':'0');
-  /* 按钮高亮由 _pv.setThemeMode（预览稿版）按 .theme-modes 更新 */
+  sSet('athena_dark',mode==='auto'?'auto':(active==='dark'?'1':'0'));
   if(athenaRPC.live){
     var g=(window._pv&&window._pv.GLASS_THEME)||{palette:'aurora',blob:100,glass:58,blur:20,iri:55,hi:70};
     athenaRPC.exec('athena-theme.sh',['set',g.palette,String(g.blob),String(g.glass),String(g.blur),String(g.iri),String(g.hi),mode]).catch(function(){});
   }
   if(athenaRPC.live&&window._pv&&window._pv.setThemeMode){ try{ window._pv.setThemeMode(mode,true); }catch(e){} }
-  window.showToast('主题已切换为 '+(mode==='dark'?'深色':mode==='light'?'浅色':'跟随系统'));
+  if(!silent) window.showToast('主题已切换为 '+(mode==='dark'?'深色':mode==='light'?'浅色':'跟随系统'));
 };
+if(!window._athenaThemeMedia&&window.matchMedia){
+  window._athenaThemeMedia=window.matchMedia('(prefers-color-scheme: dark)');
+  var themeMediaChange=function(){
+    if(window._athenaThemeMode==='auto') window.setThemeMode('auto',true);
+  };
+  if(window._athenaThemeMedia.addEventListener) window._athenaThemeMedia.addEventListener('change',themeMediaChange);
+  else if(window._athenaThemeMedia.addListener) window._athenaThemeMedia.addListener(themeMediaChange);
+}
 window.saveGlassTheme=function(){
   if(!window._pv){ toast('主题组件未就绪'); return; }
   var g=window._pv.GLASS_THEME;
