@@ -55,11 +55,21 @@ case "$CMD" in
 	verify)
 		FILE="${2:-}"
 		[ "$FILE" = "$FW_ALLOWED" ] || { echo '{"ok":false,"compatible":false,"msg":"固件路径不在允许范围"}'; exit 1; }
+		# 每次预校验先清理旧凭据；只有本次完整校验成功才生成一次性 SHA-256 凭据。
+		rm -f /tmp/athena-fw-upload.sha256 /tmp/athena-fw-upload.sha256.tmp.*
 		if verify_file "$FILE"; then
-			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":true,"pkg":"%s","reason":""}\n' "$SIZE" "$SHA" "$DIR"
+			umask 077
+			MARKER_TMP="/tmp/athena-fw-upload.sha256.tmp.$$"
+			if ! printf '%s\\n' "$SHA" > "$MARKER_TMP" || ! chmod 600 "$MARKER_TMP" || ! mv -f "$MARKER_TMP" /tmp/athena-fw-upload.sha256; then
+				rm -f "$MARKER_TMP" /tmp/athena-fw-upload.sha256
+				echo '{"ok":false,"compatible":false,"msg":"无法保存固件预校验凭据"}'
+				exit 1
+			fi
+			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":true,"pkg":"%s","reason":""}\\n' "$SIZE" "$SHA" "$DIR"
 		else
-			SAFE_REASON=$(printf '%s' "$REASON" | sed 's/\\/\\\\/g; s/"/\\"/g')
-			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":false,"pkg":"%s","reason":"%s"}\n' "${SIZE:-0}" "$SHA" "$DIR" "$SAFE_REASON"
+			rm -f /tmp/athena-fw-upload.sha256
+			SAFE_REASON=$(printf '%s' "$REASON" | sed 's/\\\\/\\\\\\\\/g; s/"/\\\\"/g')
+			printf '{"ok":true,"size":%s,"sha256":"%s","compatible":false,"pkg":"%s","reason":"%s"}\\n' "${SIZE:-0}" "$SHA" "$DIR" "$SAFE_REASON"
 		fi
 		;;
 	flash)
