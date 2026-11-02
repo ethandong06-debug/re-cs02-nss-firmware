@@ -426,3 +426,56 @@
 - **验收边界**：CI 的 APK 验签和临时 root 依赖模拟步骤均成功；这仅证明构建流水线通过。设备端尚未导入本次公钥、验签或模拟升级；FileBrowser Quantum 的 Athena 真机功能也尚未验收。
 - **签名限制**：本次仍使用 Actions runner 临时签名密钥；Artifact 中的公钥只匹配 Run #188 的 APK。不能用于验证其他 Run 的 APK，私钥不在 Artifact 中。
 - 本轮没有连接 Athena 真机、没有安装 APK、没有刷写固件，也没有修改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。正式安装仍须等待设备端验签、模拟升级通过及用户明确确认。
+
+
+## 11. AthenaWrt 1.2.60-r2 设备端安装验收记录（2026-11-02）
+
+### GitHub 当前状态核对
+
+- 仓库：`ethandong06-debug/re-cs02-nss-firmware`。
+- 工作分支：`athenawrt/apk-fixed-signing`。
+- 本次核对时分支 HEAD：`a40f2312f519f78b73cca74068731d8e804a483d`，提交说明：`docs: record successful Athena APK run 188 and artifact verification`。
+- 最新 Actions：Build Athena LuCI APK，Run #188，ID `41436896339`，对应构建提交 `ecff7b81ba62421aae80b645ac84435a1ca9a68f`，状态 completed / **success**。
+- Run #188 的 14 个主要步骤全部成功：静态语法与元数据检查、FileBrowser Quantum ARM64 QEMU smoke test、ImmortalWrt host tools、目标工具链、仅编译 Athena APK、APK 签名与 SHA-256 校验、Artifact 上传。
+- 最近一次运行序列：#188 success；#187 failure；#186 failure；#185 failure；#184 cancelled。#187/#186/#185 的失败是构建临时 APK 数据库初始化参数问题，已由 #188 的 `--usermode` 修复验证。
+- 当前未发现 Run #188 之后更新的 Actions 运行记录。分支 HEAD 是记录 Run #188 结果的文档提交；Run #188 的实际构建源码提交仍为 `ecff7b81ba62421aae80b645ac84435a1ca9a68f`。
+
+### 设备端实际安装结果
+
+用户已在 Athena（ImmortalWrt SNAPSHOT r1-20261017，APK-tools 3.0.5，aarch64）完成 1.2.60-r2 安装：
+
+- 主 APK：`luci-app-athena-1.2.60-r2.apk`。
+- 中文包：`luci-i18n-athena-zh-cn-0.apk`。
+- 设备端实际 SHA-256 与 Artifact 的 `SHA256SUMS.txt` 一致：
+  - 主 APK：`417db3ef8d4012f1977fb0941ab858703a1e43c5ce130e68a2a2b031ccf7ad78`。
+  - 中文包：`347bbfa24a29f2f7f75ea85eb08269bd249a3fbf64604a93e6a025bda9464654`。
+  - 构建公钥：`a2d0c1168d114ba03dd332b295d31a63928faad899ab4d02c090b8d9b84b31f0`。
+- 使用 `apk --keys-dir /tmp/athena-run188 verify` 验证两个本地 APK，均返回 `OK`。
+- `apk adbdump` 确认主包名 `luci-app-athena`、版本 `1.2.60-r2`、架构 `noarch`、依赖 `libc`；中文包名 `luci-i18n-athena-zh-cn`、版本 `0`、架构 `noarch`，依赖主包。
+- 模拟安装计划只涉及两个目标包：主程序从 `1.2.60-r1` 升级到 `1.2.60-r2`；中文包从 `0.261023.42061` 降为包内版本 `0`。模拟输出同时出现系统软件源缓存索引 `UNTRUSTED signature` 警告，但本地两个 APK 的独立签名验证均已通过；正式安装命令最终返回 `OK: 98.7 MiB in 392 packages`。
+- 安装前已备份 `/etc/config/athena` 与 `/etc/apk/world` 至 `/tmp/athena-backup-1260/`。
+- 主包 post-upgrade 阶段触发了 root 密码提示，出现 `Bad password: too weak` 及恢复提示 `{"ok":true,"restored":true}`。随后用户使用原有 root 密码新建 SSH 连接成功；确认原密码仍可用。BusyBox 的 `passwd -S` 不支持，读取 root shadow 条目只确认存在密码哈希，未将哈希内容作为密码信息保存。
+- 用户打开 LuCI 首页后反馈“看不出来有什么问题”，随后确认“没什么大问题”。这属于首页初步目视验收，不等于全站页面、按钮、后端调用链和 FileBrowser Quantum 真机功能已完成验收。
+
+### 当前设备验收结论与边界
+
+- [x] 两个 APK 的设备端 SHA-256 与 Artifact 清单一致。
+- [x] 两个 APK 使用本次构建公钥验签成功。
+- [x] 模拟升级只涉及 Athena 主包和中文语言包。
+- [x] 1.2.60-r2 主包与中文包正式安装成功。
+- [x] 原 root 密码仍可通过新 SSH 会话登录。
+- [x] LuCI 首页初步目视检查未发现明显问题（用户反馈）。
+- [ ] 全站页面分类、入口、功能边界和重复项审计。
+- [ ] 全部前端按钮/参数/RPC 与后端实现逐项映射，区分真实实现、只读展示、占位/无效控件。
+- [ ] 后端权限、输入校验、错误处理、回滚和危险操作保护复核。
+- [ ] FileBrowser Quantum 真机运行与 USB/LAN/文件操作验收。
+- [ ] 网络、系统维护、灯光等页面的低风险只读验收；任何可能修改网络或系统状态的动作须另行确认。
+
+### 下一阶段工作要求
+
+用户当前明确希望先整体分析 AthenaWrt 全站页面功能分类与功能实现，再制定优化方案。先做静态源码审计和功能映射，不要立即改 CSS、重写页面或开始大规模代码修改。
+
+必须保留：PPPoE、现网 VLAN 2044、IPv6 PD/SLAAC、防火墙/NAT、OpenClash、NSS/ECM 及其现有运行逻辑。不得刷写固件，不得执行网络模式切换、恢复出厂、sysupgrade、服务停用或其他高风险动作。
+
+建议交付《AthenaWrt 全站功能架构与实现审计清单》，至少包括：现有菜单树/页面入口、按用户任务重组的分类建议、每页真实功能与数据来源、按钮及参数对应的后端 RPC、权限与安全边界、重复/过时/无效入口、缺陷等级、建议保留/合并/移动/修复项。完成清单后再由用户确认优化范围。
+
