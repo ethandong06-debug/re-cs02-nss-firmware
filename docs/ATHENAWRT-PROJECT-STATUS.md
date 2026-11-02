@@ -734,6 +734,7 @@
 - 维护页将原“重启与升级”拆为“计划维护”和“危险操作”；重启、定时重启、升级、恢复出厂按钮的原有回调和后端动作保持不变，增加风险提示。
 - 提交前对完整 HTML 做精确文本/引用检查：`topologyHTML`/`topoBox`/家庭网络拓扑引用为 0；`openMatrixFull` 为 0；`toggleSsh` 与旧 SSH 控件引用为 0；旧 `checkUpdate` 为 0；新 `refreshPackageList` 恰有按钮与函数定义各 1 处；实时网速 Hero 保留。
 - 首页拓扑卡移除后，快捷操作卡改为横跨原双列网格，避免桌面宽屏下只占左侧 3/5 宽度；仅调整 DOM 布局，不改变快捷操作回调。
-- 本批为源码静态检查，不等于 Node JavaScript 语法检查、GitHub Actions 成功、APK 构建/验签或设备实测。提交后尚未取得可确认的 Actions run 结果；待检查 CI。
+- 前端语法检查：从最新分支文件提取 3 个 inline script block，并按 workflow 的拼接方式合并；在隔离 V8 解析器中编译通过，零语法错误。该检查不等同于 GitHub Actions 中 Node 22 的正式 `node --check`。
+- GitHub Actions：当前 workflow 的 push 分支和 paths 规则覆盖本次前端文件；但当前可用 GitHub 接口未返回该 push 的 workflow run，提交 combined status 也为空，因此**构建结果尚未确认**，不得宣称 APK 构建成功。
 - 没有安装新 APK，也没有操作路由器；PPPoe/VLAN 2044/IPv6/防火墙/NAT/OpenClash/NSS/ECM 均未触碰。
 - 下一步：核对该提交对应的 Actions 构建结果；通过后再做页面级复核和 C3-A 下一小批。若构建失败，先修复构建，不继续叠加页面改动。
