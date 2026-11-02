@@ -277,3 +277,9 @@
 - Workflow 已增加前端 `athenaRPC.exec()` 目标、Makefile 安装项、rpcd ACL `file.exec` 的自动交叉检查，并校验唯一动态目标 `cfg.f` 由 `confirmApply('athena-mode.sh', ...)` 提供。
 - 自动核对结果：24 个直接目标全部在 Makefile 安装并获 ACL 授权；31 个 Shell 文件中识别 6 个内部依赖和 1 个未引用的 `athena-single.sh`。这项检查已随 Run #170 的静态检查步骤通过。
 - Run #170（`41367892120`，提交 `340f8dc0...`）静态语法、JSON 元数据、前后端调用链检查及 File Browser 二进制下载均已通过；当前正在安装构建依赖，APK 构建尚未开始。
+
+### 文件共享依赖的待决事项（安装阻断项）
+
+- 当前构建仍包含原版 File Browser v2.63.23。上游已归档且停止安全维护，因此即使已实施 LAN 绑定、随机密码、/mnt/usb 限定、命令执行禁用和 USB 拔除停止服务，也不能把它描述为无已知维护风险。
+- 已核对一个可替代方案：FileBrowser Quantum v2.0.2-stable，提供 linux-arm64 单文件构建，配置支持 `http.listen`、独立 source path 和随机初始管理员密码，且近期版本持续修复安全问题；但它改用 YAML 配置和 SQLite，二进制体积也明显大于当前版本，需重做 init、密码展示和服务验收。
+- 未经用户确认，不自动切换依赖。当前 Run #170 只用于验证现有源码构建流程；即使 APK 构建成功，也不应在用户确认文件共享依赖前正式安装。
