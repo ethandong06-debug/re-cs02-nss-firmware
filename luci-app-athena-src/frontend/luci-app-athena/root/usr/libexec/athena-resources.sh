@@ -17,6 +17,8 @@ if [ "$1" = "stop" ] || [ "$1" = "restart" ]; then
 	[ -d "/proc/$PID" ] || { echo '{"ok":false,"msg":"进程不存在"}'; exit 1; }
 	NAME=$(tr -d '\0' < "/proc/$PID/comm" 2>/dev/null)
 	[ -n "$NAME" ] || NAME="unknown"
+	PID_START=$(sed 's/^.*) //' "/proc/$PID/stat" 2>/dev/null | awk '{print $20}')
+	[ -n "$PID_START" ] || { echo '{"ok":false,"msg":"无法确认进程身份"}'; exit 1; }
 	# 内核线程（comm 形如 [kworker/x]）与核心进程保护
 	case "$NAME" in *"["*) echo '{"ok":false,"msg":"内核线程受保护，不允许操作"}'; exit 1 ;; esac
 	[ "$PID" -le 2 ] && { echo '{"ok":false,"msg":"系统核心进程受保护"}'; exit 1; }
@@ -25,14 +27,21 @@ if [ "$1" = "stop" ] || [ "$1" = "restart" ]; then
 		*"|wpad|"*|*"|hostapd|"*|*"|hostapd_cli|"*|*"|netifd|"*|*"|dnsmasq|"*|*"|odhcpd|"*|*"|odhcp6c|"*|*"|ubusd|"*|*"|rpcd|"*|*"|uhttpd|"*|*"|lighttpd|"*|*"|dropbear|"*|*"|logd|"*|*"|syslogd|"*|*"|pppd|"*|*"|pppoe|"*|*"|openclash|"*|*"|clash|"*|*"|clash-"*|*"|mihomo|"*|*"|mihomo-"*|*"|ecm|"*|*"|qca-nss-ecm|"*|*"|qca-nss-drv|"*|*"|qca-nss-"*|*"|nss|"*|*"|nss-"*)
 			echo '{"ok":false,"msg":"关键系统服务受保护，不允许停止/重启（会导致断网或失联）"}'; exit 1 ;;
 	esac
+	# PID 可能在校验后被复用；杀进程前再次核对 starttime 与 comm。
+	NOW_START=$(sed 's/^.*) //' "/proc/$PID/stat" 2>/dev/null | awk '{print $20}')
+	NOW_NAME=$(tr -d '\0' < "/proc/$PID/comm" 2>/dev/null)
+	[ "$NOW_START" = "$PID_START" ] && [ "$NOW_NAME" = "$NAME" ] || { echo '{"ok":false,"msg":"进程身份已变化，拒绝操作"}'; exit 1; }
+	INIT_NAME=""
+	case "$NAME" in *[!A-Za-z0-9_.-]*|*..*) ;; *) INIT_NAME="$NAME" ;; esac
 	kill -9 "$PID" 2>/dev/null
 	if [ "$1" = "restart" ]; then
 		sleep 1
-		if [ -x "/etc/init.d/$NAME" ]; then
-			/etc/init.d/$NAME restart >/dev/null 2>&1
+		if [ -n "$INIT_NAME" ] && [ -x "/etc/init.d/$INIT_NAME" ]; then
+			/etc/init.d/"$INIT_NAME" restart >/dev/null 2>&1
 		fi
 	fi
-	echo "{\"ok\":true,\"pid\":$PID,\"name\":\"$NAME\",\"action\":\"$1\"}"
+	NAME_JSON=$(printf '%s' "$NAME" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -cd '\11\12\15\40-\176')
+	echo "{\"ok\":true,\"pid\":$PID,\"name\":\"$NAME_JSON\",\"action\":\"$1\"}"
 	exit 0
 fi
 
