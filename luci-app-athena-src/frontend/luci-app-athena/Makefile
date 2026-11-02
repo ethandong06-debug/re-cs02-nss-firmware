@@ -90,7 +90,7 @@ define Package/luci-app-athena/install
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/block
 	$(INSTALL_BIN) ./root/etc/hotplug.d/block/99-athena-filebrowser $(1)/etc/hotplug.d/block/99-athena-filebrowser
 
-	# ---- filebrowser 预编译二进制（官方 release，aarch64 静态链接，34.5MB）----
+	# ---- filebrowser 预编译二进制（FileBrowser Quantum 官方 release，Linux ARM64，约 26.5MB）----
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) ./root/usr/bin/filebrowser $(1)/usr/bin/filebrowser
 
