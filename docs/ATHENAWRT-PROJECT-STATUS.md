@@ -184,3 +184,14 @@
 - 正式 SPA 的网络模式应用通过 athena-mode.sh single-bg / router / ap / bypass 执行；这些操作会改写网络配置并重启网络/Wi-Fi，且 AP/旁路由分支会调用 nss_off。审计期间不调用这些动作；用户要求保留现网 PPPoE/VLAN/IPv6/防火墙/NSS/ECM，因此未来任何网络模式改动必须先获得明确授权。
 
 以上均为静态源码发现，尚未修复或在设备上验证。
+
+### 进一步核对：服务保护与前端确认流程（2026-11-02）
+
+- 当前正式 SPA 的网络模式按钮先调用 confirmApply 弹出确认框，再调用 athena-mode.sh；单臂模式改用 single-bg 并轮询 progress。确认框提示会重建 VLAN/网桥、短时断网，但后端动作确实会提交网络配置并重启网络/Wi-Fi。审计期间未调用。
+- athena-mode.sh 内部包含 nss_off（停止 qca-nss-ecm 并修改 firewall flow_offloading 字段）及 nss_on 逻辑；AP/旁路由切换路径可能触及 NSS/ECM。用户当前要求保留现网配置，因此该入口只能作为高风险网络维护操作审计，不得执行。
+- athena-services-legacy.sh 的动态 init.d 枚举会把未列入 CORE_INIT 的服务视为普通第三方服务；当前保护名单未覆盖 openclash、qca-nss-ecm。服务管理页面可能出现停止/禁用按钮，必须补后端保护，不能只隐藏 UI。
+- athena-resources.sh 的进程操作后端也未覆盖 OpenClash/Mihomo、ECM/NSS 进程名；需要扩展保护名单，并考虑 PID 复用竞态。
+- 正式 SPA 的恢复出厂入口先由页面确认框触发，但后端只检查 --confirm 字符串，没有一次性确认令牌。后续应评估为后端增加更强的二次确认机制，避免误调用。
+- athena-diag.sh ping 命令将用户提供的 count 直接传给 ping -c；目前没有限定为 1-10 的纯数字。需要在后端校验，不能信任前端输入。
+
+注意：本轮仅更新项目审计记录，没有修改这些后端脚本，也没有运行会改变路由器配置的命令。
