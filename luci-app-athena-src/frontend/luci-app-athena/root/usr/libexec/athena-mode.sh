@@ -304,15 +304,6 @@ config_single() {
 	fi
 	log "配置为 单臂路由（内网VLAN=$vlan_inner, 拨号VLAN=$vlan_wan, IPTV=${vlan_iptv:-无}, proto=$proto, IPTV口=$iptv_port）"
 
-	# ---- 参数校验（误配会直接打断网络，先拦）----
-	# 单臂会重建 WAN 接口；未重新输入账号密码时，先从当前配置保留原 PPPoE 凭据。
-	if [ "$proto" = "pppoe" ] && [ -z "$user" ] && [ -z "$pass" ]; then
-		user=$(uci -q get network.wan.username 2>/dev/null)
-		pass=$(uci -q get network.wan.password 2>/dev/null)
-	fi
-	if [ "$proto" = "pppoe" ] && { [ -n "$user" ] || [ -n "$pass" ]; }; then
-		valid_text_arg "$user" && valid_text_arg "$pass" || { echo '{"ok":false,"msg":"PPPoE 账号和密码必须为 1-128 字节且不能包含控制字符"}'; return 1; }
-	fi
 	for v in "$vlan_inner" "$vlan_wan" "$vlan_iptv"; do
 		if [ -n "$v" ] && ! valid_vlan "$v"; then
 			echo '{"ok":false,"msg":"VLAN ID 必须为 1-4094 的纯数字（IPTV 可留空关闭）"}'
