@@ -227,8 +227,11 @@ do_set() {
 	echo '{"ok":true,"msg":"无线配置已保存并生效"}'
 }
 
-# ---- 恢复出厂默认无线（一键自愈：SSID / WPA2-PSK / 12345678 / CN / 信道 auto）----
+# ---- 恢复出厂默认无线（随机密码 / CN / 信道 auto）----
 do_reset_defaults() {
+	local RESET_PWD
+	RESET_PWD=$(od -An -N8 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')
+	[ "${#RESET_PWD}" -eq 16 ] || { echo '{"ok":false,"msg":"无法生成随机 WiFi 密码，未修改配置"}'; return 1; }
 	for r in 0 1 2; do
 		band=$(uci -q get "wireless.radio${r}.band" 2>/dev/null)
 		[ -z "$band" ] && continue
@@ -250,14 +253,14 @@ do_reset_defaults() {
 		if [ -n "$iface" ]; then
 			uci -q set "${iface}.ssid=$SSID"
 			uci -q set "${iface}.encryption=psk2"
-			uci -q set "${iface}.key=12345678"
+			uci -q set "${iface}.key=$RESET_PWD"
 			# 清除 WPA3 残留（PMF/SAE），避免手机按 WPA3 方式连接 WPA2 网络报"密码错误"
 			uci -q delete "${iface}.ieee80211w" 2>/dev/null
 		fi
 	done
 	uci commit wireless 2>/dev/null
 		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
-	echo '{"ok":true,"msg":"无线已恢复出厂默认（WPA2-PSK，密码 12345678）"}'
+	echo "{\"ok\":true,\"msg\":\"无线已恢复默认，请使用新随机密码连接\",\"password\":\"$RESET_PWD\"}"
 }
 
 # ---- 访客网络（2.4G 多 BSS + guest 独立桥 + 防火墙隔离）----
