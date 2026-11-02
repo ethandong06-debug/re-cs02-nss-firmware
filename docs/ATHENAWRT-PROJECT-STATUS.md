@@ -112,3 +112,59 @@
 ## 8. 已取消的 Codespaces 方案
 
 用户已明确表示不需要固定签名密钥初始化流程。此前拟定的 Codespaces、ECDSA P-256 私钥生成和 Repository Secret 配置步骤全部暂停，不应继续引导用户执行。
+
+## 9. 第一阶段前端/后端安全审计（2026-11-02，进行中）
+
+本节记录当前分支源码静态审计结果。仅审查源码，没有对路由器执行任何命令，也没有修改网络配置、安装或刷写。
+
+### 已核实的调用链数量
+
+- SPA 页面 index.html 中，直接调用的 athena-*.sh RPC 入口为 24 个。
+- 第 25 个脚本是 athena-single.sh：它由已授权的 athena-mode.sh 在单臂配置流程中承担实际配置，不是独立的前端 RPC 入口。
+- 因此“25 个后端脚本”对应 24 个前端 RPC 入口 + 1 个内部执行脚本。
+- ACL 对 24 个直接入口均有 file.exec 授权。
+- Makefile 共安装 36 个 libexec 文件（含 .sh 与 .uc），包含主入口、legacy 回退脚本、ucode 实现及内部 helper。7 个脚本未单独出现在 ACL 中：status-legacy、single、services-legacy、resources-legacy、packages-legacy、wanip、logcap。需要按内部调用关系分类，不应盲目全部加入 ACL。
+- Makefile 注释仍写“后端脚本（23 个）”，与实际清单不一致，需要统一。
+
+### 磁盘管理
+
+- athena-disk.sh 的格式化只接受 /dev/sd[a-z][0-9]+ 真实块设备分区，并要求 sysfs 路径包含 USB 设备路径。
+- 拒绝正在挂载或作为 swap 使用的目标，并检查根、/rom、/overlay 与内核 root 参数。
+- 支持 ext4、vfat、exfat、f2fs；挂载目录目前允许 /mnt/usb 及其子目录。
+- 前端格式化目标也限制为 /dev/sdXn。
+- 待补强：挂载/交换设备别名解析与格式化前后的真实挂载状态复核；共享目录固定为 /mnt/usb 后，应将挂载流程与 filebrowser 启停联动，避免 USB 未挂载时仍暴露根目录。
+
+### 文件共享（高优先级缺陷）
+
+已确认 init 脚本 root/etc/init.d/filebrowser 实际执行：初始管理员账号/密码固定为 root/admin；监听 0.0.0.0:8081；根目录为 /。
+
+99-athena-filebrowser.sh 仅写入 UCI 的 filebrowser.root_dir=/mnt，但 init 脚本没有读取该 UCI 项，因此不能限制实际 filebrowser 根目录。前端旧提示一处显示 root/admin，另一处提示密码与路由器管理密码一致，均不符合随机密码要求。
+
+必须修复为：首次启动随机生成高熵密码、仅绑定当前 LAN 管理地址、根目录严格为 /mnt/usb；USB 未挂载或 LAN 地址不可确认时不启动服务；前端通过受 ACL 保护的后端入口安全读取初始密码，不在源码/日志中写死密码。
+
+### 软件包管理（高优先级缺陷）
+
+- 前端提供安装和卸载；当前版本没有升级按钮，但后端仍保留 upgrade <pkg> 命令。
+- athena-packages-legacy.sh 的 remove 直接执行 apk del，upgrade 直接执行 apk upgrade。
+- 当前后端未见 OpenClash、NSS/ECM 或关键系统组件的保护名单/拒绝逻辑。
+- 仅隐藏前端按钮不足以保护系统；必须在后端对 remove 和 upgrade 双重拦截，并在前端隐藏受保护包的操作。软件源索引刷新 apk update 不等同于升级已安装软件包。
+
+### 维护/恢复/网络操作的风险点（继续审计）
+
+- athena-mode.sh / athena-single.sh 会修改 network、wireless、DHCP、firewall、VLAN/bridge、WAN/IPv6 相关 UCI 配置，并可能重启 network / firewall / Wi-Fi。仅做静态审查，禁止在本轮对路由器执行。
+- athena-upgrade.sh 包含 sysupgrade 刷写入口；本轮不调用。
+- athena-backup.sh 包含配置恢复入口；需要继续检查备份文件名校验、路径穿越和恢复前提示。
+- athena-resources.sh 有进程 stop/restart 功能，已对若干网络、无线、拨号、DNS 和管理进程做保护；仍需检查 PID/进程身份校验和服务重启行为。
+- athena-services-legacy.sh 对核心 init 服务有启停保护；需继续核对动态服务发现是否会把 filebrowser 等应用错误地视为可启停，以及其与 U 盘挂载状态的协调。
+
+### 当前验收状态
+
+- [x] 磁盘格式化已有真实 USB 分区与挂载/swap/系统分区防护（待补强复核）。
+- [x] 24 个直接 RPC 入口与 ACL 匹配。
+- [x] 识别第 25 个脚本为单臂内部 helper athena-single.sh。
+- [ ] 文件共享随机密码、LAN-only 监听、/mnt/usb 根目录修复。
+- [ ] 软件包管理后端保护 OpenClash、NSS/ECM 和关键系统组件。
+- [ ] 维护、诊断、资源、备份恢复及网络操作剩余调用链审计。
+- [ ] 修正 Makefile 脚本数量注释和状态文档中的统计口径。
+- [ ] 完成全部静态检查、构建、Artifact 内容检查（主 APK + 中文语言包 APK + 匹配公钥）。
+- [ ] 设备端验签、模拟升级与用户确认；在用户明确同意前不正式安装。
