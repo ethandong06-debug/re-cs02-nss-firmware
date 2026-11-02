@@ -271,3 +271,9 @@
 - 当前 workflow 使用每次 Actions runner 生命周期内的临时签名密钥；Artifact 只保留与该 APK 匹配的公钥，私钥留在临时 runner 中销毁。
 - 这不是跨构建持久化的固定密钥。每次构建都必须使用同一 Artifact 中的匹配公钥；不能拿 Run #24 的公钥验签 Run #168 的 APK。
 - 尚未创建或配置长期私钥 Secret，也未把任何公钥导入 Athena 路由器。若要实现跨构建稳定信任，需要用户另行确认安全密钥保管方案；当前不擅自把私钥提交到仓库或配置 Secret。
+
+### 调用链自动化核对
+
+- Workflow 已增加前端 `athenaRPC.exec()` 目标、Makefile 安装项、rpcd ACL `file.exec` 的自动交叉检查，并校验唯一动态目标 `cfg.f` 由 `confirmApply('athena-mode.sh', ...)` 提供。
+- 自动核对结果：24 个直接目标全部在 Makefile 安装并获 ACL 授权；31 个 Shell 文件中识别 6 个内部依赖和 1 个未引用的 `athena-single.sh`。这项检查已随 Run #170 的静态检查步骤通过。
+- Run #170（`41367892120`，提交 `340f8dc0...`）静态语法、JSON 元数据、前后端调用链检查及 File Browser 二进制下载均已通过；当前正在安装构建依赖，APK 构建尚未开始。
