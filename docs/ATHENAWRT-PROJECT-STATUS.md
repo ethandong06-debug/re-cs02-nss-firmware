@@ -694,3 +694,17 @@
 - 本轮只新增 Markdown 文档；未修改源码、ACL、工作流、APK 或设备配置。
 - 功能操作清单提交：`f9cc9d012d6e8f237c7708d54517c5d8942c6b0a`。
 - 下一步 C2-D：核对当前设备版本原生 LuCI 实际存在的菜单和功能路径，再形成最终功能去留矩阵；随后可先实施 C2-A 的低风险页面整理，不必等待所有 P0/P1 完成，但涉及危险后端的功能必须等安全整改验收。
+
+
+### 阶段 C2-D：原生 LuCI 能力边界静态核对完成（2026-11-02）
+
+- 检查当前分支 `final.config`、`configs/packages.list`、设备 seed、Athena 菜单 JSON 和 Athena Makefile。
+- 构建配置明确启用 LuCI base/light、network/status/system 模块、firewall、package-manager、IPv6/PPP proto，以及中文基础/防火墙/软件包管理语言包。
+- Athena 菜单自身只定义 AthenaWrt SPA 和一个 alias 到 `admin/status` 的“高级模式（LuCI）”入口；原生子菜单由固件其他 LuCI 包菜单与 ACL 决定。
+- 发现 `configs/packages.list` 与 `final.config` 存在差异：packages.list 声明 ddns、ttyd 等包，但 final.config 对应项未选入。不能把配置文件当成设备实时安装清单，需核对构建链及设备实际菜单。
+- 新增 `docs/ATHENAWRT-NATIVE-LUCI-CAPABILITY-AUDIT.md`，记录证据、配置冲突、替代矩阵和只读设备核验命令。
+- 当前决定：通用网络/状态/系统、防火墙、APK 包管理列为原生替代候选；Athena 三频 WiFi、设备控制、单臂/VLAN 专用向导、USB 受限文件访问、LED/点阵屏等专属功能继续保留。其他菜单未取得设备证据前不删除。
+- 本轮只新增 Markdown；未修改源码、ACL、workflow、APK 或设备配置。
+- 原生 LuCI 核对文档提交：`f23b496a9fdbc786b4e8f3eb3b85b5c21892a6ee`。
+- 下一步进入 C2-E：整合 C1/C2/C2-D 为最终功能去留矩阵；设备端菜单核验作为后续只读验收点。矩阵确认后，先实施不依赖危险后端的低风险页面整理。
+
