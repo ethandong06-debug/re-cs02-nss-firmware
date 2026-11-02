@@ -162,6 +162,7 @@ do_get() {
 do_switch() {
 	local action="$1" target="$2"
 	local radios=""
+	case "$target" in all|b24|b52|b58) ;; *) echo '{"ok":false,"msg":"未知无线频段"}'; return 1 ;; esac
 	if [ "$target" = "all" ]; then radios="0 1 2"; else radios="$(band_radio "$target")"; fi
 	for idx in $radios; do
 		local radio="radio$idx"
@@ -177,10 +178,10 @@ do_switch() {
 		# 开启时显式 wifi up 目标 radio：仅 wifi reload 时部分频段（QCN9074 5.2G）
 		# 首次上电不会真正拉起，表现为"显示已开启但搜不到"，需再开关一次才恢复
 		for idx in $radios; do wifi up "radio$idx" >/dev/null 2>&1; done
-		wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
 		for idx in $radios; do wifi up "radio$idx" >/dev/null 2>&1; done
 	else
-		wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
 	fi
 	printf '{"ok":true,"msg":"无线已%s"}' "$([ "$action" = "enable" ] && echo 开启 || echo 关闭)"
 }
@@ -196,6 +197,15 @@ do_set() {
 	local band_type=$(uci -q get "wireless.$radio.band" 2>/dev/null)
 	local enc_u=$(enc2uci "$enc")
 	[ -n "$enc_u" ] || { echo '{"ok":false,"msg":"不支持的无线加密方式，请重新选择"}'; exit 1; }
+	case "$ch" in ""|0|auto) ch=auto ;; esac
+	valid_ssid "$ssid" || { echo '{"ok":false,"msg":"WiFi 名称必须为 1-32 字节且不能包含控制字符"}'; exit 1; }
+	valid_channel "$band" "$ch" || { echo '{"ok":false,"msg":"该频段不支持所选信道"}'; exit 1; }
+	valid_bw "$band" "$bw" || { echo '{"ok":false,"msg":"该频段不支持所选频宽"}'; exit 1; }
+	if [ "$enc_u" = "none" ]; then
+		[ -z "$pwd" ] || { echo '{"ok":false,"msg":"开放网络不能设置密码"}'; exit 1; }
+	elif [ -n "$pwd" ]; then
+		valid_pass "$pwd" || { echo '{"ok":false,"msg":"WiFi 密码必须为 8-63 字节且不能包含控制字符"}'; exit 1; }
+	fi
 	# 防呆：当前接口无密码（开放）且用户未填新密码 → 拒绝保存，避免继续以开放/无密码状态造成困惑
 	local cur_key=$(uci -q get "wireless.$iface.key" 2>/dev/null)
 	if [ "$enc_u" != "none" ] && [ -z "$pwd" ] && [ -z "$cur_key" ]; then
@@ -213,7 +223,7 @@ do_set() {
 		uci set "wireless.$iface.key=$pwd"
 	fi
 	uci commit wireless 2>/dev/null
-	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
 	echo '{"ok":true,"msg":"无线配置已保存并生效"}'
 }
 
@@ -246,7 +256,7 @@ do_reset_defaults() {
 		fi
 	done
 	uci commit wireless 2>/dev/null
-	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
 	echo '{"ok":true,"msg":"无线已恢复出厂默认（WPA2-PSK，密码 12345678）"}'
 }
 
@@ -255,6 +265,10 @@ guest_clear_internal() {
 	uci -q delete "wireless.$GUEST_IFACE" 2>/dev/null
 	uci -q delete "network.guest" 2>/dev/null
 	uci -q delete "network.br_guest" 2>/dev/null
+	# guest bridge 是匿名 device 段；按 name 清理，避免重复创建 br-guest。
+	for sec in $(uci -q show network 2>/dev/null | sed -n 's/^network\.\([^=]*\)=device$/\1/p'); do
+		[ "$(uci -q get "network.$sec.name" 2>/dev/null)" = "br-guest" ] && uci -q delete "network.$sec" 2>/dev/null
+	done
 	uci -q delete "dhcp.guest" 2>/dev/null
 	uci -q delete "firewall.guest_zone" 2>/dev/null
 	uci -q delete "firewall.guest_fwd" 2>/dev/null
@@ -272,9 +286,10 @@ guest_get() {
 }
 
 guest_enable() {
-	local ssid="${1:-$GUEST_SSID}" pwd="${2:-12345678}"
+	local ssid="${1:-$GUEST_SSID}" pwd="${2:-}"
 	local radio="radio1"
-	[ "${#ssid}" -ge 1 ] && [ "${#ssid}" -le 32 ] || { echo '{"ok":false,"msg":"访客 WiFi 名称长度必须为 1-32 字节"}'; exit 1; }
+	valid_ssid "$ssid" || { echo '{"ok":false,"msg":"访客 WiFi 名称必须为 1-32 字节且不能包含控制字符"}'; exit 1; }
+	valid_pass "$pwd" || { echo '{"ok":false,"msg":"访客 WiFi 密码必须为 8-63 字节且不能包含控制字符"}'; exit 1; }
 	[ "${#pwd}" -ge 8 ] && [ "${#pwd}" -le 63 ] || { echo '{"ok":false,"msg":"访客 WiFi 密码长度必须为 8-63 字符"}'; exit 1; }
 	[ "$(uci -q get "wireless.$radio" 2>/dev/null)" = "wifi-device" ] || { echo '{"ok":false,"msg":"2.4G 无线设备不存在"}'; exit 1; }
 	guest_clear_internal
@@ -310,18 +325,18 @@ guest_enable() {
 	uci set "firewall.guest_fwd.src=guest"
 	uci set "firewall.guest_fwd.dest=wan"
 	uci commit wireless 2>/dev/null; uci commit network 2>/dev/null; uci commit dhcp 2>/dev/null; uci commit firewall 2>/dev/null
-	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
 	/etc/init.d/dnsmasq restart >/dev/null 2>&1
-	/etc/init.d/firewall restart >/dev/null 2>&1
+	/etc/init.d/firewall reload >/dev/null 2>&1
 	echo '{"ok":true,"msg":"访客网络已开启"}'
 }
 
 guest_disable() {
 	guest_clear_internal
 	uci commit wireless 2>/dev/null; uci commit network 2>/dev/null; uci commit dhcp 2>/dev/null; uci commit firewall 2>/dev/null
-	wifi reload >/dev/null 2>&1 || /etc/init.d/network restart >/dev/null 2>&1
+		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
 	/etc/init.d/dnsmasq restart >/dev/null 2>&1
-	/etc/init.d/firewall restart >/dev/null 2>&1
+	/etc/init.d/firewall reload >/dev/null 2>&1
 	echo '{"ok":true,"msg":"访客网络已关闭"}'
 }
 
