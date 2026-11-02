@@ -10,6 +10,7 @@
 case "$1" in
 filebrowser-password)
 	awk '$2 == "/mnt/usb" && $1 ~ /^\/dev\/sd[a-z][0-9]+$/ { found=1 } END { exit !found }' /proc/mounts 2>/dev/null || { echo '{"ok":false,"msg":"USB 分区未挂载到 /mnt/usb"}'; exit 1; }
+	pidof filebrowser >/dev/null 2>&1 || { echo '{"ok":false,"msg":"文件共享服务尚未运行，请确认 LAN 地址和 USB 挂载状态"}'; exit 1; }
 	PASS=$(cat /etc/filebrowser.password 2>/dev/null)
 	case "$PASS" in
 		''|*[!0-9a-f]*) echo '{"ok":false,"msg":"随机密码尚未生成；请先挂载 USB 并启动文件共享"}'; exit 1 ;;
