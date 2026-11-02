@@ -253,3 +253,45 @@ SPA 顶部提供 8 个主页面：
 - 因此不能只在现有脚本外围调用一次 `apply(true)` 就宣称原生回滚覆盖所有副作用。若要真正复用原生机制，需要重构配置提交路径，使网络配置变更进入同一 rpcd UCI session 的 staged changes，再由原生 apply/confirm/rollback 管理；同时仍需验证无线、DHCP、防火墙、Athena 私有配置、硬件 VLAN 预创建与重启脚本是否都在回滚覆盖范围内。
 - 在完成设备当前 LuCI 版本、RPC/ACL、会话权限与覆盖范围核对前，现有手工备份/回退逻辑不能删除，也不能假定原生回滚已接管。
 - 本节只作静态审计，没有执行任何模式切换或回滚测试。
+
+
+## 10. 主要交互控件映射（阶段 A 初表）
+
+| 页面/控件 | 前端处理 | 后端/副作用 | 判定 |
+|---|---|---|---|
+| 概览：访客网络快捷开关 | `toggleGuest()` | `athena-wireless.sh guest enable/disable` | 真实写操作；必须验证隔离 |
+| 概览：WiFi/设备/网络快捷入口 | `goto()` / `navGo()` | 页面切换后触发对应数据加载 | 纯导航 |
+| WiFi：总开关/单频开关 | `toggleWifiAll()` / `toggleBand()` | `athena-wireless.sh enable/disable` | 真实写操作 |
+| WiFi：编辑名称/密码/信道/频宽/加密 | `editBand()` / `saveBand()` | `athena-wireless.sh set` | 真实写操作 |
+| WiFi：访客网络 | `openGuestModal()` / `toggleGuest()` | `athena-wireless.sh guest get/enable/disable` | 真实写操作；隔离效果待验收 |
+| WiFi：恢复默认 | `resetWifi()` / `doResetWireless()` | `athena-wireless.sh reset-defaults` | 高影响写操作 |
+| 设备：全部/在线/离线筛选 | `switchDevTab()` | 无 | 本地筛选 |
+| 设备：备注/改名/认识设备 | `saveDevNote()` / `doRename()` / `knowDev()` | `athena-client.sh note/rename/know` | 真实写操作 |
+| 设备：拉黑/解除拉黑 | `doBlock()` / `doUnblock()` | `athena-client.sh block/unblock` | 真实网络控制；核对 IPv4/IPv6 和重启持久化 |
+| 设备：家长控制 | `saveParent()` / `cancelParent()` | `athena-parent.sh set/clear` | 真实定时规则；核对规则恢复与防火墙交互 |
+| 网络：模式卡片/协议选择 | `pickMode()` / `setWanProto()` | 暂存前端状态，不立即写入 | 本地表单状态 |
+| 网络：保存并应用 | `saveApply()` → `confirmApply()` → `doApply()` | `athena-mode.sh` router/single-bg/ap/bypass；单臂 progress 轮询 | P0 高风险；当前不执行 |
+| 网络：一键体检/连通性/Ping | `runScan()` / `runDiag()` / `runPing()` | `athena-scan.sh`、`athena-diag.sh check/ping` | 只读诊断（Ping 有外发流量） |
+| 网络：测速 | `runSpeed()` | `athena-speedtest.sh <node>` | 产生外网流量；测速源/数据口径需说明 |
+| 存储：刷新/挂载/卸载/格式化 | `refreshDisks()` / `mountUsb()` / `umountUsb()` / `fmtDiskDo()` | `athena-disk.sh list/mount/umount/format` | 格式化不可逆；当前不执行 |
+| 存储：打开文件共享 | `openFbModal()` | `athena-services.sh filebrowser-password`，随后访问 LAN:8081 | 服务运行/目录/监听需真机验收 |
+| 灯光：点阵屏开关/亮度/模式/项目/夜间计划 | `toggleMatrix()`、`setMatrix*()`、`setNight*()` | `athena-matrix.sh set <key> <value>` | 真实硬件配置 |
+| 灯光：呼吸灯 | `toggleBreath()` | `athena-led.sh set breath <0|1>` | 真实硬件配置 |
+| 灯光：“打开完整管理” | `openMatrixFull()` | 仅 toast“独立的点阵屏完整管理页面尚未集成” | **无效入口候选，应移除或实现** |
+| 维护：立即/定时重启 | `doReboot()` / `saveRebootSched()` | `athena-reboot.sh now/enable/disable` | 高影响系统操作 |
+| 维护：固件升级 | `doUpgrade()` → multipart `cgi-upload` → `verify` → `flash` | `athena-upgrade.sh verify/flash` | 刷写级危险操作；当前不执行 |
+| 维护：恢复出厂 | `doReset()` | `athena-reset.sh --confirm` | 不可逆；后端确认参数目前为固定字符串 |
+| 维护：备份/恢复 | `backupNow()`、`restore-upload`、备份列表/下载/恢复 | `athena-backup.sh`；备份上传用 `file.write` | 覆盖全配置的高风险操作 |
+| 高级：进程操作 | `procGrpAct()` / `doProcAction()` | `athena-resources.sh stop/restart <pid>` | 高风险；后端保护名单优先 |
+| 高级：服务启停/重启 | `svcAct()` | `athena-services.sh set <id> <0|1>` | 高风险；OpenClash/NSS/ECM 必须后端拒绝 |
+| 高级：软件包安装/卸载 | `installPkg()` / `doRemovePkg()` | `athena-packages.sh install/remove` | 高风险；关键包保护必须在后端 |
+| 高级：检查软件源更新 | `checkUpdate()` | `athena-packages.sh update`（刷新索引） | **不是升级已安装软件包**；文案需避免误导 |
+| 高级：日志查看/导出/清空 | `loadLog()` / `exportLog()` / `clearLog()` | `athena-log.sh list/export/clear` | 清空为写操作 |
+| 高级：修改管理密码 | `savePassword()` | `athena-passwd.sh <current> <new> 1` | 真实账号操作 |
+| 高级：网速单位/主题/默认界面/缩放/KPI 排序 | 对应设置函数 | `athena-speedtest.sh`、`athena-theme.sh`、`athena-ui.sh`、`athena-prefs.sh` | 偏好设置 |
+| 高级：SSH 开关 | 最终生效的 `toggleSsh()` 只显示“SSH 始终启用”提示 | 无 RPC、无服务动作 | **假开关/无效入口，应移除** |
+
+说明：
+- SPA 中有历史预览脚本块，部分同名函数在后续真实实现中重新定义；本表以最终生效的真实 RPC 实现为准。删除旧代码前仍需做作用域/脚本边界检查。
+- “检查软件源更新”执行的是 `apk update` 刷新索引，不是 `apk upgrade`；不要把按钮称为“升级已安装软件”。
+- 固件升级使用独立 `cgi-upload` 上传通道；配置备份上传才使用 ubus `file.write`。
