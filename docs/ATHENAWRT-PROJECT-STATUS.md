@@ -326,3 +326,11 @@
 - 目前尚未证明 Quantum 在 Athena 真机上的运行时内存占用或 USB 文件操作兼容性；需要后续真机验收。不得把 CI 通过等同于设备功能验收。
 - 本阶段仅修改 GitHub 源码与 Actions；没有操作路由器，没有安装 APK，没有改动 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。
 - 新 Artifact 在 Quantum 构建成功且完成哈希检查前，不得作为可安装包交付；之后仍须先完成设备端匹配公钥验签与 APK 模拟升级，再由用户明确确认安装。
+
+
+### Quantum CI 补充状态（2026-11-02）
+
+- Run #181 的 QEMU 步骤已实际通过：ARM64 二进制的 `version` 命令成功，且 `user set admin --password ... -a --no-input -c config.yaml` 成功创建 SQLite 数据库。
+- 随后为 procd 启动命令增加 `umask 077`，确保 Quantum 运行时创建的 SQLite/WAL 等文件使用私有权限。该改动提交为 `1f375cebb021273115e70fbd3d60d6e9914033a2`。
+- 最新 Actions Run #182：ID `41378970658`，对应上述提交；静态语法/元数据/调用链检查通过，Quantum 二进制下载与校验通过，当前正在安装构建依赖。QEMU smoke test 与完整 package-only 构建仍待完成。
+- Run #181 为较早源码快照；最终以 Run #182（或更新提交对应的后续 Run）作为 Quantum 版本的构建验收依据。
