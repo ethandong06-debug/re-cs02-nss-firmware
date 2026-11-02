@@ -1009,7 +1009,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <div style="flex:1;min-width:200px"><div class="ct">网页文件管理</div><div style="font-size:12px;color:var(--text3);margin-top:5px">手机 / 电脑浏览器打开一个网页，就能上传、下载、播放文件</div></div>
           <button class="btn primary" onclick="openFbModal()">打开文件共享</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">filebrowser 运行中 · 端口 8081</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">FileBrowser Quantum · 端口 8081</div>
       </div>
     </div>
   </div>
@@ -3492,11 +3492,11 @@ window.openFbModal=function(){
     +'<div style="font-size:13px;color:var(--text2);padding:10px 0">访问地址：<br><b style="color:var(--primary)">http://'+esc(location.hostname)+':8081</b></div>'
     +'<div id="fbCredential" style="font-size:12px;color:var(--text2);padding:10px 0">正在读取随机登录密码…</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="closeModal();window.open(\'http://\'+location.hostname+\':8081\',\'_blank\')">打开文件管理</button></div>');
-  var st=document.getElementById('fbStatus'); if(st) st.textContent='filebrowser · LAN · /mnt/usb';
+  var st=document.getElementById('fbStatus'); if(st) st.textContent='Quantum · LAN · /mnt/usb';
   athenaRPC.exec('athena-services.sh',['filebrowser-password']).then(function(d){
     var el=document.getElementById('fbCredential'); if(!el) return;
     if(!d||d.ok!==true){ el.textContent=(d&&d.msg)||'随机密码暂不可用；请确认 USB 已挂载并启动文件共享'; return; }
-    el.innerHTML='<div>登录账号：<b>'+esc(d.username||'root')+'</b></div><div style="margin-top:6px">初始随机密码：<code>'+esc(d.password||'')+'</code></div><div style="margin-top:6px;color:var(--text3)">密码首次生成后保存在路由器本机；若曾在 File Browser 内修改密码，此处显示的仍是初始密码。</div>';
+    el.innerHTML='<div>登录账号：<b>'+esc(d.username||'admin')+'</b></div><div style="margin-top:6px">初始随机密码：<code>'+esc(d.password||'')+'</code></div><div style="margin-top:6px;color:var(--text3)">密码首次生成后保存在路由器本机；若已在 Quantum 内修改密码，此处仍显示首次生成的初始密码。</div>';
   }).catch(function(e){
     var el=document.getElementById('fbCredential'); if(el) el.textContent='读取登录密码失败：'+(e.message||'请稍后重试');
   });
