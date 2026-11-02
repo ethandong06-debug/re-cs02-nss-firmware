@@ -228,17 +228,31 @@ config_router() {
 	uci set network.wan.device='wan'
 	uci set network.wan.proto="$proto"
 	if [ "$proto" = "pppoe" ]; then
+		uci -q delete network.wan.ipaddr 2>/dev/null
+		uci -q delete network.wan.netmask 2>/dev/null
+		uci -q delete network.wan.gateway 2>/dev/null
+		uci -q delete network.wan.dns 2>/dev/null
 		[ -n "$user" ] && uci set network.wan.username="$user"
 		[ -n "$pass" ] && uci set network.wan.password="$pass"
 	elif [ "$proto" = "static" ]; then
-		# 静态 IP：IP/掩码/网关/DNS 完整写入，避免 wan.proto=static 却无地址导致断网
-		[ -n "$ip" ] && uci set network.wan.ipaddr="$ip"
-		[ -n "$mask" ] && uci set network.wan.netmask="$mask"
-		[ -n "$gw" ] && uci set network.wan.gateway="$gw"
+		# 静态 IP：清除 PPPoE 残留并完整写入 IP/掩码/网关/DNS。
+		uci -q delete network.wan.username 2>/dev/null
+		uci -q delete network.wan.password 2>/dev/null
+		uci -q delete network.wan.dns 2>/dev/null
+		uci -q delete network.wan.ipaddr 2>/dev/null
+		uci -q delete network.wan.netmask 2>/dev/null
+		uci -q delete network.wan.gateway 2>/dev/null
+		uci set network.wan.ipaddr="$ip"
+		uci set network.wan.netmask="$mask"
+		uci set network.wan.gateway="$gw"
 		[ -n "$dns" ] && uci -q add_list network.wan.dns="$dns"
 	else
 		uci -q delete network.wan.username 2>/dev/null
 		uci -q delete network.wan.password 2>/dev/null
+		uci -q delete network.wan.ipaddr 2>/dev/null
+		uci -q delete network.wan.netmask 2>/dev/null
+		uci -q delete network.wan.gateway 2>/dev/null
+		uci -q delete network.wan.dns 2>/dev/null
 	fi
 	uci -q set network.wan6.device='wan'
 	uci -q set network.wan6.proto='dhcpv6'
