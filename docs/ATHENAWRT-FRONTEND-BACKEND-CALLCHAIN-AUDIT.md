@@ -295,3 +295,35 @@ SPA 顶部提供 8 个主页面：
 - SPA 中有历史预览脚本块，部分同名函数在后续真实实现中重新定义；本表以最终生效的真实 RPC 实现为准。删除旧代码前仍需做作用域/脚本边界检查。
 - “检查软件源更新”执行的是 `apk update` 刷新索引，不是 `apk upgrade`；不要把按钮称为“升级已安装软件”。
 - 固件升级使用独立 `cgi-upload` 上传通道；配置备份上传才使用 ubus `file.write`。
+
+
+## 11. 高风险后端入口复核：新增 P0 候选
+
+### 11.1 服务管理动态 init 名称缺少白名单
+
+- `athena-services.sh set` 会把参数转交给 `athena-services-legacy.sh set`。
+- 对动态服务，`set_svc()` 直接令 `init="$id"`，随后检查 `/etc/init.d/$init` 是否可执行，并用该路径执行 `enable/start` 或 `stop/disable`。
+- 该分支没有先将 `id` 限定为 `^[A-Za-z0-9_.-]+$`，也没有拒绝 `..`、斜杠或路径分隔符；核心服务保护只按完整字符串比较，不能阻止目录穿越。
+- 结果：调用者可尝试用路径片段逃出 `/etc/init.d` 并触发非预期可执行文件。这里不在真机测试；必须后端先做严格 init 名称白名单/字符校验，再拼接路径，并在执行前 realpath 确认仍位于 `/etc/init.d` 内。
+
+### 11.2 固件刷写后端未重复执行完整兼容性验证
+
+- 前端流程先上传 `/tmp/athena-fw-upload.bin`，调用 `athena-upgrade.sh verify` 检查 tar 结构、目标机型和 SHA-256，随后显示用户确认按钮。
+- 但后端 `flash` 分支只检查文件存在，再执行 `sysupgrade -T`；脚本自身注释明确当前平台 `sysupgrade -T` 对任意数据可能返回成功，不能作为有效判据。
+- `flash` 分支没有重新检查 `sysupgrade-<board>/CONTROL/kernel/root` 结构，也没有重新验证目标机型；因此直接 RPC 调用可绕过前端 `verify` 步骤。
+- 必须在后端 `flash` 分支重新执行完整验证，并把可刷写文件路径限制到受控上传目录/文件；不得依赖前端先调用 verify。审计期间禁止调用。
+
+### 11.3 其他“前端确认、后端未独立确认”的危险入口
+
+- `athena-reset.sh --confirm` 使用固定字符串作为确认参数，不是一次性确认令牌；任何具备脚本执行权限的调用者都可直接传入该字符串。
+- `athena-mode.sh` 的 router/single/ap/bypass 模式入口可直接由 RPC 调用，后端没有绑定前端弹窗的一次性授权；模式脚本会直接写 UCI、commit 并重启网络。
+- `athena-backup.sh restore-upload` 通过固定临时文件恢复配置，后端没有一次性恢复确认令牌；具备对应 file.write/file.exec 权限的客户端可绕过页面确认流程。
+- 上述操作不能把前端 modal 当作安全边界；应由后端实现短时、一次性、与具体操作/参数绑定的确认票据，或将危险操作移交原生 LuCI 的受保护流程。
+
+### 11.4 已复核的保护措施
+
+- 服务核心保护名单已包含 `openclash`、`qca-nss-ecm`、`qca-nss-drv`、`qca-nss` 等；但动态 init 名称校验仍须先修复。
+- 软件包后端已验证包名字符集，并在 remove/upgrade 中阻止 OpenClash、NSS/ECM、内核、网络、防火墙、LuCI 与 Athena 关键包；对已安装的受保护包也阻止通过 install 入口变相升级。
+- 备份恢复路径已限制文件名格式、拒绝路径穿越，并通过 realpath 检查目标位于备份目录内；恢复前检查 tar.gz 结构。
+- USB 管理挂载点固定为 `/mnt/usb`，目标限定真实 USB 分区；格式化会拒绝已挂载/swap/系统分区及系统分区所在物理盘。
+- 以上均为静态代码判断；本节没有调用任何危险入口。
