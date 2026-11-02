@@ -719,3 +719,20 @@
 - 本轮仅新增规划文档；未修改前端/后端源码、ACL、workflow、APK 或设备配置。
 - 最终去留矩阵提交：`e49bd945265868abea3ccba9804930bbf8e28622`。
 - C2 功能整理规划阶段完成。下一阶段 C3-A 可开始逐页实施低风险前端整理；实施前需再核对最新源码并做全仓库调用者检查，按页面独立提交和构建验收。
+
+
+### 阶段 C3-A 第一批：概览、灯光、维护、高级页面低风险整理（2026-11-02）
+
+- 基线核对：分支 `athenawrt/apk-fixed-signing`；本批源码基线为 `0c1215ca9b3cb2f9c594e4ae5ab671f86e26f600`；实施提交为 `df23c8ed2ef6d2bb097ecbb5c4831996a3317f20`。
+- 仅修改 `luci-app-athena-src/frontend/luci-app-athena/htdocs/luci-static/resources/view/athena/index.html`，没有改动后端脚本、ACL、Makefile、workflow、设备配置或其他包。
+- 首页实时上下行速率 Hero 已经位于首页首屏最上方，继续使用现有 `athena-status.sh rate` 每 2 秒采样机制；本批保留，不重复创建网速组件。
+- 移除首页家庭网络拓扑卡、`topologyHTML()`、`_bandGrp()` 和相关 DOM 更新调用；保留 WAN/IPv6 等网络摘要、设备数量摘要和快捷操作。
+- 活跃应用标题改为“活跃应用线索”，说明统一为“DNS/OAF 域名线索推测 · 非 DPI 识别”，不再把 DNS/OAF 线索表达成 DPI 精确识别。
+- 移除点阵屏“打开完整管理”未集成入口及其空函数；保留现有点阵屏参数控制和“刷新状态”。
+- SSH 行改为只读说明“由系统服务统一管理，此处不提供开关”；移除两个无效的前端 toggleSsh 定义及其渲染引用，没有启停 SSH 服务。
+- 软件包按钮改为“刷新软件列表”，前端函数重命名为 `refreshPackageList`。后端原调用 `athena-packages.sh update` 保持不变；已核对 legacy 脚本该分支只执行 `apk update`，不升级已安装软件包。
+- 维护页将原“重启与升级”拆为“计划维护”和“危险操作”；重启、定时重启、升级、恢复出厂按钮的原有回调和后端动作保持不变，增加风险提示。
+- 提交前对完整 HTML 做精确文本/引用检查：`topologyHTML`/`topoBox`/家庭网络拓扑引用为 0；`openMatrixFull` 为 0；`toggleSsh` 与旧 SSH 控件引用为 0；旧 `checkUpdate` 为 0；新 `refreshPackageList` 恰有按钮与函数定义各 1 处；实时网速 Hero 保留。
+- 本批为源码静态检查，不等于 Node JavaScript 语法检查、GitHub Actions 成功、APK 构建/验签或设备实测。提交后尚未取得可确认的 Actions run 结果；待检查 CI。
+- 没有安装新 APK，也没有操作路由器；PPPoe/VLAN 2044/IPv6/防火墙/NAT/OpenClash/NSS/ECM 均未触碰。
+- 下一步：核对该提交对应的 Actions 构建结果；通过后再做页面级复核和 C3-A 下一小批。若构建失败，先修复构建，不继续叠加页面改动。
