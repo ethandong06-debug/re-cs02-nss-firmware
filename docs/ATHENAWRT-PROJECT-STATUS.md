@@ -258,3 +258,10 @@
 - File Browser 数据库独立存放于 `/etc/filebrowser-data.db`，统一使用 CLI 的 `-d` 数据库参数，避免将旧 `/etc/filebrowser.db` 配置文件误当数据库。
 - 初始化和管理员用户更新均显式清空可执行命令列表并设置 `perm.execute=false`；LuCI 显示的是首次生成的随机密码，并提示若用户在 File Browser 内自行改密，显示值不会自动同步。
 - 最新源码提交 `e2416d0422356b9a6fc6fe8650e39c5f7ab0fb80`；对应 Actions Run #166（ID `41367497484`）处于 pending。Run #103 仍占用同一 concurrency group，最新构建尚未开始。
+
+### CI 语法检查修正与最新运行
+
+- Run #167（`41367580124`）失败原因已定位：Shell 检查误把 `athena-status.uc` 等 ucode 文件交给 `sh -n`，不是源码语法错误。
+- Workflow 已修正为：libexec 仅检查 `*.sh`；`etc/init.d`、`etc/uci-defaults`、`etc/hotplug.d/block` 中的脚本仍检查。不会把 `.uc` 误判为 Shell。
+- Run #168（`41367634146`，提交 `09c531ac...`）的静态语法与元数据检查已通过；File Browser 固定版本二进制下载步骤也已通过。当前正在安装构建依赖，后续 ImmortalWrt 获取、host tools、目标工具链和 APK 编译仍未完成。
+- Workflow concurrency 已改为按分支分组并取消同分支过期构建，避免新提交长期排在旧构建之后。
