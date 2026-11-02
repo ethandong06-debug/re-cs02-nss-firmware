@@ -3929,6 +3929,9 @@ window.pkgLoadAvail=function(tries){
     pkgRender();
   }).catch(function(e){ if(el) el.innerHTML='<div class="pkg-empty">加载失败：'+esc(e.message||'')+'</div>'; });
 };
+window.pkgIsProtected=function(n){
+  return /^(?:luci-app-openclash|luci-i18n-openclash-|openclash$|mihomo|clash|sing-box|singbox|qca-nss|kmod-qca-nss|qca-ssdk|kmod-qca-ssdk|ecm|kmod-ecm|nss-|kmod-nss-|base-files$|busybox$|apk-tools$|openwrt-keyring$|immortalwrt-keyring$|kernel(?:-|$)|kmod-|libc(?:-|$)|musl(?:-|$)|libgcc(?:-|$)|libubox|libubus|libnl|libopenssl|libustream|rpcd$|ubus$|uhttpd$|netifd$|firewall4$|nftables$|dnsmasq|odhcpd|dropbear$|procd$|fstools$|block-mount$|wpad|hostapd|ppp(?:-|$)|luci-base$|luci-mod-|luci-app-athena$|luci-i18n-athena-zh-cn$)/i.test(String(n||''));
+};
 window.pkgRender=function(){
   var el=document.getElementById('pkgList'); if(!el) return;
   var q=(document.getElementById('pkgSearch').value||'').toLowerCase();
@@ -3938,7 +3941,7 @@ window.pkgRender=function(){
   el.innerHTML=list.slice(0,80).map(function(p){
     return '<div class="pkg-row"><div class="pkg-name" title="'+esc(p.name)+'">'+esc(p.name)+'</div><div class="pkg-ver">'+esc(p.version||'')+'</div><div class="pkg-actions">'
       +(tab==='available'?'<button class="btn sm primary" onclick="installPkg(\''+p.name+'\')">安装</button>':'')
-      +(tab==='installed'?'<button class="btn sm danger" onclick="removePkg(\''+p.name+'\')">卸载</button>':'')
+      +(tab==='installed'?(pkgIsProtected(p.name)?'<span style="font-size:11px;color:var(--text3);padding:6px 8px">系统保护</span>':'<button class="btn sm danger" onclick="removePkg(\''+p.name+'\')">卸载</button>'):'')
       +'</div></div>';
   }).join('')||'<div class="pkg-empty">没有匹配的软件包</div>';
 };
@@ -3946,7 +3949,7 @@ window.installPkg=function(n){ toast('安装 '+n+' …'); athenaRPC.exec('athena
 window.removePkg=function(n){
   openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
 };
-window.doRemovePkg=function(n){ toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
+window.doRemovePkg=function(n){ if(pkgIsProtected(n)){ toast('该软件包属于关键系统组件，禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
 window.checkUpdate=function(){ toast('检查软件源更新中（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源已更新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
 window.openSyslog=function(){
   openBkModal('<h3>系统日志</h3><div class="m-sub">内核与系统服务实时日志</div><div class="log-toolbar"><input class="log-search" id="logSearch" placeholder="搜索日志…" oninput="logRender()"><div class="log-chips"><button class="log-chip on" data-lv="" onclick="logLv(\'\')">全部</button><button class="log-chip" data-lv="err" onclick="logLv(\'err\')">错误</button><button class="log-chip" data-lv="warn" onclick="logLv(\'warn\')">警告</button></div></div><div id="logList" class="log-list"><div class="log-empty">加载中…</div></div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn" onclick="exportLog()">导出日志</button><button class="btn danger" onclick="clearLog()">清空日志</button></div>');
