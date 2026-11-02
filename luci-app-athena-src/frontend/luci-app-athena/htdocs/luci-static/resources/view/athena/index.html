@@ -862,7 +862,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>WiFi 连不上了？一键恢复默认</h3>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">三个频段恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 密码 <b style="color:var(--text)">12345678</b>。密码错乱、连不上时点这里自愈。</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">三个频段恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 重置时自动生成随机密码。密码错乱、连不上时点这里自愈。</div>
         <button class="btn primary" onclick="resetWifi()">恢复默认 WiFi</button>
       </div>
     </div>
@@ -1510,7 +1510,7 @@ var KPI_ITEMS=[
     var bwOpts={b2:'<option>20MHz</option><option selected>40MHz</option>',b5:'<option>20MHz</option><option selected>80MHz</option><option>160MHz</option>',b6:'<option>20MHz</option><option selected>80MHz</option><option>160MHz</option>'}[b];
     openModal("编辑 WiFi 配置",({b2:"2.4G",b5:"5.2G",b6:"5.8G"}[b])+" · 修改后保存即生效",
       '<div class="field"><label>WiFi 名称（SSID）</label><input id="ebSsid" type="text" value="'+x.ssid+'"></div>'
-      +'<div class="field"><label>密码（8-63 位）</label><div class="pwd-wrap"><input id="ebPwd" type="text" data-pwd="1" value="12345678"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>'
+      +'<div class="field"><label>密码（8-63 位）</label><div class="pwd-wrap"><input id="ebPwd" type="text" data-pwd="1" value="" placeholder="留空表示保持当前密码"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>'
       +'<div class="field"><label>加密方式</label><select id="ebEnc"><option>WPA3/WPA2</option><option>WPA2</option><option>开放（无加密）</option></select></div>'
       +'<div class="field"><label>信道（当前频段可选）</label><select id="ebCh">'+chOpts+'</select></div>'
       +'<div class="field"><label>频宽</label><select id="ebBw">'+bwOpts+'</select></div>'
@@ -1532,7 +1532,7 @@ var KPI_ITEMS=[
     closeModal(); showToast("已保存 "+( {b2:"2.4G",b5:"5.2G",b6:"5.8G"}[b] )+" 配置");
   };
   window.resetWifi=function(){
-    confirmAct("恢复默认 WiFi？","三个频段将恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 密码 12345678", "resetWifiDo");
+    confirmAct("恢复默认 WiFi？","三个频段将恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 随机生成密码", "resetWifiDo");
   };
   window.resetWifiDo=function(){
     S.bands={b2:{on:true,ssid:"Athena-2.4G"},b5:{on:true,ssid:"Athena-5G"},b6:{on:true,ssid:"Athena-5G-Game"}};
@@ -3181,8 +3181,8 @@ window.saveBand=function(id){
 window.openGuestModal=function(){
   openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，访客仅可上网</div>'
     +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" maxlength="32" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="12345678"></div></div>'
-    +'<div style="font-size:12px;color:var(--text3)">默认密码为 12345678，可在此修改。开启后访客无法访问内网设备。</div>'
+    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="" placeholder="留空表示保持当前密码"></div></div>'
+    +'<div style="font-size:12px;color:var(--text3)">请输入独立的访客 WiFi 密码；不会使用固定默认密码。开启后访客无法访问内网设备。</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
   try{ enhancePwds(document.querySelector('.mask.show')); }catch(e){}
 };
@@ -3201,11 +3201,16 @@ window.toggleGuest=function(){
   athenaRPC.exec('athena-wireless.sh',['guest','disable']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭访客网络'); GUEST.enabled=false; toast('访客网络已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.resetWifi=function(){
-  openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：<b>12345678</b><br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
+  openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：自动生成随机密码<br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
 };
 window.doResetWireless=function(){
-  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复'); toast('已恢复默认，WiFi 重新广播中'); window.closeModal(); setTimeout(loadWireless,2500); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
-};
+  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复');
+    window.closeModal();
+    openBkModal('<h3>WiFi 已恢复默认</h3><div class="m-sub">三个频段已使用同一个随机密码。请保存该密码，并用新密码重新连接 WiFi。</div><div style="padding:12px 0;font-size:15px">新密码：<code>'+esc(d.password||'')+'</code></div><div class="m-foot"><button class="btn primary" onclick="closeModal()">我已保存</button></div>');
+    setTimeout(loadWireless,2500);
+  }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+}
 
 /* ---- 设备 ---- */
 window.switchDevTab=function(t){ devTab=t; document.querySelectorAll('[data-devt]').forEach(function(x){ x.classList.toggle('on',x.dataset.devt===t); }); renderDevTable(); };
