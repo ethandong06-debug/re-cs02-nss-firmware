@@ -24,9 +24,17 @@ valid_usb_partition() {
 	return 0
 }
 is_mounted() {
-	local dev="$1"
-	awk -v dev="$dev" '$1 == dev { found=1 } END { exit !found }' /proc/mounts 2>/dev/null && return 0
-	awk -v dev="$dev" 'NR > 1 && $1 == dev { found=1 } END { exit !found }' /proc/swaps 2>/dev/null && return 0
+	local dev="$1" target src resolved
+	target=$(readlink -f "$dev" 2>/dev/null)
+	[ -n "$target" ] || return 1
+	for src in $(awk '{print $1}' /proc/mounts 2>/dev/null); do
+		resolved=$(readlink -f "$src" 2>/dev/null)
+		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
+	done
+	for src in $(awk 'NR > 1 {print $1}' /proc/swaps 2>/dev/null); do
+		resolved=$(readlink -f "$src" 2>/dev/null)
+		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
+	done
 	return 1
 }
 is_system_partition() {
@@ -103,8 +111,9 @@ case "$CMD" in
 		DEV="${2:-}"; MP="${3:-}"; FS="${4:-auto}"
 		[ -z "$DEV" ] || [ -z "$MP" ] && { echo '{"ok":false,"msg":"缺少设备或挂载点"}'; exit 1; }
 		valid_usb_partition "$DEV" || { echo '{"ok":false,"msg":"仅允许挂载真实的 USB 分区（例如 /dev/sda1）"}'; exit 1; }
-		case "$MP" in /mnt/usb|/mnt/usb-*) ;; *) echo '{"ok":false,"msg":"挂载目录仅允许 /mnt/usb 或其子目录"}'; exit 1 ;; esac
-		is_mounted "$DEV" && { echo '{"ok":false,"msg":"该分区已经挂载"}'; exit 1; }
+		case "$MP" in /mnt/usb) ;; *) echo '{"ok":false,"msg":"USB 共享分区只能挂载到 /mnt/usb"}'; exit 1 ;; esac
+		is_mounted "$DEV" && { echo '{"ok":false,"msg":"该分区已经挂载或作为交换分区使用"}'; exit 1; }
+		awk '$2 == "/mnt/usb" { found=1 } END { exit !found }' /proc/mounts 2>/dev/null && { echo '{"ok":false,"msg":"/mnt/usb 已被其他设备占用"}'; exit 1; }
 		mkdir -p "$MP" 2>/dev/null || { echo '{"ok":false,"msg":"无法创建挂载目录"}'; exit 1; }
 		if [ "$FS" = "auto" ]; then
 			mount "$DEV" "$MP" >/dev/null 2>&1
@@ -112,13 +121,25 @@ case "$CMD" in
 			case "$FS" in ext4|vfat|exfat|f2fs) ;; *) echo '{"ok":false,"msg":"不支持的文件系统"}'; exit 1 ;; esac
 			mount -t "$FS" "$DEV" "$MP" >/dev/null 2>&1
 		fi
-		[ $? -eq 0 ] && echo "{\"ok\":true,\"msg\":\"$DEV 已挂载到 $MP\"}" || echo "{\"ok\":false,\"msg\":\"挂载失败，检查分区或文件系统\"}"
+		if [ $? -eq 0 ] && awk -v dev="$DEV" '$1 == dev && $2 == "/mnt/usb" { found=1 } END { exit !found }' /proc/mounts 2>/dev/null; then
+			[ -x /etc/init.d/filebrowser ] && /etc/init.d/filebrowser restart >/dev/null 2>&1
+			echo "{\"ok\":true,\"msg\":\"$DEV 已挂载到 $MP，文件共享已尝试启动\"}"
+		else
+			echo '{"ok":false,"msg":"挂载失败或挂载状态未确认，文件共享未启动"}'
+		fi
 		;;
 	umount)
 		DEV="${2:-}"
 		[ -z "$DEV" ] && { echo '{"ok":false,"msg":"缺少设备"}'; exit 1; }
 		valid_usb_partition "$DEV" || { echo '{"ok":false,"msg":"仅允许卸载真实的 USB 分区（例如 /dev/sda1）"}'; exit 1; }
-		umount "$DEV" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$DEV 已卸载\"}" || echo "{\"ok\":false,\"msg\":\"卸载失败（可能正在使用）\"}"
+		MP=$(awk -v dev="$DEV" '$1 == dev {print $2; exit}' /proc/mounts 2>/dev/null)
+		if [ "$MP" = "/mnt/usb" ] && [ -x /etc/init.d/filebrowser ]; then /etc/init.d/filebrowser stop >/dev/null 2>&1; fi
+		if umount "$DEV" >/dev/null 2>&1; then
+			echo "{\"ok\":true,\"msg\":\"$DEV 已卸载\"}"
+		else
+			[ "$MP" = "/mnt/usb" ] && [ -x /etc/init.d/filebrowser ] && /etc/init.d/filebrowser start >/dev/null 2>&1
+			echo '{"ok":false,"msg":"卸载失败（可能正在使用），文件共享已恢复尝试"}'
+		fi
 		;;
 	format)
 		DEV="${2:-}"; FS="${3:-ext4}"
