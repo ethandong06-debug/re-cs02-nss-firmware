@@ -658,3 +658,14 @@
 - 本轮只新增方案 Markdown；未修改源码、ACL、工作流、APK，也未操作设备。
 - 方案文档提交：`69ab4e67c6e751756f2f36c0c620bc4396ad4b4f`。
 - 下一步：按 Batch 0 开始完善离线测试框架和只读基线清单；在用户确认前，不进入任何源码整改或设备操作。
+
+
+### Batch 0 补充：现有 CI 与测试缺口已盘点（2026-11-02）
+
+- 当前 GitHub Actions 已有 Shell `sh -n`、菜单/ACL JSON 解析、Node inline JS 语法检查、RPC/Makefile/ACL 静态一致性检查、APK 构建、签名验证和临时 root 依赖模拟。
+- 未发现独立 `tests/` 目录；现有 `tools/_audit.py`、`_audit2.py`、`_cfgchk.py` 属于审计/检查工具，不构成高危后端 mock 行为测试套件。
+- 当前 CI 未覆盖 ShellCheck、服务路径穿越用例、固件 tar 伪包校验、firstboot/sysupgrade mock、nftables 规则生成、UCI 多配置失败回滚、上传并发和 USB 设备身份竞态。
+- workflow 的 push paths 目前主要覆盖前端包源码、设备 seed 和 workflow 文件；新增测试目录时必须加入触发路径。
+- 已将 CI 现状、缺口和建议测试目录补入整改方案第 15 节。
+- 整改方案文档最新提交：`a9e54a48238f84a162ca93a8aaa473faa23665f1`。
+- 本轮仍然只更新 Markdown；没有新增测试代码、修改 workflow、改源码/ACL、触发 APK 构建或操作设备。
