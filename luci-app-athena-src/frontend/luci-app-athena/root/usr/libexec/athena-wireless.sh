@@ -259,8 +259,9 @@ do_reset_defaults() {
 		fi
 	done
 	uci commit wireless 2>/dev/null
-		wifi reload >/dev/null 2>&1 || { echo '{"ok":false,"msg":"无线重载失败，未重启整体网络"}'; return 1; }
-	echo "{\"ok\":true,\"msg\":\"无线已恢复默认，请使用新随机密码连接\",\"password\":\"$RESET_PWD\"}"
+	RELOAD_OK=true
+	wifi reload >/dev/null 2>&1 || RELOAD_OK=false
+	echo "{\"ok\":true,\"msg\":\"无线已恢复默认，请使用新随机密码连接\",\"password\":\"$RESET_PWD\",\"reload_ok\":$RELOAD_OK}"
 }
 
 # ---- 访客网络（2.4G 多 BSS + guest 独立桥 + 防火墙隔离）----
