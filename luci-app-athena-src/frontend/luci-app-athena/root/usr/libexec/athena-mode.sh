@@ -107,7 +107,7 @@ valid_ipv4() {
 	printf '%s\n' "$1" | awk -F. 'NF != 4 { exit 1 } { for (i=1; i<=4; i++) if ($i !~ /^[0-9]+$/ || length($i) > 3 || $i+0 > 255) exit 1 }'
 }
 valid_netmask() {
-	printf '%s\n' "$1" | awk -F. 'NF != 4 { exit 1 } { b=""; for (i=1; i<=4; i++) { if ($i !~ /^[0-9]+$/ || length($i) > 3 || $i+0 > 255) exit 1; n=$i+0; for (j=7; j>=0; j--) b=b int(n/(2^j))%2 } if (b !~ /^1+0*$/) exit 1 }'
+	printf '%s\n' "$1" | awk -F. 'NF != 4 { exit 1 } { b=""; for (i=1; i<=4; i++) { if ($i !~ /^[0-9]+$/ || length($i) > 3 || $i+0 > 255) exit 1; n=$i+0; for (j=7; j>=0; j--) b = b (int(n/(2^j)) % 2) } if (b !~ /^1+0*$/) exit 1 }'
 }
 valid_text_arg() {
 	local n
@@ -295,6 +295,14 @@ config_single() {
 	log "配置为 单臂路由（内网VLAN=$vlan_inner, 拨号VLAN=$vlan_wan, IPTV=${vlan_iptv:-无}, proto=$proto, IPTV口=$iptv_port）"
 
 	# ---- 参数校验（误配会直接打断网络，先拦）----
+	# 单臂会重建 WAN 接口；未重新输入账号密码时，先从当前配置保留原 PPPoE 凭据。
+	if [ "$proto" = "pppoe" ] && [ -z "$user" ] && [ -z "$pass" ]; then
+		user=$(uci -q get network.wan.username 2>/dev/null)
+		pass=$(uci -q get network.wan.password 2>/dev/null)
+	fi
+	if [ "$proto" = "pppoe" ] && { [ -n "$user" ] || [ -n "$pass" ]; }; then
+		valid_text_arg "$user" && valid_text_arg "$pass" || { echo '{"ok":false,"msg":"PPPoE 账号和密码必须为 1-128 字节且不能包含控制字符"}'; return 1; }
+	fi
 	for v in "$vlan_inner" "$vlan_wan" "$vlan_iptv"; do
 		if [ -n "$v" ] && ! valid_vlan "$v"; then
 			echo '{"ok":false,"msg":"VLAN ID 必须为 1-4094 的纯数字（IPTV 可留空关闭）"}'
@@ -649,11 +657,11 @@ esac
 backup
 
 case "$MODE" in
-	router)  config_router "$@" ;;
-	ap)      config_ap ;;
-	single)  config_single "$@" ;;
+	router)  config_router "$@" || exit $? ;;
+	ap)      config_ap || exit $? ;;
+	single)  config_single "$@" || exit $? ;;
 	single-status) status_single "$@" ;;
-	bypass)  config_bypass "$@" ;;
+	bypass)  config_bypass "$@" || exit $? ;;
 	*) log "未知模式: $MODE（支持 router|ap|single|single-bg|single-status|bypass|progress）"; exit 1 ;;
 esac
 
