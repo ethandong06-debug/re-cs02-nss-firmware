@@ -28,6 +28,8 @@ mkdir -p /etc/crontabs 2>/dev/null
 # 自动备份执行体：创建备份 + 只保留最近 keep 份
 autobackup() {
 	local keep="${1:-3}"
+	case "$keep" in ''|*[!0-9]*) keep=3 ;; esac
+	[ "$keep" -ge 1 ] 2>/dev/null && [ "$keep" -le 30 ] 2>/dev/null || keep=3
 	local TS=$(date +%Y%m%d-%H%M%S)
 	local FILE="$BACKUP_DIR/config-$TS.tar.gz"
 	sysupgrade -b "$FILE" >/dev/null 2>&1
