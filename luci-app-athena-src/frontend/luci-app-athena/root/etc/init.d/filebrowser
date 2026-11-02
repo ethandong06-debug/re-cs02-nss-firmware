@@ -85,16 +85,19 @@ start_service() {
 	write_config "$LAN_IP" || { logger -t filebrowser "Quantum config creation failed"; return 1; }
 	chmod 600 "$FB_DB" 2>/dev/null
 
+	if [ ! -s "$FB_DB" ]; then
+		# Create the first administrator before the daemon starts. This avoids
+		# storing an auth.adminPassword setting that would reset UI password changes.
+		"$FB_BIN" user set admin --password "$PASS" -a --no-input -c "$FB_CONFIG" >/dev/null 2>&1 || {
+			logger -t filebrowser "Quantum administrator initialization failed"
+			return 1
+		}
+		chmod 600 "$FB_DB" 2>/dev/null
+	fi
+
 	procd_open_instance
 	procd_set_param command "$FB_BIN" -c "$FB_CONFIG"
-	if [ ! -s "$FB_DB" ]; then
-		# Quantum reads this only during first database initialization.
-		procd_set_param env FILEBROWSER_ADMIN_PASSWORD="$PASS"
-	else
-		# Do not reapply the bootstrap password after the database exists:
-		# users must be able to change their password in the web interface.
-		procd_set_param respawn 3600 5 5
-	fi
+	procd_set_param respawn 3600 5 5
 	procd_close_instance
 }
 
