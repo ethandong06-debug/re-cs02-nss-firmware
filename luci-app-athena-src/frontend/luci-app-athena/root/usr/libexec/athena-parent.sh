@@ -129,7 +129,7 @@ case "$1" in
 		esac
 
 		# 星期校验
-		case "$DAYS" in '''|,*|*,|*,,*) echo '{"ok":false,"msg":"至少选择一个有效星期"}'; exit 1 ;; esac
+		case "$DAYS" in ''|,*|*,|*,,*) echo '{"ok":false,"msg":"至少选择一个有效星期"}'; exit 1 ;; esac
 		for d in $(echo "$DAYS" | tr ',' ' '); do
 			case "$d" in
 				0|1|2|3|4|5|6) ;;
