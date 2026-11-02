@@ -429,3 +429,42 @@ SPA 没有调用 ubus `uci` 对象，也没有调用 `athena.status`、`network.
 - 配置备份恢复：SPA 使用 rpcd `file.write` 分块写 `/tmp/athena-restore.b64`，再执行 `athena-backup.sh restore-upload`。
 - 固件上传：SPA 使用原生 `/cgi-bin/cgi-upload` multipart 上传到 `/tmp/athena-fw-upload.bin`，随后调用 `athena-upgrade.sh verify/flash`。
 - 两者不可混为一条上传链。历史 `index_v1.2.22_backup.html` 曾用 `/tmp/athena-fw.b64`，但它不是当前主 SPA；ACL 不能因历史备份文件引用而默认保留旧授权。
+
+
+## 14. 24 个专用 RPC 脚本入口参数矩阵（静态清单）
+
+| 脚本入口 | 前端使用的命令/参数 | 主要副作用与边界 |
+|---|---|---|
+| `athena-status.sh` | 无参、`rate` | 只读 /proc、/sys、UCI 状态；首页速率采样 |
+| `athena-mode.sh` | `progress`、`single-bg`、`router`、`single`、`ap`、`bypass` 等 | 大范围改写 network/wireless/dhcp/firewall/athena 并重启网络；P0 |
+| `athena-client.sh` | list/known/notes/block/unblock/rename/know/unlearn/note + MAC/文本 | nft/iptables、UCI、DHCP host、dnsmasq restart |
+| `athena-services.sh` | list、filebrowser-password、set <id> <0|1> | 服务启停/开机启用；动态 id 路径穿越 P0 |
+| `athena-resources.sh` | 无参、stop/restart <pid> | 进程采样；对 PID 直接 kill -9，关键服务保护与 PID 二次身份校验 |
+| `athena-diag.sh` | check、ping <host> <family>、dns <domain> [dns]、nodes | ping/curl/nslookup 外发探测；host/domain 白名单校验 |
+| `athena-log.sh` | list [level] [keyword]、export、clear | 读日志、临时导出、清空 syslog/dmesg |
+| `athena-passwd.sh` | <current> <new> <sync> | 修改 root 密码；需确保 ACL 仅管理员会话 |
+| `athena-packages.sh` | list installed/available、install/remove/update/upgrade <pkg> | APK 数据库读、apk add/del/update/upgrade；包名白名单和关键包保护 |
+| `athena-backup.sh` | create/list/restore <file>/download <file>/restore-upload/schedule/autobackup | sysupgrade -b/-r、固定临时文件、cron；恢复全局配置 P0 |
+| `athena-reset.sh` | `--confirm` | firstboot -y + reboot；固定字符串确认 P0 |
+| `athena-scan.sh` | 无参 | 只读状态检查；DNS 探测与 NSS 状态推断 |
+| `athena-reboot.sh` | status/enable <HH:MM> <DOW>/disable/now | 写 root crontab、cron restart、立即 reboot |
+| `athena-upgrade.sh` | check/verify <path>/flash <path> <keep> | 固件校验与 sysupgrade；flash 必须后端复验 P0 |
+| `athena-disk.sh` | list/mount <dev> /mnt/usb [fs]/umount <dev>/format <dev> <fs> | USB mount/umount/mkfs；不可逆格式化与热插拔竞态 |
+| `athena-theme.sh` | get/set <palette> <0-100...> [dark]/reset | 写主题 UCI；偏好权威源待统一 |
+| `athena-matrix.sh` | get/set <key> <value> | 写 athena_led UCI 并重启 LED 服务 |
+| `athena-led.sh` | get/set breath <0|1> | 写 Athena LED UCI 并更新硬件灯效 |
+| `athena-wireless.sh` | get/enable/disable <band>/set <band> <ssid> <pwd> <channel> <bw> <enc>/guest get|enable|disable | 改 wireless/network/dhcp/firewall 四配置并 reload |
+| `athena-speedtest.sh` | auto/iperf3/mirrors、unit get/set <Mbps|MB/s> | 对公网测速，产生大量外网流量；单位持久化 |
+| `athena-ui.sh` | get/set <athena|native|last>/mark/sync/zoom get|set | 写 Athena UI 配置与 /www/index.html |
+| `athena-parent.sh` | list/set <mac> <days> <start> <end>/clear <mac> | 写 UCI、重建 nft 文件、firewall reload |
+| `athena-apps.sh` | list | 读取 DNS/OAF 映射、缓存活跃应用；属于推断而非 DPI |
+
+### 14.1 参数与边界结论
+
+- 已有较明确白名单：MAC、WiFi SSID/密码/频段信道频宽、诊断 host/domain、软件包名、备份文件名、偏好 key/value、UI mode、LED/矩阵值、家长控制星期/时间、磁盘设备/文件系统。
+- 仍需后端加固或专项验证：服务动态 init 名称、固件 flash 复验、恢复出厂/配置恢复/网络模式后端确认票据、备份恢复并发锁、USB 格式化设备身份竞态、家长控制 nft 规则语法/排序、访客网络四配置失败回滚。
+- `athena-resources.sh` 对普通进程执行 `kill -9`，虽有 PID starttime/comm 二次核验和关键服务保护，但没有先发 SIGTERM 的宽限期；建议改为 TERM → 短等待 → 再次核验 → 必要时 KILL，并明确不自动重启未受 init 管理的进程。
+- `athena-apps.sh` 的活跃应用依赖 DNS/OAF 域名映射及短期缓存，不是 DPI/流量内容识别；首页应标注“域名线索推测”，无法稳定映射时降级或移除。
+- `athena-services.uc` 的只读服务列表主要读取 menu.d/控制器文件、init enabled 状态和少量 UCI；服务启停仍转交 shell legacy。ucode 只读提速不改变权限边界。
+- `athena-packages.uc` 只读 APK installed 数据库；写操作仍交 legacy shell。其性能优化不替代后端包名和关键包保护。
+- `athena-resources.uc` 读取 /proc、/sys 并写缓存文件；进程 stop/restart 仍走 shell。资源采样结果不能当作服务健康或 NSS 硬件卸载的权威证据。
