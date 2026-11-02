@@ -327,3 +327,56 @@ SPA 顶部提供 8 个主页面：
 - 备份恢复路径已限制文件名格式、拒绝路径穿越，并通过 realpath 检查目标位于备份目录内；恢复前检查 tar.gz 结构。
 - USB 管理挂载点固定为 `/mnt/usb`，目标限定真实 USB 分区；格式化会拒绝已挂载/swap/系统分区及系统分区所在物理盘。
 - 以上均为静态代码判断；本节没有调用任何危险入口。
+
+
+## 12. 其他后端脚本静态审计（参数、持久化与副作用）
+
+### 12.1 设备拉黑/备注/已知设备（`athena-client.sh`）
+
+- MAC 输入统一校验六组十六进制字节；备注限制 128 字节并拒绝控制字符；名称限制 63 字节并拒绝控制字符。
+- 拉黑会同时尝试向 `inet fw4 forward` 添加 nft 规则、向 iptables FORWARD 插入兼容规则，再写入 `athena.client.blocked` 并 commit；开机 restore 只恢复 nft 规则。
+- 解除拉黑会在整个 nft ruleset 中搜索包含该 MAC 的规则并按 handle 删除，再删除 iptables 规则、更新 UCI。此搜索范围比 Athena 自己的规则更广，可能触及其他组件/用户创建的同 MAC 规则；应给 Athena 规则加稳定 comment/专属 chain/set，只删除自身规则。
+- nft 与 iptables 双写而 restore 只恢复 nft，存在规则重复、规则不一致和防火墙 reload 后行为变化风险；应统一到 fw4/nftables，并对重复 block 做幂等处理。
+- rename 会写 DHCP host 段并重启 dnsmasq；若同 MAC 存在多段，仅更新第一条匹配记录。设备名有长度/控制字符校验，但 JSON 转义逻辑仍应统一。
+
+### 12.2 家长控制（`athena-parent.sh`）
+
+- MAC、星期 0-6、HH:MM 范围有基础校验；跨午夜时会将次日星期集合整体平移。
+- set/clear 写入 `athena.parent`，重建 `/etc/nftables.d/10-athena-parent.nft`，然后 reload firewall；属于真实防火墙规则生成与重载，不是单纯定时显示。
+- 当前每个 MAC 生成独立 base chain，并各自挂到 forward hook、priority 0；需在 Athena 当前 nftables/nft 版本上验证多 base chain 同 hook 同优先级的排序语义，以及规则文件由 fw4 include 的实际加载位置。不能只凭脚本生成成功判断规则生效顺序。
+- 星期参数允许重复值；list 直接把 UCI 字符串拼为 JSON 数组，异常/旧配置可能输出重复或非规范值。建议归一化去重，并对已有配置做生成前校验。
+- 生成规则前直接删除旧规则文件，缺少临时文件 + 原子 rename；生成中断可能留下空/不完整规则文件。应先生成临时文件、语法检查成功后原子替换，再 reload；失败保留旧规则。
+
+### 12.3 无线与访客网络（`athena-wireless.sh`）
+
+- SSID/密码/信道/频宽采用白名单校验；常规无线设置写 `wireless` 并 commit，属于真实无线重载操作。
+- 访客网络确实创建独立 `br-guest`、静态网段、DHCP、独立 firewall zone 和 guest→wan forwarding；无线接口设置 `isolate=1`，guest zone input/forward 为 REJECT，代码没有创建 guest→lan 转发。静态结构符合隔离方向，但仍需真机验证 fw4 实际规则、IPv4/IPv6、客户端互访及主 LAN 可达性。
+- guest_clear_internal 会按固定名称删除 `network.guest`、`dhcp.guest`、`firewall.guest_zone`、`firewall.guest_fwd`，并删除所有 name=br-guest 的 network device。若用户已有同名配置，会被覆盖/删除；应在创建前检测冲突、使用专属标记/唯一 section，并备份原值。
+- 访客网络跨写 wireless/network/dhcp/firewall 四份配置并分别 commit，随后依次 wifi reload、dnsmasq restart、firewall reload；中途失败没有事务式回滚，且脚本可能留下部分配置。需加分阶段备份与失败恢复，不可简单套用 LuCI 单配置 apply。
+- guest_get 仅通过 wireless iface 的 network='guest' 判断启用状态，不核验 bridge、DHCP、zone 和 forwarding 是否完整；页面可能显示“已开启”但隔离链不完整。
+
+### 12.4 密码修改（`athena-passwd.sh`）
+
+- 新密码限制 8-128 字节、拒绝冒号和控制字符；通过 shadow 中 root hash 校验当前密码，再用 chpasswd/passwd 更新 root，Dropbear 共用 shadow。
+- 若 root hash 为空、`!` 或 `*`，当前代码直接放行，不验证传入的当前密码；在当前认证会话仍受 rpcd ACL 严格保护的前提下不一定构成匿名漏洞，但不应把“锁定/空密码”自动等同用户当前密码验证成功。建议改为依赖已认证会话并明确提示，或对锁定状态采用安全失败策略。
+- 无 openssl 时脚本直接信任已认证 rpcd 会话；必须确保该脚本 ACL 只授予已认证管理员，而非匿名/访客会话。
+
+### 12.5 偏好、主题与界面入口
+
+- `athena-prefs.sh` 使用 `/etc/athena-prefs.conf`，仅允许四个 key；值有白名单/范围校验，权限由 `umask 077` 限制。写入采用临时文件替换，但没有锁，多请求并发写可能互相覆盖。
+- `athena-theme.sh` 对 palette/dark 做白名单，数值超 100 截断；非法 dark 值会被忽略但仍返回成功，且主题配置仍依赖 `uci commit athena`。应统一配置存储源并对非法输入明确报错。
+- `athena-ui.sh` 的 mode/last 有白名单；set/mark 会改写 `/www/index.html`，属于设备全局入口行为。zoom 已改用 prefs 文件，和 UCI 镜像并存。
+- 偏好文件与 UCI 镜像并存，部分脚本读取顺序不同；应明确唯一权威源，避免设置保存成功但刷新后读取到旧 UCI 值。
+
+### 12.6 定时重启、维护与日志
+
+- `athena-reboot.sh` 对时间和星期做基础校验；enable/disable 会修改 root crontab 并重启 cron；now 会延迟一秒直接 reboot。定时任务是系统级副作用，应保留明确状态提示。
+- `athena-reset.sh` 只认固定字符串 `--confirm` 后执行 `firstboot -y` 并异步重启；前端确认框不构成后端授权。且脚本无论 firstboot 成败最后都 `exit 0`，RPC 调用者必须解析 JSON 的 `ok`，不能只看退出码。
+- `athena-log.sh clear` 会清空 logread 与 dmesg 缓冲区；export 会在 `/www/athena-log` 生成临时日志并 300 秒后删除。日志可能包含设备标识/网络信息，导出目录和 HTTP 访问权限需核对。
+
+### 12.7 存储、备份与升级的剩余检查点
+
+- USB 挂载/格式化入口限定 `/dev/sd[a-z][0-9]+` 且检查 sysfs USB 路径、挂载/swap、系统分区；mount point 固定 `/mnt/usb`。整体保护较完整，但 format 的检查与 mkfs 之间仍有设备热插拔/设备节点替换竞态；执行前需重新解析 sysfs 设备身份，并考虑锁。
+- 配置备份恢复限制文件名并 realpath 校验备份目录，检查 tar.gz 可读；但 `restore-upload` 走固定 `/tmp/athena-restore.b64` 与 `/tmp/athena-restore.tar.gz`，缺少并发锁/上传者绑定，多个会话可能互相覆盖文件。恢复前 tar 列表检查仅验证归档可读，没有显式限制归档成员只能属于受允许的配置路径；需核对 sysupgrade -r 的过滤策略。
+- 固件 verify 有结构与机型检查，但检查只在 verify 分支；flash 分支只调用当前平台已知不可靠的 `sysupgrade -T`。这是 P0：完整校验必须在 flash 内重新执行，并锁定文件路径/哈希。
+- 自动备份 cron 与手动配置备份都属于设备持久化配置操作；应核对计划设置参数边界、并发写和失败清理。
