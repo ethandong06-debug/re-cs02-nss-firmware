@@ -245,3 +245,10 @@
 
 - 当前 workflow 固定下载 File Browser v2.63.23。上游仓库已于 2026-08-31 归档，官方说明此后不再提供修复或安全更新；其 README 也提醒不要直接暴露到互联网，并建议关闭命令执行功能。当前代码已限制为 LAN 地址和 /mnt/usb，但“仅 LAN 可访问”不能消除软件本身停止维护的风险。
 - 因此 File Browser 保留为现有设计下的受限共享服务，不应配置公网端口映射或 WAN 访问；后续如需长期公网访问，应先评估替代的受维护方案。
+
+### 最近一次构建排队状态
+
+- 最新源码提交：`f1448776fa15c3815389f855e7436305043dd8b2`（偏好设置 KPI 排序校验兼容部分顺序）。
+- 对应 Actions Run #162：`41367339743`，当前状态 pending。
+- 其前序 Run #103（旧提交 `180dbed6...`）仍显示 in_progress，卡在 `Build required host tools`；因此最新 Run #162 尚未开始执行。Run #103 的静态语法检查已通过，但该结果不覆盖后续新增修复。
+- filebrowser 数据库路径现为 `/etc/filebrowser-data.db`，使用 File Browser 正确的 `-d` 数据库参数；旧版 `/etc/filebrowser.db` 文件不再被当作数据库打开，避免把旧配置文件误当 SQLite 数据库。
