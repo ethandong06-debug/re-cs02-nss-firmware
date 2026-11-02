@@ -183,7 +183,7 @@ SPA 顶部提供 8 个主页面：
 1. 菜单与 SPA 的主入口清晰，但单页内有较大段历史预览/模拟 UI 代码与后续真实 RPC 实现并存。不能仅凭“重复函数名”直接删除；需按 IIFE/作用域、运行顺序和真实调用关系继续判定。
 2. Makefile 注释已描述 24 个前端 RPC 脚本入口，实际安装 36 个 libexec 文件，包含 legacy 回退、ucode 和 helper；文档和清单应始终区分这两种数量。
 3. 状态、服务、资源、软件包等入口通过 Shell wrapper 优先调用 ucode，异常时回退 legacy Shell；这属于同一 RPC 入口下的实现后端，不应另算成新的前端 API。
-4. 前端 `athenaRPC.exec(file,args)` 固定把目标拼为 `/usr/libexec/` + `file`；当前 SPA 没有直接调用 `/etc/init.d/network`、`/bin/ping`、`nslookup` 或 `ubus` 可执行文件。`file.exec` ACL 却额外授权这些路径，且对 `file` 提供 exec/write，对多份 UCI 配置提供写权限。因为浏览器可直接调用 ubus，不应以“前端封装没调用”为安全保证；这些额外授权仍可形成绕过 UI 的直接 RPC 面，必须核实是否有其他合法调用者，并优先收敛到最小权限。
+4. 前端 `athenaRPC` 适配层实际使用的 ubus 对象/方法为：`session.login`、`system.info`（登录/会话心跳）、`file.exec`（命令固定为 `/usr/libexec/` + `file`）和 `file.write`（配置备份分块上传）。完整 SPA 未发现直接调用 `uci`、`athena.status`、`network.device`、`network.wireless`、`/etc/init.d/network`、`ping`、`nslookup` 或 `ubus` 可执行文件的代码。ACL 却额外授权这些 `file.exec` 路径，并对 `athena/network/wireless/dhcp/system/ddns/ttyd` 配置开放 UCI 读写权限。因为浏览器可直接构造 ubus 请求，这些授权不受前端封装限制，构成可绕过 UI 的直接 RPC 面。下一步必须确认是否有其他合法调用者；若无，应移除未使用的直接执行权限，并将 UCI 权限缩至真实必需配置/操作。
 5. `athena-netcheck`、`athena-vlan-pre`、filebrowser init/hotplug、uci-defaults 不属于前端直接 RPC，但会影响开机和运行态，必须纳入系统行为审计。
 6. HTML 的初始演示内容、静态拓扑、硬编码端口/设备/服务示例与真实 RPC 数据要区分；本次只确认数据刷新路径，不将占位文本认定为真实设备状态。
 
