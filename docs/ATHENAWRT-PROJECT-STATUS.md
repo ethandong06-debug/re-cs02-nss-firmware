@@ -252,3 +252,9 @@
 - 对应 Actions Run #162：`41367339743`，当前状态 pending。
 - 其前序 Run #103（旧提交 `180dbed6...`）仍显示 in_progress，卡在 `Build required host tools`；因此最新 Run #162 尚未开始执行。Run #103 的静态语法检查已通过，但该结果不覆盖后续新增修复。
 - filebrowser 数据库路径现为 `/etc/filebrowser-data.db`，使用 File Browser 正确的 `-d` 数据库参数；旧版 `/etc/filebrowser.db` 文件不再被当作数据库打开，避免把旧配置文件误当 SQLite 数据库。
+
+### 文件共享加固补充
+
+- File Browser 数据库独立存放于 `/etc/filebrowser-data.db`，统一使用 CLI 的 `-d` 数据库参数，避免将旧 `/etc/filebrowser.db` 配置文件误当数据库。
+- 初始化和管理员用户更新均显式清空可执行命令列表并设置 `perm.execute=false`；LuCI 显示的是首次生成的随机密码，并提示若用户在 File Browser 内自行改密，显示值不会自动同步。
+- 最新源码提交 `e2416d0422356b9a6fc6fe8650e39c5f7ab0fb80`；对应 Actions Run #166（ID `41367497484`）处于 pending。Run #103 仍占用同一 concurrency group，最新构建尚未开始。
