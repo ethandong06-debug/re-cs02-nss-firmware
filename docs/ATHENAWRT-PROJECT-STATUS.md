@@ -172,3 +172,15 @@
 ### 调用链统计更正（2026-11-02）
 
 进一步对当前正式 SPA index.html 的全部 RPC 调用进行扫描后，发现页面共有 81 处 athenaRPC.exec 调用，其中 78 处是字面量目标，3 处使用动态参数；去重后仍是 24 个不同的直接后端脚本入口。athena-mode.sh 中没有调用 athena-single.sh。athena-single.sh 虽被 Makefile 安装，但当前正式 SPA 与 athena-mode.sh 均未发现调用它的证据，因此应暂列为“已安装但未证实被调用的脚本”，不能计入前端 25 个有效调用链。之前本节将其描述为 athena-mode.sh 的内部 helper，现予以更正。需要继续查明用户提到的第 25 个脚本是否来自另一前端文件、动态 cfg.f 配置或旧版本清单；在查明前不宣称 25 项已闭环。
+
+### 维护/诊断/资源操作补充审计（2026-11-02）
+
+- athena-backup.sh 的 restore、download、export 分支把用户参数直接拼接到 /etc/athena-backup/$FILE，未将文件名限制为程序生成的 config-时间戳.tar.gz 格式，也未拒绝 ../ 等路径片段。download/export 存在越界读取风险；restore 也可能尝试从备份目录之外读取归档。必须加入严格文件名白名单，并验证目标 realpath 位于备份目录内。
+- athena-resources.sh 的 stop/restart 使用 PID 后直接 kill -9，按当前 PID 重新读取进程名并拒绝若干核心进程；尚未验证前端提交的 PID 与采样时进程身份是否一致，存在 PID 重用竞态。其保护名单未覆盖 OpenClash/Mihomo 与 NSS/ECM 相关进程。
+- athena-services-legacy.sh 的 CORE_INIT 保护名单包含网络、DNS、无线、管理等核心服务，但当前未覆盖 openclash 和 qca-nss-ecm；动态 init.d 枚举可能将它们当成普通第三方服务显示启停按钮。需要将 OpenClash 与 NSS/ECM 服务加入后端不可启停名单，前端同步显示受保护状态。
+- athena-reset.sh 的 --confirm 参数会执行 firstboot -y 并延迟重启；正式 SPA 的 doReset 直接发送该参数。前端有二次确认弹窗时仍需核对弹窗是否确实是唯一入口；后端当前没有一次性确认令牌。
+- athena-upgrade.sh 的 flash 分支会执行 sysupgrade；前端在上传后先执行 verify 并检查 compatible、SHA256 后才显示刷写确认，但后端 flash 本身仍可直接被 RPC 调用。审计/测试期间禁止调用 flash。
+- athena-diag.sh 的 ping 参数尚未严格限制 CNT 为小范围纯数字；应限制 1-10，HOST/DNS 参数应做格式校验并对 JSON 控制字符转义，避免非预期参数和格式破坏。
+- 正式 SPA 的网络模式应用通过 athena-mode.sh single-bg / router / ap / bypass 执行；这些操作会改写网络配置并重启网络/Wi-Fi，且 AP/旁路由分支会调用 nss_off。审计期间不调用这些动作；用户要求保留现网 PPPoE/VLAN/IPv6/防火墙/NSS/ECM，因此未来任何网络模式改动必须先获得明确授权。
+
+以上均为静态源码发现，尚未修复或在设备上验证。
