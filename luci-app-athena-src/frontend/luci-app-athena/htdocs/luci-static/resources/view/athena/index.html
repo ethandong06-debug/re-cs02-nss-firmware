@@ -3496,7 +3496,7 @@ window.openFbModal=function(){
   athenaRPC.exec('athena-services.sh',['filebrowser-password']).then(function(d){
     var el=document.getElementById('fbCredential'); if(!el) return;
     if(!d||d.ok!==true){ el.textContent=(d&&d.msg)||'随机密码暂不可用；请确认 USB 已挂载并启动文件共享'; return; }
-    el.innerHTML='<div>登录账号：<b>'+esc(d.username||'root')+'</b></div><div style="margin-top:6px">随机密码：<code>'+esc(d.password||'')+'</code></div><div style="margin-top:6px;color:var(--text3)">密码仅在此处读取，不使用固定默认密码。</div>';
+    el.innerHTML='<div>登录账号：<b>'+esc(d.username||'root')+'</b></div><div style="margin-top:6px">初始随机密码：<code>'+esc(d.password||'')+'</code></div><div style="margin-top:6px;color:var(--text3)">密码首次生成后保存在路由器本机；若曾在 File Browser 内修改密码，此处显示的仍是初始密码。</div>';
   }).catch(function(e){
     var el=document.getElementById('fbCredential'); if(el) el.textContent='读取登录密码失败：'+(e.message||'请稍后重试');
   });
