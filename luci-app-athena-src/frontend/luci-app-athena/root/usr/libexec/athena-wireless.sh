@@ -353,7 +353,7 @@ case "$CMD" in
 	guest)
 		case "${2:-get}" in
 			get) guest_get ;;
-			enable) guest_enable "${3:-$GUEST_SSID}" "${4:-12345678}" ;;
+			enable) guest_enable "${3:-$GUEST_SSID}" "${4:-}" ;;
 			disable) guest_disable ;;
 			*) echo '{"ok":false,"msg":"未知 guest 子命令（get|enable|disable）"}'; exit 1 ;;
 		esac
