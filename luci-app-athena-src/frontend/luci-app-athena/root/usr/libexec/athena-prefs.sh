@@ -24,7 +24,7 @@ valid_key() {
 valid_value() {
 	case "$K" in
 		kpi_order)
-			printf '%s\n' "$V" | awk -F, 'NF != 4 { exit 1 } { for (i=1; i<=NF; i++) if ($i !~ /^(cpu|mem|up|dev)$/ || seen[$i]++) exit 1 }' || return 1
+			printf '%s\n' "$V" | awk -F, 'NF < 1 || NF > 4 { exit 1 } { for (i=1; i<=NF; i++) if ($i !~ /^(cpu|mem|up|dev)$/ || seen[$i]++) exit 1 }' || return 1
 			;;
 		res_kth) case "$V" in 0|1) ;; *) return 1 ;; esac ;;
 		ui_zoom) case "$V" in ''|*[!0-9]*) return 1 ;; esac; [ "$V" -ge 80 ] 2>/dev/null && [ "$V" -le 120 ] 2>/dev/null || return 1 ;;
