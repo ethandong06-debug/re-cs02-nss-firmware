@@ -43,6 +43,22 @@ case "$CMD" in
 		KEY="${2:-}"; VAL="${3:-}"
 		[ -z "$KEY" ] && { echo '{"ok":false,"msg":"缺少配置项"}'; exit 1; }
 		case "$KEY" in
+			enabled|night|clock|medal|up|down)
+				case "$VAL" in 0|1) ;; *) echo '{"ok":false,"msg":"开关值只能为 0 或 1"}'; exit 1 ;; esac
+				;;
+			light_level|night_level)
+				case "$VAL" in ''|*[!0-9]*) echo '{"ok":false,"msg":"亮度必须为 0-7"}'; exit 1 ;; esac
+				[ "$VAL" -le 7 ] 2>/dev/null || { echo '{"ok":false,"msg":"亮度必须为 0-7"}'; exit 1; }
+				;;
+			night_start|night_end)
+				case "$VAL" in [0-9][0-9]:[0-9][0-9]) ;; *) echo '{"ok":false,"msg":"时间格式应为 HH:MM"}'; exit 1 ;; esac
+				H=${VAL%:*}; M=${VAL#*:}
+				[ "$H" -le 23 ] 2>/dev/null && [ "$M" -le 59 ] 2>/dev/null || { echo '{"ok":false,"msg":"时间必须在 00:00-23:59"}'; exit 1; }
+				;;
+			profile) case "$VAL" in single|multi) ;; *) echo '{"ok":false,"msg":"显示模式仅支持 single 或 multi"}'; exit 1 ;; esac ;;
+			*) echo '{"ok":false,"msg":"未知配置项"}'; exit 1 ;;
+		esac
+		case "$KEY" in
 			enabled) uci -q set "athena_led.general.enabled=$VAL" ;;
 			light_level) uci -q set "athena_led.general.light_level=$VAL" ;;
 			night) uci -q set "athena_led.general.night_light_enable=$VAL" ;;
