@@ -14,6 +14,15 @@
 RULE_FILE=/etc/nftables.d/10-athena-parent.nft
 RULE_DIR=/etc/nftables.d
 
+valid_mac() {
+	local m
+	m=$(printf '%s' "$1" | tr 'A-F' 'a-f')
+	case "$m" in
+		[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]) return 0 ;;
+	esac
+	return 1
+}
+
 # 生成 nftables 规则文件（由所有规则重建，保证与 uci 一致）
 gen_rules() {
 	mkdir -p "$RULE_DIR"
@@ -107,6 +116,7 @@ case "$1" in
 			echo '{"ok":false,"msg":"set <mac> <days_csv> <start> <end>"}'
 			exit 1
 		fi
+		valid_mac "$2" || { echo '{"ok":false,"msg":"MAC 地址格式错误"}'; exit 1; }
 		MAC=$(echo "$2" | tr 'A-F' 'a-f')
 		DAYS=$3
 		START=$4
@@ -119,6 +129,7 @@ case "$1" in
 		esac
 
 		# 星期校验
+		case "$DAYS" in '''|,*|*,|*,,*) echo '{"ok":false,"msg":"至少选择一个有效星期"}'; exit 1 ;; esac
 		for d in $(echo "$DAYS" | tr ',' ' '); do
 			case "$d" in
 				0|1|2|3|4|5|6) ;;
@@ -149,6 +160,7 @@ case "$1" in
 			echo '{"ok":false,"msg":"clear <mac>"}'
 			exit 1
 		fi
+		valid_mac "$2" || { echo '{"ok":false,"msg":"MAC 地址格式错误"}'; exit 1; }
 		MAC=$(echo "$2" | tr 'A-F' 'a-f')
 		uci -q delete "athena.parent.$MAC"
 		uci commit athena
