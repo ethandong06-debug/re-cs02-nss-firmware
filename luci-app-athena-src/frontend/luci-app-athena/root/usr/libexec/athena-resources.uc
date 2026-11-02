@@ -288,7 +288,7 @@ function dsc(n) {
 }
 
 function prot(n) {
-	return match(n, /^(wpad|hostapd|hostapd_cli|netifd|dnsmasq|odhcpd|odhcp6c|ubusd|rpcd|uhttpd|lighttpd|dropbear|logd|syslogd|pppd|pppoe.*)$/) != null;
+	return match(n, /^(wpad|hostapd|hostapd_cli|netifd|dnsmasq|odhcpd|odhcp6c|ubusd|rpcd|uhttpd|lighttpd|dropbear|logd|syslogd|pppd|pppoe.*|openclash|clash.*|mihomo.*|ecm.*|qca-nss.*|nss.*)$/) != null;
 }
 
 /* ---------- 8. 排序（按内存占比降序，与 shell 版 sort -k4 -rn 一致） + 组装 ---------- */
