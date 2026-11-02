@@ -575,3 +575,13 @@
 - 最新 Actions 仍为 Run #188（ID `41436896339`，success）；Run #188 之后只有文档提交，没有新的 APK 构建运行。
 - 本轮所有 GitHub 写入仅新增/更新 Markdown 审计文档；没有修改构建工作流、前端、后端或路由器配置。
 - 下一步继续：逐个核对 24 个后端入口的参数校验、命令执行边界、UCI/文件/服务副作用和保护名单；随后完成 ACL 最小权限建议与最终功能去留表。用户确认前不做代码删改。
+
+
+### 阶段 A 补充：高风险后端入口新增 P0 候选（2026-11-02）
+
+- 服务动态 init.d 管理分支将用户传入的 service id 直接拼入 `/etc/init.d/$id` 并执行，未先拒绝路径分隔符/目录穿越，也未对 realpath 做目录边界确认；核心服务保护只按完整名称比较。需优先加入严格服务名白名单与 realpath 限制。
+- `athena-upgrade.sh flash` 后端只依赖 `sysupgrade -T`，而脚本注释明确当前平台该命令对任意数据可能返回成功；完整 tar 结构/机型检查只在独立的 `verify` 分支，flash 未重复检查。直接 RPC 可绕过前端 verify。需将完整兼容性验证放进 flash 后端，并限制固件路径。
+- `athena-reset.sh --confirm` 使用固定确认字符串；`athena-mode.sh` 模式入口和 `athena-backup.sh restore-upload` 也没有与操作/参数绑定的一次性后端确认票据。前端弹窗不能作为安全边界。
+- 已复核服务核心名单包含 OpenClash 与 NSS/ECM 相关服务；软件包后端 remove/upgrade 保护、备份路径 realpath 检查、USB 分区限制均已在当前源码中找到对应实现。
+- 上述均为静态代码判断，未调用危险入口；详情见审计文档第 11 节。
+- 本轮新增发现文档提交：`d97a9bcb3ed65cd89cb14a9fb3394d14f0ef479c`。
