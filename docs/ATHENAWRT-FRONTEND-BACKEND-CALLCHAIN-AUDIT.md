@@ -380,3 +380,52 @@ SPA 顶部提供 8 个主页面：
 - 配置备份恢复限制文件名并 realpath 校验备份目录，检查 tar.gz 可读；但 `restore-upload` 走固定 `/tmp/athena-restore.b64` 与 `/tmp/athena-restore.tar.gz`，缺少并发锁/上传者绑定，多个会话可能互相覆盖文件。恢复前 tar 列表检查仅验证归档可读，没有显式限制归档成员只能属于受允许的配置路径；需核对 sysupgrade -r 的过滤策略。
 - 固件 verify 有结构与机型检查，但检查只在 verify 分支；flash 分支只调用当前平台已知不可靠的 `sysupgrade -T`。这是 P0：完整校验必须在 flash 内重新执行，并锁定文件路径/哈希。
 - 自动备份 cron 与手动配置备份都属于设备持久化配置操作；应核对计划设置参数边界、并发写和失败清理。
+
+
+## 13. rpcd ACL 最小权限映射（静态差异）
+
+### 13.1 当前 SPA 实际 RPC 面
+
+完整 SPA 适配层只直接使用以下 ubus 对象/方法：
+
+| ubus 对象 | 方法 | 用途 |
+|---|---|---|
+| `session` | `login` | 管理员登录，返回 rpc session |
+| `system` | `info` | 登录后会话有效性检查与心跳 |
+| `file` | `exec` | 执行 ACL 明确列出的 `/usr/libexec/athena-*.sh` |
+| `file` | `write` | 分块上传配置备份到 `/tmp/athena-restore.b64` |
+
+SPA 没有调用 ubus `uci` 对象，也没有调用 `athena.status`、`network.device.status`、`network.wireless.status`。配置读取/写入主要由 root 权限的专用 shell/ucode 脚本在后端完成。
+
+### 13.2 当前 ACL 中的冗余授权候选
+
+| 当前 ACL 授权 | SPA 当前是否使用 | 建议 |
+|---|---|---|
+| UCI read: athena/network/wireless/dhcp/system/ddns/ttyd | 未发现 SPA 直接调用 ubus UCI | 核实其他调用者后移除 Athena ACL 的 UCI read |
+| UCI write: 同上七份配置 | 未发现 SPA 直接调用 ubus UCI | P0 收敛候选；专用后端脚本直接操作 UCI，不需要给浏览器额外 UCI 写权限 |
+| ubus athena.status read | 未发现 SPA 直接调用 | 核实其他调用者后移除 |
+| ubus network.device status read | 未发现 SPA 直接调用 | 核实其他调用者后移除 |
+| ubus network.wireless status read | 未发现 SPA 直接调用 | 核实其他调用者后移除 |
+| file.exec `/etc/init.d/network` | 未发现 SPA 直接调用 | 移除；网络操作走专用 `athena-mode.sh`，但需先确认其他调用者 |
+| file.exec `/bin/ping` | 未发现 SPA 直接调用 | 移除；诊断走 `athena-diag.sh` |
+| file.exec `/usr/bin/nslookup` | 未发现 SPA 直接调用 | 移除；诊断走专用脚本 |
+| file.exec `/usr/bin/ubus`、`/bin/ubus` | 未发现 SPA 直接调用 | P0 候选，移除，避免在 UI 脚本白名单外再次开放 ubus 命令执行 |
+| file.write `/tmp/athena-restore.b64` | 使用 | 保留；这是配置恢复上传的实际路径 |
+| file.write `/tmp/athena-fw.b64` | 当前 SPA 未使用 | 移除候选；只在旧备份页面找到历史引用 |
+| file.write/read `/tmp/athena-fw-upload.bin` | 上传由 `/cgi-bin/cgi-upload` multipart 通道完成；SPA 没有 ubus file.read/write 此路径 | 移除候选，仍需核对 cgi-io 上传目标与 ACL 版本 |
+| file.exec 24 个 Athena 专用入口 | 使用 | 按实际调用保留；逐个检查危险入口的后端参数和确认票据 |
+
+### 13.3 最小化 ACL 的目标形态（建议，不是已实施改动）
+
+- 仅保留 SPA 所需的 `file.exec` 专用脚本路径，以及 `file.write` 对 `/tmp/athena-restore.b64` 的写权限。
+- 若 rpcd ACL schema 要求 ubus method 级授权与 path 级授权同时存在，则只保留 `file.exec`、`file.write` 两个方法；不扩大到任意命令。
+- `system.info` 由系统默认 ACL/认证策略提供，不应为了 Athena 另行授予额外系统配置写权限。
+- 不允许对 `file.exec` 使用通配符，也不允许用 `/bin/sh`、`ubus`、`uci` 等通用解释器/命令作为白名单入口。
+- 删除前必须核对设备实际安装的 ACL 文件、rpcd ACL 解析语义、LuCI 登录桥接会话及其他菜单/插件调用者；当前静态结果不足以直接删权限。
+- 此处是最小权限建议，不是当前 ACL 修改；没有改 ACL、没有重载 rpcd、没有测试登录或执行脚本。
+
+### 13.4 文件上传通道澄清
+
+- 配置备份恢复：SPA 使用 rpcd `file.write` 分块写 `/tmp/athena-restore.b64`，再执行 `athena-backup.sh restore-upload`。
+- 固件上传：SPA 使用原生 `/cgi-bin/cgi-upload` multipart 上传到 `/tmp/athena-fw-upload.bin`，随后调用 `athena-upgrade.sh verify/flash`。
+- 两者不可混为一条上传链。历史 `index_v1.2.22_backup.html` 曾用 `/tmp/athena-fw.b64`，但它不是当前主 SPA；ACL 不能因历史备份文件引用而默认保留旧授权。
