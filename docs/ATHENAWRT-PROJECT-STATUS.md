@@ -542,3 +542,15 @@
 - ACL 仍为上述未在 SPA 使用的 UCI 配置开放读写，并授权额外 `file.exec` 路径。由于浏览器可以绕过前端封装直接构造 ubus 请求，这些权限本身构成可调用面。
 - 这项发现已写入调用链审计文档，属于 P0 权限收敛候选；暂不修改 ACL，先核对是否存在其他合法调用者及原生 LuCI 会话关联。
 - 补充提交：`1d5defc097d19075ec21fb84c4b724405f55ec73`。
+
+
+### 阶段 A 补充：网络模式与启动回退链（2026-11-02）
+
+- 已静态读取 `athena-mode.sh`、`athena-netcheck`、`athena-vlan-pre`、`athena-boot`。
+- 启动顺序：`athena-vlan-pre` START=40（network START=50 前预创建单臂 `wan.X` VLAN 子接口）；`athena-netcheck` START=98（单臂启动后延迟 45 秒检查）；`athena-boot` START=99（恢复 LED 呼吸灯和设备拉黑规则）。
+- 当前存在三条不同回退路径：前端 `single-bg` 对 network/wireless/dhcp/firewall/athena 五份配置备份并做 15 秒 VLAN/管理地址检查；直接 `single` 路径另有 8 秒检查但失败时只恢复 network；开机 `athena-netcheck` 仅以 br-lan 管理 IP 判断健康，失败时调用主路由模式回退。
+- `config_single/router` 调用 `nss_on`；`config_ap/bypass` 调用 `nss_off` 并停止 qca-nss-ecm。模式脚本会改写网络、桥、VLAN、DHCP、部分 firewall zone 与 wan6 设备承载关系。
+- 关键设计限制：Athena 当前模式脚本通过 CLI `uci set/delete` 后直接 `uci commit`，并后台重启 network；并未将变更放入 LuCI 登录会话的 UCI pending changes。因此不能简单在外围加 `apply(true)` 就认为原生 LuCI 回滚覆盖现有脚本。若要真正复用原生回滚，需要重构为同一 rpcd UCI session staged changes，并验证所有相关配置及硬件专属步骤的覆盖范围。
+- 不得在当前设备执行模式切换或回滚测试；现有手工备份/回退逻辑在原生回滚接管前不得移除。
+- 详情已补入审计文档；本次只读源码，没有执行任何网络操作。
+- 补充提交：`8ca5c6a7a3addafc5dfe09340cf78549d2315351`。
