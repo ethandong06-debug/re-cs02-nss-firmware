@@ -736,5 +736,5 @@
 - 首页拓扑卡移除后，快捷操作卡改为横跨原双列网格，避免桌面宽屏下只占左侧 3/5 宽度；仅调整 DOM 布局，不改变快捷操作回调。
 - 前端语法检查：从最新分支文件提取 3 个 inline script block，并按 workflow 的拼接方式合并；在隔离 V8 解析器中编译通过，零语法错误。该检查不等同于 GitHub Actions 中 Node 22 的正式 `node --check`。
 - GitHub Actions：当前 workflow 的 push 分支和 paths 规则覆盖本次前端文件；但当前可用 GitHub 接口未返回该 push 的 workflow run，提交 combined status 也为空，因此**构建结果尚未确认**，不得宣称 APK 构建成功。
-- 没有安装新 APK，也没有操作路由器；PPPoe/VLAN 2044/IPv6/防火墙/NAT/OpenClash/NSS/ECM 均未触碰。
+- 没有安装新 APK，也没有操作路由器；PPPoE/VLAN 2044/IPv6/防火墙/NAT/OpenClash/NSS/ECM 均未触碰。
 - 下一步：核对该提交对应的 Actions 构建结果；通过后再做页面级复核和 C3-A 下一小批。若构建失败，先修复构建，不继续叠加页面改动。
