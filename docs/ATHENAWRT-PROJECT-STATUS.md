@@ -522,3 +522,14 @@
 - SPA 中仍有历史预览/模拟 UI 代码与真实 RPC 实现并存；不得仅凭重复函数名直接删除，下一轮要继续核对作用域、执行顺序和控件真实调用关系。
 - 本次仅新增审计文档，没有修改任何前端/后端源码，没有运行构建，没有连接或操作 Athena 真机；未触及 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash、NSS/ECM。
 - 下一步：完成 ACL 额外权限逐项追踪，并继续建立“控件 → JS → RPC 参数 → 后端分支 → 系统副作用”的逐项清单；之后再对照原生 LuCI 做替代性判断。仍不做 CSS/SPA 重写或功能删改。
+
+
+### 阶段 A 补充：ACL 与 RPC 封装核对（2026-11-02）
+
+- 已读取 SPA 的 `athenaRPC` 适配层：`exec(file,args)` 将命令固定拼为 `/usr/libexec/` + `file`，再调用 ubus `file.exec`；`_writeChunked` 仅用于配置备份上传到 `/tmp/athena-restore.b64`。
+- 固件上传走 `/cgi-bin/cgi-upload` multipart 通道，目标为 `/tmp/athena-fw-upload.bin`，不经过 ubus file.write。
+- 当前 SPA 没有直接调用 `/etc/init.d/network`、`ping`、`nslookup` 或 `ubus` 可执行文件；ACL 却额外授权这些 `file.exec` 路径，并给多个 UCI 配置开放写权限。
+- 重要安全判断：虽然当前 SPA 封装不调用这些额外路径，但浏览器可直接构造 ubus 请求；ACL 授权本身就是可用权限面，不能以 UI 没有按钮作为保护。下一步应追查是否存在其他合法调用者，并评估移除多余路径/缩小 UCI 写权限。
+- ACL 还包含 `/tmp/athena-fw.b64` 写权限，本次完整 SPA 未发现该路径引用，暂列为待确认的陈旧授权候选；不能在未核对其他包/上传处理链前直接删除。
+- 本次发现已补入审计文档，尚未修改 ACL 或源码。
+- 补充文档提交：`978b76d6b3aba5d56a479249307438d5b11febac`。
