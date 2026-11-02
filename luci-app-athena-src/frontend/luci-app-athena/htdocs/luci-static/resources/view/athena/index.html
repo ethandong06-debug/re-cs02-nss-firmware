@@ -770,38 +770,20 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <span class="chip"><span class="k">固件</span><b id="netFw">v1.2.39</b></span>
     </div>
 
-    <!-- 活跃应用（OAF 分类 + DNS 指纹识别） -->
+    <!-- 活跃应用识别线索（DNS/OAF 映射推测，非 DPI） -->
     <div class="card" id="appCard" style="display:none">
       <div class="app-head">
         <div class="ttl">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
-          当前活跃应用 <span style="font-weight:400;color:var(--text3)">· 最近 15 分钟</span>
+          活跃应用线索 <span style="font-weight:400;color:var(--text3)">· 最近 15 分钟</span>
         </div>
-        <span class="sub" id="appSub">基于应用过滤分类识别</span>
+        <span class="sub" id="appSub">DNS/OAF 域名线索推测 · 非 DPI 识别</span>
       </div>
       <div class="apps" id="appBox"><div class="apps-empty" style="padding:14px 0;color:var(--text3);font-size:12px">正在识别活跃应用…</div></div>
     </div>
 
-    <!-- 拓扑 + 快捷 -->
+    <!-- 快捷操作 -->
     <div class="row2">
-      <div class="card">
-        <h3>家庭网络拓扑 <span class="sub">示意</span></h3>
-        <div class="topo" id="topoBox">
-          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">已连接</span></div>
-          <div class="topo-line">光猫 · 桥接模式</div>
-          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">pppoe-wan · VLAN 2044</span></div>
-          <div class="topo-line">内网 br-lan · 192.168.10.0/24</div>
-          <div class="topo-branch">
-            <div class="leaf"><b>LAN1–LAN3</b>有线设备 4 台</div>
-            <div class="leaf"><b>WiFi</b>2.4G / 5.2G / 5.8G · 5 台</div>
-          </div>
-          <div class="topo-line">IPTV br-iptv · VLAN 3066</div>
-          <div class="topo-branch">
-            <div class="leaf"><b>LAN4</b>IPTV 机顶盒</div>
-            <div class="leaf" style="opacity:.45"><b>—</b>未接入</div>
-          </div>
-        </div>
-      </div>
       <div class="card">
         <h3>快捷操作</h3>
         <div class="quick">
@@ -1026,7 +1008,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch on" data-k="matrix" onclick="toggleMatrix()"></div></div>
         <div class="check-row"><span>亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="matrixLight" min="0" max="7" value="5" onchange="setMatrixLight(this.value)"></div>
         <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option value="multi">多频道轮播</option><option value="single">单频道轮播</option></select></div>
-        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openMatrixFull()">打开完整管理</button><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
+        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
       </div>
       <div class="card">
         <h3>显示内容区域</h3>
@@ -1081,9 +1063,14 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="info-row"><span>CPU 温度</span><span style="font-weight:600" id="fwTemp">42°C <span style="font-size:11px;color:var(--text3)">被动散热 · 正常</span></span></div>
       </div>
       <div class="card">
-        <h3>重启与升级</h3>
+        <h3>计划维护</h3>
         <div class="info-row"><span>重启路由器</span><button class="btn sm" onclick="openRebootConfirm()">立即重启</button></div>
         <div class="info-row"><span>定时重启</span><button class="btn sm" data-rebootSched onclick="openRebootSched()">已设置 04:00（每周日）</button></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:8px">定时重启按已保存的计划执行；立即重启会短暂中断网络连接。</div>
+      </div>
+      <div class="card">
+        <h3>危险操作 <span class="sub">高风险</span></h3>
+        <div style="font-size:12px;color:var(--warn);margin-bottom:10px">固件升级或恢复出厂可能中断网络或清除配置。后端安全整改和专项验收完成前，请勿执行。</div>
         <div class="info-row"><span>升级固件</span><button class="btn sm primary" onclick="openUpgradeConfirm()">升级</button></div>
         <div class="info-row"><span>恢复出厂设置</span><button class="btn sm danger" onclick="openResetConfirm()">恢复出厂</button></div>
       </div>
@@ -1138,7 +1125,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <div class="info-row"><span>已安装</span><span style="font-weight:600" id="pkgCount">—</span></div>
           <div class="info-row"><span>可用更新</span><span style="font-weight:600;color:var(--ok)" id="pkgUpd">—</span></div>
           <div class="info-row"><span>总存储</span><span style="font-weight:600" id="pkgStore">—</span></div>
-          <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openPkgManager()">管理软件包</button><button class="btn sm" onclick="checkUpdate()">检查更新</button></div>
+          <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openPkgManager()">管理软件包</button><button class="btn sm" onclick="refreshPackageList()">刷新软件列表</button></div>
         </div>
         <div class="card">
           <h3>系统日志</h3>
@@ -1151,7 +1138,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>账号与全局设置</h3>
         <div class="info-row"><span>登录用户</span><span style="font-weight:600">root</span></div>
         <div class="info-row"><span>管理密码</span><button class="btn sm" onclick="openPwdModal()">修改密码</button></div>
-        <div class="info-row"><span>SSH 访问</span><span class="tag green">已启用 · 由系统服务管理</span></div>
+        <div class="info-row"><span>SSH 访问</span><span style="font-size:12px;color:var(--text3)">由系统服务统一管理，此处不提供开关</span></div>
         <div class="info-row"><span>网速显示单位</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-unit="Mbps" onclick="setUnit('Mbps')">Mbps</button><button class="btn sm" data-unit="MB/s" onclick="setUnit('MB/s')">MB/s</button></span></div>
         <div class="info-row"><span>界面主题</span><button class="btn sm" onclick="openThemeModal()">主题设置（深浅 / 液态玻璃）</button></div>
         <div class="info-row"><span>默认界面</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-defaultui="athena" onclick="setDefaultUi('athena')">管理台</button><button class="btn sm" data-defaultui="native" onclick="setDefaultUi('native')">原生界面</button><button class="btn sm" data-defaultui="last" onclick="setDefaultUi('last')">跟随上次</button></span></div>
@@ -1412,13 +1399,6 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       +'<div class="info-row"><span>访问内网</span><span><span class="tag gray">已隔离</span></span></div>'
       +'<div class="info-row"><span>速率限制</span><span style="display:flex;gap:6px"><button class="btn sm primary" onclick="done(\'不限速\')">不限速</button><button class="btn sm" onclick="done(\'限速 10Mbps\')">限速 10Mbps</button></span></div>'
       +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="done(\'访客网络设置已保存\');closeModal()">保存</button></div>');
-  };
-  window.toggleSsh=function(){
-    S.ssh=!S.ssh;
-    var el=document.querySelector('[data-k="ssh"]'); if(el) el.classList.toggle("on",S.ssh);
-    var tag=document.querySelector('[data-k="ssh"]').parentNode.querySelector(".tag");
-    if(tag){ tag.textContent=S.ssh?"已启用":"已关闭"; tag.className="tag "+(S.ssh?"green":"gray"); }
-    showToast(S.ssh?"SSH 已启用（端口 22）":"SSH 已关闭");
   };
   
   /* v1.2.54：SVC_DETAIL 假表已删除（pid 3108 / 内存 18 MB / 版本 v2.31.0 全部是写死的）；
@@ -1926,10 +1906,6 @@ var KPI_ITEMS=[
       +'<div class="svc-row"><div class="svc-info"><div class="svc-name">luci-app-ddns</div><div class="svc-desc">已安装 · 2.8.7</div></div><button class="btn sm danger" onclick="done(\'luci-app-ddns 已卸载\')">卸载</button></div>'
       +'<div class="svc-row"><div class="svc-info"><div class="svc-name">luci-app-argon-config</div><div class="svc-desc">未安装 · 可用</div></div><button class="btn sm primary" onclick="done(\'argon-config 已安装\')">安装</button></div>'
       +'<div class="m-foot"><button class="btn sm" onclick="closeModal()">关闭</button></div>');
-  };
-  window.checkUpdate=function(){
-    showToast("正在检查更新…");
-    setTimeout(function(){ done("软件包已是最新版本"); },1200);
   };
   window.openSyslog=function(){
     openModal("系统日志","内核与系统服务实时日志",
@@ -2443,47 +2419,6 @@ var DEV_ICONS={
   other:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>'
 };
 function devIconBox(type,on){ return '<div class="dev-ic"'+(on?'':' style="opacity:.55"')+'>'+(DEV_ICONS[type]||DEV_ICONS.other)+'</div>'; }
-function _bandGrp(b){
-  b=b||'有线';
-  if(b==='有线') return 'lan';
-  if(b.indexOf('2.4')>=0) return 'g24';
-  if(b.indexOf('5')>=0) return 'g5';
-  return 'lan';
-}
-function topologyHTML(){
-  var on=DEVS.filter(function(d){return d.online;}).length;
-  var modeName={router:'主路由',ap:'AP 桥接',bypass:'旁路由'}[curMode]||curMode;
-  var wanLabel=(WAN_PROTO==='pppoe'?'pppoe-wan':WAN_PROTO)+(WAN_VLAN?' · VLAN '+esc(WAN_VLAN):'');
-  var wanOk=!!WAN_IP;
-  var grp={lan:{list:[]},g24:{list:[]},g5:{list:[]}};
-  DEVS.forEach(function(d){ grp[_bandGrp(d.band)].list.push(d); });
-  function chips(list){
-    if(!list.length) return '<div class="topo-empty">暂无设备</div>';
-    list=list.slice().sort(function(a,b){ return (b.online?1:0)-(a.online?1:0); });
-    var MAX=10, more=list.length>MAX, vis=list.slice(0,MAX);
-    var s=vis.map(function(d){
-      return '<div class="topo-dev'+(d.online?'':' off')+'" onclick="devDetail('+d.id+')">'
-        +'<span class="st '+(d.online?'st-on':'st-off')+'"></span>'
-        +'<span class="tdev-ic">'+(DEV_ICONS[d.type]||DEV_ICONS.other)+'</span>'
-        +'<b>'+esc(d.name)+'</b>'
-        +'<i>'+esc(d.online?(d.ip||'在线'):'离线')+'</i>'
-        +'</div>';
-    }).join('');
-    return s+(more?'<div class="topo-more">+'+(list.length-MAX)+' 台</div>':'');
-  }
-  function branch(lineTxt,list){
-    return '<div class="topo-line">'+lineTxt+'</div><div class="topo-dev-grid">'+chips(list)+'</div>';
-  }
-  var iptvLeaf=IPTV_VLAN?'<div class="leaf"><b>LAN4</b>IPTV 机顶盒 · VLAN '+esc(IPTV_VLAN)+'</div>':'<div class="leaf" style="opacity:.45"><b>—</b>未接入</div>';
-  return '<div class="topo-node"><span class="st '+(wanOk?'st-on':'st-off')+'" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">'+(wanOk?'已连接':'未连接')+'</span></div>'
-    +'<div class="topo-line">光猫 · 桥接模式</div>'
-    +'<div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">'+esc(wanLabel)+' · '+modeName+'</span></div>'
-    +branch('LAN · 有线 '+grp.lan.list.filter(function(d){return d.online;}).length+' 台在线', grp.lan.list)
-    +branch('2.4G WiFi · '+grp.g24.list.filter(function(d){return d.online;}).length+' 台在线', grp.g24.list)
-    +branch('5G WiFi · '+grp.g5.list.filter(function(d){return d.online;}).length+' 台在线', grp.g5.list)
-    +'<div class="topo-line">IPTV br-iptv'+(IPTV_VLAN?' · VLAN '+esc(IPTV_VLAN):'')+'</div>'
-    +'<div class="topo-branch">'+iptvLeaf+'</div>';
-}
 function updateNumbers(){
   var f1=fmtSpeed(down), f2=fmtSpeed(up);
   var dnV=document.getElementById('dnV'), upV=document.getElementById('upV');
@@ -2527,7 +2462,6 @@ function updateNumbers(){
       if(st) st.className='st '+(on?'st-on':'st-off');
       if(bEl) bEl.textContent=on?'在线':'关闭'; }
   });
-  var tb=document.getElementById('topoBox'); if(tb) tb.innerHTML=topologyHTML();
 }
 function renderOverview(){
   updateNumbers();
@@ -2861,7 +2795,6 @@ function renderAdvAccount(){
   var st=SPD_UNIT||sGet('athena_speed_unit')||'Mbps';
   document.querySelectorAll('[data-unit]').forEach(function(b){ b.classList.toggle('primary',b.dataset.unit===st); });
   document.querySelectorAll('[data-defaultui]').forEach(function(b){ b.classList.toggle('primary',b.dataset.defaultui===(UI_MODE.mode==='last'?UI_MODE.last:UI_MODE.mode)); });
-  var ssh=document.querySelector('[data-k="ssh"]'); if(ssh) ssh.classList.toggle('on',true);
 }
 function renderAll(){
   renderOverview(); renderWifiCards(); renderDevTable(); renderNetPage();
@@ -2948,7 +2881,7 @@ function renderActiveApps(){
   }
   card.style.display='';
   var sub=document.getElementById('appSub');
-  if(sub) sub.textContent=(ACTIVE_APPS.source==='dns'?'基于 DNS 指纹识别（应用过滤未启用）':'基于应用过滤分类识别');
+  if(sub) sub.textContent='DNS/OAF 域名线索推测 · 非 DPI 识别';
   var show=apps.slice(0,10);
   var more=apps.length-show.length;
   box.innerHTML=show.map(function(a){
@@ -3526,9 +3459,6 @@ function setMatrix(key,val){
     renderMatrixPanel(); toast('点阵屏设置已保存');
   }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 }
-window.openMatrixFull=function(){
-  toast('独立的点阵屏完整管理页面尚未集成；当前页面已提供点阵屏与灯效设置');
-};
 function openSvcFrame(name,path){
   var src='/cgi-bin/luci'+(path.indexOf('/cgi-bin/luci')===0?path.slice(11):path);
   openBkModal('<h3>'+esc(name)+'</h3><div class="m-sub" style="padding-bottom:10px">原生 LuCI 页面 · 无需重新登录</div>'
@@ -3959,7 +3889,7 @@ window.removePkg=function(n){
   openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
 };
 window.doRemovePkg=function(n){ if(pkgIsProtected(n)){ toast('该软件包属于关键系统组件，禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
-window.checkUpdate=function(){ toast('检查软件源更新中（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源已更新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
+window.refreshPackageList=function(){ toast('正在刷新软件列表（仅更新软件源索引，不升级已安装软件）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件列表已刷新'); loadPkgSummary(); }).catch(function(e){ toast('刷新失败：'+(e.message||'')); }); };
 window.openSyslog=function(){
   openBkModal('<h3>系统日志</h3><div class="m-sub">内核与系统服务实时日志</div><div class="log-toolbar"><input class="log-search" id="logSearch" placeholder="搜索日志…" oninput="logRender()"><div class="log-chips"><button class="log-chip on" data-lv="" onclick="logLv(\'\')">全部</button><button class="log-chip" data-lv="err" onclick="logLv(\'err\')">错误</button><button class="log-chip" data-lv="warn" onclick="logLv(\'warn\')">警告</button></div></div><div id="logList" class="log-list"><div class="log-empty">加载中…</div></div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn" onclick="exportLog()">导出日志</button><button class="btn danger" onclick="clearLog()">清空日志</button></div>');
   loadLog();
@@ -4019,7 +3949,6 @@ window.setUnit=function(u){
 window.setDefaultUi=function(m){
   athenaRPC.exec('athena-ui.sh',['set',m]).then(function(){ UI_MODE.mode=m; toast('默认界面已设为：'+({athena:'管理台',native:'原生界面',last:'跟随上次'}[m])); renderAdvAccount(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
-window.toggleSsh=function(){ toast('SSH 服务由系统安全策略管理，始终启用'); };
 /* v1.2.54：此处原有的 openSortModal 覆盖定义已删除——
    它把上面真正的排序弹窗顶掉成"固定顺序、保留入口"的说明框，导致「自定义排序」是假的。 */
 
