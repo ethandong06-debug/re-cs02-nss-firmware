@@ -1408,7 +1408,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
   window.openGuestModal=function(){
     openModal("访客网络设置","访客网络与内网完全隔离，仅可上网",
       '<div class="field"><label>访客 WiFi 名称</label><input type="text" value="Athena-Guest"></div>'
-      +'<div class="field"><label>密码（8-63 位）</label><input type="text" value="guest12345"></div>'
+      +'<div class="field"><label>密码（8-63 位）</label><input type="password" value="" placeholder="请输入 8-63 位访客密码"></div>'
       +'<div class="info-row"><span>访问内网</span><span><span class="tag gray">已隔离</span></span></div>'
       +'<div class="info-row"><span>速率限制</span><span style="display:flex;gap:6px"><button class="btn sm primary" onclick="done(\'不限速\')">不限速</button><button class="btn sm" onclick="done(\'限速 10Mbps\')">限速 10Mbps</button></span></div>'
       +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="done(\'访客网络设置已保存\');closeModal()">保存</button></div>');
@@ -3181,7 +3181,7 @@ window.saveBand=function(id){
 window.openGuestModal=function(){
   openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，访客仅可上网</div>'
     +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" maxlength="32" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="" placeholder="留空表示保持当前密码"></div></div>'
+    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="" placeholder="请输入 8-63 位访客密码"></div></div>'
     +'<div style="font-size:12px;color:var(--text3)">请输入独立的访客 WiFi 密码；不会使用固定默认密码。开启后访客无法访问内网设备。</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
   try{ enhancePwds(document.querySelector('.mask.show')); }catch(e){}
