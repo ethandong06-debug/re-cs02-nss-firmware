@@ -16,12 +16,33 @@ P=/etc/athena-prefs.conf
 K="${2:-}"
 V="${3:-}"
 
+umask 077
+valid_key() {
+	case "$1" in kpi_order|res_kth|ui_zoom|speed_unit) return 0 ;; esac
+	return 1
+}
+valid_value() {
+	case "$K" in
+		kpi_order)
+			printf '%s\n' "$V" | awk -F, 'NF != 4 { exit 1 } { for (i=1; i<=NF; i++) if ($i !~ /^(cpu|mem|up|dev)$/ || seen[$i]++) exit 1 }' || return 1
+			;;
+		res_kth) case "$V" in 0|1) ;; *) return 1 ;; esac ;;
+		ui_zoom) case "$V" in ''|*[!0-9]*) return 1 ;; esac; [ "$V" -ge 80 ] 2>/dev/null && [ "$V" -le 120 ] 2>/dev/null || return 1 ;;
+		speed_unit) case "$V" in Mbps|MB/s|KB/s) ;; *) return 1 ;; esac ;;
+		*) return 1 ;;
+	esac
+	return 0
+}
+
 case "$1" in
 	get)
+		valid_key "$K" || { echo '{"ok":false,"msg":"不允许的偏好键"}'; exit 1; }
 		[ -n "$K" ] || { echo '{"ok":false,"msg":"缺 key"}'; exit 1; }
 		[ -f "$P" ] && grep -m1 "^$K=" "$P" 2>/dev/null | cut -d= -f2-
 		;;
 	set)
+		valid_key "$K" || { echo '{"ok":false,"msg":"不允许的偏好键"}'; exit 1; }
+		valid_value || { echo '{"ok":false,"msg":"偏好值不合法"}'; exit 1; }
 		[ -n "$K" ] || { echo '{"ok":false,"msg":"缺 key"}'; exit 1; }
 		[ -f "$P" ] || : > "$P" 2>/dev/null
 		if grep -q "^$K=" "$P" 2>/dev/null; then
@@ -33,6 +54,7 @@ case "$1" in
 		echo '{"ok":true}'
 		;;
 	del)
+		valid_key "$K" || { echo '{"ok":false,"msg":"不允许的偏好键"}'; exit 1; }
 		[ -n "$K" ] || { echo '{"ok":false,"msg":"缺 key"}'; exit 1; }
 		if [ -f "$P" ]; then
 			tmp="$P.tmp.$$"
