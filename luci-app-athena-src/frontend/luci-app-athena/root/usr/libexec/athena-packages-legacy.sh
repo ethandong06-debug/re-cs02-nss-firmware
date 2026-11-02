@@ -159,6 +159,11 @@ case "$CMD" in
 		;;
 	install)
 		PKG="${2:-}"; valid_pkg_name "$PKG" || { echo '{"ok":false,"msg":"软件包名称无效"}'; exit 1; }
+		if protected_pkg "$PKG"; then
+			if installed_pkgs | awk -F'|' -v p="$PKG" '$1 == p { found=1 } END { exit !found }'; then
+				echo '{"ok":false,"msg":"该关键软件包已安装，禁止通过安装入口变相升级"}'; exit 1
+			fi
+		fi
 		apk add "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 安装成功\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 安装失败\"}"
 		;;
 	remove)
