@@ -218,6 +218,28 @@ jobs:
           test -s immortalwrt/public-key.pem
           cp immortalwrt/public-key.pem output/athenawrt-build-signing.pub
           openssl pkey -pubin -in output/athenawrt-build-signing.pub -noout
+
+          # Verify package signatures with the exact public key from this build.
+          # The temporary key directory is isolated from any host/system trust store.
+          keys_dir="$(mktemp -d)"
+          trap 'rm -rf "$keys_dir"' EXIT
+          install -m 0644 output/athenawrt-build-signing.pub "$keys_dir/athenawrt-build-signing.pub"
+          apk_bin="$PWD/immortalwrt/staging_dir/host/bin/apk"
+          "$apk_bin" --keys-dir "$keys_dir" verify output/*.apk
+
+          # Resolve the package's declared runtime dependency chain in a clean,
+          # disposable target root. This is a simulation only: no scripts run,
+          # no host files are changed, and no router is contacted.
+          root="$(mktemp -d)"
+          trap 'rm -rf "$keys_dir" "$root"' EXIT
+          mapfile -t runtime_libs < <(find immortalwrt/bin/targets/qualcommax/ipq60xx/packages -maxdepth 1 -type f \( -name 'libgcc1-*.apk' -o -name 'libc-*.apk' \) -print | sort)
+          if [ "${#runtime_libs[@]}" -ne 2 ]; then
+            echo "Expected libc and libgcc1 target packages for dependency simulation." >&2
+            printf '%s\\n' "${runtime_libs[@]}" >&2
+            exit 1
+          fi
+          "$apk_bin" --root "$root" --initdb --arch aarch64_cortex-a53 --keys-dir "$keys_dir" --repositories-file /dev/null --no-network add --simulate --no-scripts --no-commit-hooks "${runtime_libs[@]}" output/luci-app-athena-*.apk output/luci-i18n-athena-zh-cn-*.apk
+
           file output/*.apk | tee output/file-type.txt
           sha256sum output/*.apk output/*.pub | tee output/SHA256SUMS.txt
           stat -c '%n %s bytes' output/*.apk output/*.pub | tee output/size.txt
