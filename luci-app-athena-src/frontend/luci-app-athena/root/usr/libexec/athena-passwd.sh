@@ -61,5 +61,5 @@ if [ "$rc" -ne 0 ]; then
 fi
 
 # ---- 同步 SSH 登录密码（dropbear 共用 shadow，无需额外操作）----
-echo "{\"ok\":true,\"msg\":\"管理密码已更新${SYNC:+\"，SSH 登录密码已同步\"}\"}"
+echo '{ "ok":true,"msg":"管理密码已更新；SSH 使用相同 root 密码" }'
 exit 0
