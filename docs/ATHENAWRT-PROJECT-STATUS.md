@@ -401,3 +401,13 @@
 - 修复方案：在一次独立的、仅针对 mktemp 临时 root 的非模拟事务中，使用本次构建匹配的公钥安装目标 `libc` 与 `libgcc1` 基础运行库并初始化 APK 数据库；随后对 Athena 主 APK 与中文语言包执行独立的 `--simulate` 依赖求解。此过程不访问路由器、不触碰主机包数据库，也不绕过签名验证。
 - 已更新工作流文件 `.github/workflows/build-athena-apk.yml`；等待本次提交触发的 Actions 运行，以实际结果验收。若模拟阶段仍失败，继续依据 job log 定位，不将失败产物交付。
 - 设备端验签、模拟升级、Quantum 真机功能验收和正式安装仍未执行；用户现有 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash、NSS/ECM 均未触碰。
+
+
+### Run #187 失败定位与 Run #188 复测（2026-11-02）
+
+- Run #187（ID `41397501643`，提交 `875bc0afba25dc452204d32f8ece563d836bf110`）的静态检查、Quantum ARM64 QEMU smoke test、ImmortalWrt 获取、host tools、目标工具链、Athena 主 APK/中文语言包编译均通过；两个 APK 的签名验证均显示 `OK`。
+- 失败发生在验证步骤的临时 root APK 数据库初始化命令。日志明确报错：`ERROR: Use --usermode to allow creating database as non-root`，退出码 99。不是源码编译错误，也不是 APK 签名错误；Artifact 上传被跳过。
+- 已在提交 `ecff7b81ba62421aae80b645ac84435a1ca9a68f` 将 `--usermode` 加入仅用于 mktemp 临时 root 的数据库 bootstrap 命令。该参数不会修改宿主机或 Athena 路由器的包数据库。
+- 对应 Run #188（ID `41436896339`）已启动，静态检查、Quantum QEMU smoke test、ImmortalWrt 获取和 package-only 配置均通过；最近检查时正在执行 `Build required host tools`，尚未进入目标工具链、APK 编译和依赖模拟阶段。
+- 下一步：等待 Run #188 完成；若失败，读取本次 job log 的首个真实错误再修复，不重复猜测参数。只有签名验证、临时数据库初始化、Athena 主 APK/中文语言包依赖模拟全部通过并成功上传 Artifact，才进入 Artifact 文件与哈希核验。
+- 本次仍未连接 Athena 真机、未导入公钥、未安装 APK、未刷写固件，也未更改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。
