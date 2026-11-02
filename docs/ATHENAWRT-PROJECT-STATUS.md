@@ -506,3 +506,19 @@
 - 原生机制无法覆盖的 Athena 硬件专属步骤，才评估独立保护逻辑。
 - 此项仍是设计原则，不代表已经修改或测试设备网络回退代码。
 
+
+
+## 14. 全站前后端调用链审计阶段 A（2026-11-02）
+
+- 新增审计文档：`docs/ATHENAWRT-FRONTEND-BACKEND-CALLCHAIN-AUDIT.md`。
+- 文档提交：`bf819ed77ec32f165e5f9010e10700bbf27d485f`。
+- 审计对象为当前分支完整 SPA、LuCI 菜单、rpcd ACL、Makefile、24 个前端 RPC 脚本及相关 ucode/legacy/init/hotplug 文件。
+- 当前 SPA 为 4,218 行、291,149 字符；8 个主页面入口已核实。
+- 重新扫描所有 `athenaRPC.exec` 表达式：82 次调用，81 个字面量脚本目标，1 个动态目标（`cfg.f`，由网络模式应用流程设为 `athena-mode.sh`）；去重后 24 个直接后端脚本入口。修正此前状态记录中 81/78/3 的旧统计口径。
+- Makefile 安装 36 个 libexec 文件（含 Shell、ucode、legacy 和 helper），ACL 对 24 个专用脚本入口授权；两种数量不可混淆。
+- 已按概览、WiFi、设备、网络、存储、灯光、维护、高级八页建立主要调用链和后端动作初表。
+- 重点确认：概览拓扑是示意而非真实物理拓扑；活跃应用识别是 DNS/OAF 线索；网络表单由 JS 动态生成；模式切换可能重写网络配置并影响 NSS/ECM；`athena-netcheck` 是独立启动自检逻辑，不等同 LuCI 原生 UCI 超时回滚。
+- ACL 除 24 个 Athena 脚本外，还授权 network init、ping、nslookup、ubus 等额外 file.exec 路径及多份 UCI 写权限，需逐项核对必要性并收敛权限。
+- SPA 中仍有历史预览/模拟 UI 代码与真实 RPC 实现并存；不得仅凭重复函数名直接删除，下一轮要继续核对作用域、执行顺序和控件真实调用关系。
+- 本次仅新增审计文档，没有修改任何前端/后端源码，没有运行构建，没有连接或操作 Athena 真机；未触及 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash、NSS/ECM。
+- 下一步：完成 ACL 额外权限逐项追踪，并继续建立“控件 → JS → RPC 参数 → 后端分支 → 系统副作用”的逐项清单；之后再对照原生 LuCI 做替代性判断。仍不做 CSS/SPA 重写或功能删改。
