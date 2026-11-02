@@ -26,6 +26,26 @@
 CMD="${1:-list}"
 json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
+# Package-name validation prevents option injection and path-like arguments.
+valid_pkg_name() {
+	case "$1" in ''|-*|*/*|*[!A-Za-z0-9+._@-]*) return 1 ;; esac
+	return 0
+}
+
+# Protect OpenClash, NSS/ECM, kernel, network and essential LuCI components.
+protected_pkg() {
+	case "$1" in
+		luci-app-openclash|luci-i18n-openclash-*|openclash|mihomo*|clash*|sing-box*|singbox*| \
+		qca-nss*|kmod-qca-nss*|qca-ssdk*|kmod-qca-ssdk*|ecm*|kmod-ecm*|nss-*|kmod-nss-*| \
+		base-files|busybox|apk-tools|openwrt-keyring|immortalwrt-keyring|kernel|kernel-*|kmod-*| \
+		libc|libc-*|musl|musl-*|libgcc|libgcc-*|libubox*|libubus*|libnl*|libopenssl*|libustream*| \
+		rpcd|ubus|uhttpd|netifd|firewall4|nftables|dnsmasq*|odhcpd*|dropbear|procd|fstools|block-mount| \
+		wpad*|hostapd*|ppp|ppp-*|luci-base|luci-mod-*|luci-app-athena|luci-i18n-athena-zh-cn)
+			return 0 ;;
+	esac
+	return 1
+}
+
 # apk list 输出 name-version（version 以数字开头），拆成 name|version
 split_pv() {
 	awk '{
@@ -138,11 +158,12 @@ case "$CMD" in
 		fi
 		;;
 	install)
-		PKG="${2:-}"; [ -z "$PKG" ] && { echo '{"ok":false,"msg":"缺少包名"}'; exit 1; }
+		PKG="${2:-}"; valid_pkg_name "$PKG" || { echo '{"ok":false,"msg":"软件包名称无效"}'; exit 1; }
 		apk add "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 安装成功\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 安装失败\"}"
 		;;
 	remove)
-		PKG="${2:-}"; [ -z "$PKG" ] && { echo '{"ok":false,"msg":"缺少包名"}'; exit 1; }
+		PKG="${2:-}"; valid_pkg_name "$PKG" || { echo '{"ok":false,"msg":"软件包名称无效"}'; exit 1; }
+		protected_pkg "$PKG" && { echo '{"ok":false,"msg":"该软件包属于 OpenClash、NSS/ECM 或关键系统组件，已禁止卸载"}'; exit 1; }
 		apk del "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 已卸载\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 卸载失败\"}"
 		;;
 	update)
@@ -153,6 +174,8 @@ case "$CMD" in
 		;;
 	upgrade)
 		PKG="${2:-}"
+		valid_pkg_name "$PKG" || { echo '{"ok":false,"msg":"软件包名称无效"}'; exit 1; }
+		protected_pkg "$PKG" && { echo '{"ok":false,"msg":"该软件包属于 OpenClash、NSS/ECM 或关键系统组件，已禁止升级"}'; exit 1; }
 		if [ -z "$PKG" ]; then echo '{"ok":false,"msg":"为安全起见不支持全量升级，请指定单个包"}'; exit 1; fi
 		apk upgrade "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 已更新\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 更新失败\"}"
 		;;
