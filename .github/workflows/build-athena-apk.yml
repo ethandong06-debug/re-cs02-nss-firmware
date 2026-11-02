@@ -238,7 +238,7 @@ jobs:
             printf '%s\\n' "${runtime_libs[@]}" >&2
             exit 1
           fi
-          "$apk_bin" --root "$root" --initdb --arch aarch64_cortex-a53 --keys-dir "$keys_dir" --repositories-file /dev/null --no-network add --simulate --no-scripts --no-commit-hooks "${runtime_libs[@]}" output/luci-app-athena-*.apk output/luci-i18n-athena-zh-cn-*.apk
+          "$apk_bin" --root "$root" --arch aarch64_cortex-a53 --keys-dir "$keys_dir" --repositories-file /dev/null --no-network add --initdb --simulate --no-scripts --no-commit-hooks "${runtime_libs[@]}" output/luci-app-athena-*.apk output/luci-i18n-athena-zh-cn-*.apk
 
           file output/*.apk | tee output/file-type.txt
           sha256sum output/*.apk output/*.pub | tee output/SHA256SUMS.txt
