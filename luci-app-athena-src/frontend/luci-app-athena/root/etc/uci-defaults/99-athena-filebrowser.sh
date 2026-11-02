@@ -1,13 +1,5 @@
 #!/bin/sh
-# ============================================================
-#  AthenaWrt — 文件共享（filebrowser-go）默认配置
-#  若固件编入了 luci-app-filebrowser-go：端口 8081、根目录 /mnt
-#  未编入时 uci 写操作无实际服务，无副作用
-# ============================================================
-
-uci -q set filebrowser.filebrowser=filebrowser
-uci -q set filebrowser.filebrowser.port='8081'
-uci -q set filebrowser.filebrowser.root_dir='/mnt'
-uci -q commit filebrowser
-
+# filebrowser 的实际监听地址、共享根目录与 USB 挂载检查统一由
+# /etc/init.d/filebrowser 管理。旧版 UCI root_dir=/mnt 不会被该 init
+# 脚本读取，故不再写入无效配置，避免造成共享目录已受限的错觉。
 exit 0
