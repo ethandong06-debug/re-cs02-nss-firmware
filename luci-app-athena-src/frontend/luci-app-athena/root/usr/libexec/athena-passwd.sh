@@ -8,7 +8,11 @@ CUR="${1:-}"; NEW="${2:-}"; SYNC="${3:-1}"
 
 [ -z "$CUR" ] && { echo '{"ok":false,"msg":"缺少当前密码"}'; exit 1; }
 [ -z "$NEW" ] && { echo '{"ok":false,"msg":"缺少新密码"}'; exit 1; }
-[ ${#NEW} -lt 8 ] && { echo '{"ok":false,"msg":"新密码至少 8 位"}'; exit 1; }
+NEW_LEN=$(printf '%s' "$NEW" | wc -c | tr -d ' ')
+[ "$NEW_LEN" -ge 8 ] 2>/dev/null && [ "$NEW_LEN" -le 128 ] 2>/dev/null || { echo '{"ok":false,"msg":"新密码必须为 8-128 字节"}'; exit 1; }
+case "$NEW" in *:*) echo '{"ok":false,"msg":"新密码不能包含冒号"}'; exit 1 ;; esac
+printf '%s' "$NEW" | LC_ALL=C grep -q '[[:cntrl:]]' && { echo '{"ok":false,"msg":"新密码不能包含换行或控制字符"}'; exit 1; }
+case "$SYNC" in 0|1) ;; *) echo '{"ok":false,"msg":"同步 SSH 参数只能为 0 或 1"}'; exit 1 ;; esac
 
 # ---- 校验当前密码 ----
 check_cur() {
