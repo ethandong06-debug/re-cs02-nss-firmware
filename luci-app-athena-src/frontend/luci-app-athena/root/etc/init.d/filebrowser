@@ -35,6 +35,7 @@ random_password() {
 
 start_service() {
 	local LAN_IP PASS
+	umask 077
 	[ -x "$FB_BIN" ] || { logger -t filebrowser "binary missing; service not started"; return 0; }
 	usb_mounted || { logger -t filebrowser "USB partition is not mounted at /mnt/usb; service not started"; return 0; }
 	[ -d /mnt/usb ] || { logger -t filebrowser "/mnt/usb is unavailable; service not started"; return 0; }
@@ -45,7 +46,9 @@ start_service() {
 			logger -t filebrowser "database initialization failed"
 			return 1
 		}
+		chmod 600 "$FB_DB" 2>/dev/null
 	fi
+	chmod 600 "$FB_DB" "$FB_PASS" 2>/dev/null
 
 	# 首次部署或从旧版固定 root/admin 迁移时，生成随机密码并旋转默认管理员密码。
 	# 密码只写入权限 0600 的本地文件，不写入日志。
