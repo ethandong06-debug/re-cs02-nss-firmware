@@ -61,6 +61,38 @@ jobs:
               raise SystemExit('No inline JavaScript blocks found')
           out = pathlib.Path('/tmp/athena-inline.js')
           out.write_text('\n;\n'.join(scripts))
+
+          # Verify every statically referenced backend script is installed and ACL-authorized.
+          args = [x.strip().replace("\\\\'", "'").replace('\\\\"', '"')
+                  for x in re.findall(r"athenaRPC\\.exec\\(\\s*([^,\\)\\n]+)", html)]
+          calls, dynamic = set(), []
+          for arg in args:
+              match = re.fullmatch(r"['\"] (athena-[^'\"]+\\.sh) ['\"]".replace(" ", ""), arg)
+              if match:
+                  calls.add(match.group(1))
+              elif arg == 'cfg.f':
+                  dynamic.append(arg)
+              else:
+                  dynamic.append(arg)
+          confirm_targets = set(re.findall(r"confirmApply\\(\\s*['\"](athena-[^'\"]+\\.sh)['\"]", html))
+          if dynamic != ['cfg.f'] or confirm_targets != {'athena-mode.sh'}:
+              raise SystemExit(f'Unexpected dynamic RPC targets: {dynamic}; confirmApply targets: {confirm_targets}')
+          calls |= confirm_targets
+          makefile = (root / 'Makefile').read_text()
+          installed = set(re.findall(r"\\$\\(INSTALL_BIN\\)\\s+\\./root/usr/libexec/(athena-[^\\s]+\\.sh)", makefile))
+          acl = json.loads((root / 'root/usr/share/rpcd/acl.d/luci-app-athena.json').read_text())
+          acl_file = acl['luci-app-athena']['write']['file']
+          allowed = {p.rsplit('/', 1)[-1] for p, perms in acl_file.items()
+                     if p.startswith('/usr/libexec/') and 'exec' in perms}
+          internal = {'athena-status-legacy.sh', 'athena-services-legacy.sh',
+                      'athena-resources-legacy.sh', 'athena-packages-legacy.sh',
+                      'athena-wanip.sh', 'athena-logcap.sh'}
+          orphan = {'athena-single.sh'}
+          if not calls or calls - installed or calls - allowed or allowed - installed:
+              raise SystemExit(f'RPC call-chain mismatch: calls={sorted(calls)}, not-installed={sorted(calls-installed)}, not-ACL={sorted(calls-allowed)}, ACL-not-installed={sorted(allowed-installed)}')
+          if not internal <= installed or not orphan <= installed or orphan & calls:
+              raise SystemExit('Internal helper/orphan inventory does not match Makefile installation list')
+          print(f'Call-chain audit passed: {len(calls)} direct RPC scripts, {len(internal)} internal helpers, {len(orphan)} unreferenced helper.')
           print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
           PY
           node --check /tmp/athena-inline.js
