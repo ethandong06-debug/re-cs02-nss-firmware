@@ -187,6 +187,14 @@ nss_on() {
 # ---- 各模式配置 ----
 config_router() {
 	local proto="${2:-pppoe}" user="${3:-}" pass="${4:-}" ip="${5:-}" mask="${6:-}" gw="${7:-}" dns="${8:-}"
+	valid_proto "$proto" || { echo '{"ok":false,"msg":"上网协议仅支持 PPPoE、DHCP 或静态 IP"}'; return 1; }
+	if [ "$proto" = "pppoe" ] && { [ -n "$user" ] || [ -n "$pass" ]; }; then
+		valid_text_arg "$user" && valid_text_arg "$pass" || { echo '{"ok":false,"msg":"PPPoE 账号和密码必须为 1-128 字节且不能包含控制字符"}'; return 1; }
+	fi
+	if [ "$proto" = "static" ]; then
+		valid_ipv4 "$ip" && valid_netmask "$mask" && valid_ipv4 "$gw" || { echo '{"ok":false,"msg":"静态 IP、掩码或网关格式无效"}'; return 1; }
+		[ -z "$dns" ] || valid_ipv4 "$dns" || { echo '{"ok":false,"msg":"DNS 必须为有效 IPv4 地址"}'; return 1; }
+	fi
 	log "配置为 主路由模式（WAN=$proto）"
 
 	# 清理单臂残留：bridge-vlan、wan.X 子接口、br-iptv、单臂专用接口、防火墙还原
@@ -274,6 +282,16 @@ config_single() {
 	case "$port_arg" in on|off) iptv_port="${9:-lan4}" ;; '') iptv_port="lan4" ;; *) iptv_port="$port_arg" ;; esac
 	# 归一化 IPTV 参数：off/none/关闭/留空 一律视为不开启（前端旧版曾传 'off' 字符串）
 	case "$vlan_iptv" in off|none|OFF|NONE|"关闭"|"无") vlan_iptv='' ;; esac
+	valid_proto "$proto" || { echo '{"ok":false,"msg":"上网协议仅支持 PPPoE、DHCP 或静态 IP"}'; return 1; }
+	if [ "$proto" = "pppoe" ] && { [ -n "$user" ] || [ -n "$pass" ]; }; then
+		valid_text_arg "$user" && valid_text_arg "$pass" || { echo '{"ok":false,"msg":"PPPoE 账号和密码必须为 1-128 字节且不能包含控制字符"}'; return 1; }
+	fi
+	if [ "$proto" = "static" ]; then
+		local sip smask sgw sdns
+		sip=$(echo "$user" | cut -d/ -f1); smask=$(echo "$user" | cut -d/ -f2); sgw=$(echo "$user" | cut -d/ -f3); sdns=$(echo "$user" | cut -d/ -f4)
+		valid_ipv4 "$sip" && valid_netmask "$smask" && valid_ipv4 "$sgw" || { echo '{"ok":false,"msg":"静态 IP、掩码或网关格式无效"}'; return 1; }
+		[ -z "$sdns" ] || valid_ipv4 "$sdns" || { echo '{"ok":false,"msg":"DNS 必须为有效 IPv4 地址"}'; return 1; }
+	fi
 	log "配置为 单臂路由（内网VLAN=$vlan_inner, 拨号VLAN=$vlan_wan, IPTV=${vlan_iptv:-无}, proto=$proto, IPTV口=$iptv_port）"
 
 	# ---- 参数校验（误配会直接打断网络，先拦）----
@@ -503,6 +521,7 @@ status_single() {
 
 config_bypass() {
 	local ip="${2:-192.168.10.2}" gw="${3:-192.168.10.1}" dns="${4:-192.168.10.1}"
+	valid_ipv4 "$ip" && valid_ipv4 "$gw" && valid_ipv4 "$dns" || { echo '{"ok":false,"msg":"旁路由 IP、网关和 DNS 必须为有效 IPv4 地址"}'; return 1; }
 	log "配置为 旁路由模式（IP=$ip, GW=$gw, DNS=$dns）"
 	# 清理单臂残留（同 router）
 	clear_bridge_vlan
