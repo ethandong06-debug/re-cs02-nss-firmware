@@ -14,7 +14,7 @@ matrix|点阵屏显示|athena_led · 正面点阵屏信息展示|athena_led.gene
 "
 
 # 核心系统服务：不展示、不允许一键启停（误停会断网/失联），仅作运行状态展示
-CORE_INIT="network firewall rpcd uhttpd dnsmasq odhcpd dropbear sysctl boot done led system logd ubusd netifd fstab urandom_seed rssileds athena-boot athena-ui athena-vlan-pre athena-netcheck wpad hostapd hostapd_cli"
+CORE_INIT="network firewall rpcd uhttpd dnsmasq odhcpd dropbear sysctl boot done led system logd ubusd netifd fstab urandom_seed rssileds athena-boot athena-ui athena-vlan-pre athena-netcheck wpad hostapd hostapd_cli openclash qca-nss-ecm qca-nss-drv qca-nss"
 
 json_esc() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
