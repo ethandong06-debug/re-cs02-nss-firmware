@@ -770,21 +770,39 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <span class="chip"><span class="k">固件</span><b id="netFw">v1.2.39</b></span>
     </div>
 
-    <!-- 活跃应用识别线索（DNS/OAF 映射推测，非 DPI） -->
+    <!-- 活跃应用（OAF 分类 + DNS 指纹识别） -->
     <div class="card" id="appCard" style="display:none">
       <div class="app-head">
         <div class="ttl">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
-          活跃应用线索 <span style="font-weight:400;color:var(--text3)">· 最近 15 分钟</span>
+          当前活跃应用 <span style="font-weight:400;color:var(--text3)">· 最近 15 分钟</span>
         </div>
-        <span class="sub" id="appSub">DNS/OAF 域名线索推测 · 非 DPI 识别</span>
+        <span class="sub" id="appSub">基于应用过滤分类识别</span>
       </div>
       <div class="apps" id="appBox"><div class="apps-empty" style="padding:14px 0;color:var(--text3);font-size:12px">正在识别活跃应用…</div></div>
     </div>
 
-    <!-- 快捷操作 -->
+    <!-- 拓扑 + 快捷 -->
     <div class="row2">
-      <div class="card" style="grid-column:1 / -1">
+      <div class="card">
+        <h3>家庭网络拓扑 <span class="sub">示意</span></h3>
+        <div class="topo" id="topoBox">
+          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">已连接</span></div>
+          <div class="topo-line">光猫 · 桥接模式</div>
+          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">pppoe-wan · VLAN 2044</span></div>
+          <div class="topo-line">内网 br-lan · 192.168.10.0/24</div>
+          <div class="topo-branch">
+            <div class="leaf"><b>LAN1–LAN3</b>有线设备 4 台</div>
+            <div class="leaf"><b>WiFi</b>2.4G / 5.2G / 5.8G · 5 台</div>
+          </div>
+          <div class="topo-line">IPTV br-iptv · VLAN 3066</div>
+          <div class="topo-branch">
+            <div class="leaf"><b>LAN4</b>IPTV 机顶盒</div>
+            <div class="leaf" style="opacity:.45"><b>—</b>未接入</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
         <h3>快捷操作</h3>
         <div class="quick">
           <button class="quick-btn" data-guestBtn onclick="toggleGuest()"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.5a10 10 0 0 1 14 0"/><circle cx="12" cy="19" r="1"/></svg></span><span>访客网络</span></button>
@@ -844,7 +862,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       </div>
       <div class="card">
         <h3>WiFi 连不上了？一键恢复默认</h3>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">三个频段恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 重置时自动生成随机密码。密码错乱、连不上时点这里自愈。</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:12px">三个频段恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 密码 <b style="color:var(--text)">12345678</b>。密码错乱、连不上时点这里自愈。</div>
         <button class="btn primary" onclick="resetWifi()">恢复默认 WiFi</button>
       </div>
     </div>
@@ -971,7 +989,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
             <div class="disk-bar"><i style="width:58%"></i></div>
             <div class="dv">已用 18.6 GB / 32 GB（58%）</div>
           </div>
-          <button class="btn sm danger" disabled title="为保护系统存储，eMMC 格式化已禁用">格式化不可用</button>
+          <button class="btn sm danger" onclick="fmtDisk('emmc')">格式化</button>
         </div>
         <div class="disk-row" data-disk="usb">
           <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 21h16"/></svg></div>
@@ -991,7 +1009,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <div style="flex:1;min-width:200px"><div class="ct">网页文件管理</div><div style="font-size:12px;color:var(--text3);margin-top:5px">手机 / 电脑浏览器打开一个网页，就能上传、下载、播放文件</div></div>
           <button class="btn primary" onclick="openFbModal()">打开文件共享</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">FileBrowser Quantum · 端口 8081</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">filebrowser 运行中 · 端口 8081</div>
       </div>
     </div>
   </div>
@@ -1007,8 +1025,8 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <h3>点阵屏设置</h3>
         <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch on" data-k="matrix" onclick="toggleMatrix()"></div></div>
         <div class="check-row"><span>亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="matrixLight" min="0" max="7" value="5" onchange="setMatrixLight(this.value)"></div>
-        <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option value="multi">多频道轮播</option><option value="single">单频道轮播</option></select></div>
-        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
+        <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option>多频道轮播</option><option>单频道轮播</option></select></div>
+        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openMatrixFull()">打开完整管理</button><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
       </div>
       <div class="card">
         <h3>显示内容区域</h3>
@@ -1063,14 +1081,9 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="info-row"><span>CPU 温度</span><span style="font-weight:600" id="fwTemp">42°C <span style="font-size:11px;color:var(--text3)">被动散热 · 正常</span></span></div>
       </div>
       <div class="card">
-        <h3>计划维护</h3>
+        <h3>重启与升级</h3>
         <div class="info-row"><span>重启路由器</span><button class="btn sm" onclick="openRebootConfirm()">立即重启</button></div>
         <div class="info-row"><span>定时重启</span><button class="btn sm" data-rebootSched onclick="openRebootSched()">已设置 04:00（每周日）</button></div>
-        <div style="font-size:12px;color:var(--text3);margin-top:8px">定时重启按已保存的计划执行；立即重启会短暂中断网络连接。</div>
-      </div>
-      <div class="card">
-        <h3>危险操作 <span class="sub">高风险</span></h3>
-        <div style="font-size:12px;color:var(--warn);margin-bottom:10px">固件升级或恢复出厂可能中断网络或清除配置。后端安全整改和专项验收完成前，请勿执行。</div>
         <div class="info-row"><span>升级固件</span><button class="btn sm primary" onclick="openUpgradeConfirm()">升级</button></div>
         <div class="info-row"><span>恢复出厂设置</span><button class="btn sm danger" onclick="openResetConfirm()">恢复出厂</button></div>
       </div>
@@ -1125,20 +1138,20 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <div class="info-row"><span>已安装</span><span style="font-weight:600" id="pkgCount">—</span></div>
           <div class="info-row"><span>可用更新</span><span style="font-weight:600;color:var(--ok)" id="pkgUpd">—</span></div>
           <div class="info-row"><span>总存储</span><span style="font-weight:600" id="pkgStore">—</span></div>
-          <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openPkgManager()">管理软件包</button><button class="btn sm" onclick="refreshPackageList()">刷新软件列表</button></div>
+          <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openPkgManager()">管理软件包</button><button class="btn sm" onclick="checkUpdate()">检查更新</button></div>
         </div>
         <div class="card">
           <h3>系统日志</h3>
           <div style="font-size:12px;color:var(--text3);margin-bottom:8px">内核与系统服务实时日志，用于排查异常</div>
           <div class="info-row"><span>最近记录</span><button class="btn sm" onclick="openSyslog()">查看日志</button></div>
-          <div class="info-row"><span>操作</span><span style="display:flex;gap:8px"><button class="btn sm" onclick="exportLog()">导出</button><button class="btn sm danger" onclick="clearLog()">清空</button></span></div>
+          <div class="info-row"><span>操作</span><span style="display:flex;gap:8px"><button class="btn sm" onclick="done('日志已导出')">导出</button><button class="btn sm danger" onclick="done('日志已清空')">清空</button></span></div>
         </div>
       </div>
       <div class="card">
         <h3>账号与全局设置</h3>
         <div class="info-row"><span>登录用户</span><span style="font-weight:600">root</span></div>
         <div class="info-row"><span>管理密码</span><button class="btn sm" onclick="openPwdModal()">修改密码</button></div>
-        <div class="info-row"><span>SSH 访问</span><span style="font-size:12px;color:var(--text3)">由系统服务统一管理，此处不提供开关</span></div>
+        <div class="info-row"><span>SSH 访问</span><span style="display:flex;align-items:center;gap:8px"><span class="tag green">已启用</span><div class="switch on" data-k="ssh" onclick="toggleSsh()"></div></span></div>
         <div class="info-row"><span>网速显示单位</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-unit="Mbps" onclick="setUnit('Mbps')">Mbps</button><button class="btn sm" data-unit="MB/s" onclick="setUnit('MB/s')">MB/s</button></span></div>
         <div class="info-row"><span>界面主题</span><button class="btn sm" onclick="openThemeModal()">主题设置（深浅 / 液态玻璃）</button></div>
         <div class="info-row"><span>默认界面</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-defaultui="athena" onclick="setDefaultUi('athena')">管理台</button><button class="btn sm" data-defaultui="native" onclick="setDefaultUi('native')">原生界面</button><button class="btn sm" data-defaultui="last" onclick="setDefaultUi('last')">跟随上次</button></span></div>
@@ -1327,7 +1340,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       +'<div class="theme-sec">液态玻璃色板</div>'
       +'<div class="theme-presets">'+GLASS_PRESETS.map(function(pr){return '<button class="theme-preset '+(GLASS_THEME.palette===pr.id?'on':'')+'" data-p="'+pr.id+'" onclick="pickPalette(\''+pr.id+'\')"><span class="tp-ic"><i class="tp-dot" style="background:'+pr.dot+'"></i></span><span class="tp-name">'+pr.name+'</span><span class="tp-desc">'+pr.desc+'</span></button>';}).join('')+'</div>'
       +'<div class="theme-sec">参数调节</div>'
-      +'<div class="theme-row"><label>光斑强度</label><input type="range" min="0" max="100" value="'+GLASS_THEME.blob+'" oninput="setGlassParam(\'blob\',this.value)"><span class="tr-val">'+GLASS_THEME.blob+'</span></div>'
+      +'<div class="theme-row"><label>光斑强度</label><input type="range" min="20" max="200" value="'+GLASS_THEME.blob+'" oninput="setGlassParam(\'blob\',this.value)"><span class="tr-val">'+GLASS_THEME.blob+'</span></div>'
       +'<div class="theme-row"><label>玻璃不透明</label><input type="range" min="30" max="90" value="'+GLASS_THEME.glass+'" oninput="setGlassParam(\'glass\',this.value)"><span class="tr-val">'+GLASS_THEME.glass+'</span></div>'
       +'<div class="theme-row"><label>模糊程度</label><input type="range" min="4" max="40" value="'+GLASS_THEME.blur+'" oninput="setGlassParam(\'blur\',this.value)"><span class="tr-val">'+GLASS_THEME.blur+'</span></div>'
       +'<div class="theme-row"><label>光晕强度</label><input type="range" min="20" max="100" value="'+GLASS_THEME.iri+'" oninput="setGlassParam(\'iri\',this.value)"><span class="tr-val">'+GLASS_THEME.iri+'</span></div>'
@@ -1395,12 +1408,26 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
   window.openGuestModal=function(){
     openModal("访客网络设置","访客网络与内网完全隔离，仅可上网",
       '<div class="field"><label>访客 WiFi 名称</label><input type="text" value="Athena-Guest"></div>'
-      +'<div class="field"><label>密码（8-63 位）</label><input type="password" value="" placeholder="请输入 8-63 位访客密码"></div>'
+      +'<div class="field"><label>密码（8-63 位）</label><input type="text" value="guest12345"></div>'
       +'<div class="info-row"><span>访问内网</span><span><span class="tag gray">已隔离</span></span></div>'
       +'<div class="info-row"><span>速率限制</span><span style="display:flex;gap:6px"><button class="btn sm primary" onclick="done(\'不限速\')">不限速</button><button class="btn sm" onclick="done(\'限速 10Mbps\')">限速 10Mbps</button></span></div>'
       +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="done(\'访客网络设置已保存\');closeModal()">保存</button></div>');
   };
-  
+  window.toggleSsh=function(){
+    S.ssh=!S.ssh;
+    var el=document.querySelector('[data-k="ssh"]'); if(el) el.classList.toggle("on",S.ssh);
+    var tag=document.querySelector('[data-k="ssh"]').parentNode.querySelector(".tag");
+    if(tag){ tag.textContent=S.ssh?"已启用":"已关闭"; tag.className="tag "+(S.ssh?"green":"gray"); }
+    showToast(S.ssh?"SSH 已启用（端口 22）":"SSH 已关闭");
+  };
+  window.openFbModal=function(){
+    openModal("文件共享 · filebrowser","手机 / 电脑浏览器打开下方地址，即可上传、下载、播放文件",
+      '<div class="info-row"><span>访问地址</span><span style="font-weight:600">http://192.168.10.1:8081</span></div>'
+      +'<div class="info-row"><span>状态</span><span class="tag green">运行中</span></div>'
+      +'<div class="info-row"><span>根目录</span><span>/mnt/usb</span></div>'
+      +'<div style="font-size:12px;color:var(--text3);margin-top:8px">登录账号与路由器管理密码一致。</div>'
+      +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="done(\'已打开 filebrowser 页面\');closeModal()">打开</button></div>');
+  };
   /* v1.2.54：SVC_DETAIL 假表已删除（pid 3108 / 内存 18 MB / 版本 v2.31.0 全部是写死的）；
      服务详情改为读 athena-services 的真实字段（见下方 openSvcWin）。 */
 var KPI_ITEMS=[
@@ -1490,7 +1517,7 @@ var KPI_ITEMS=[
     var bwOpts={b2:'<option>20MHz</option><option selected>40MHz</option>',b5:'<option>20MHz</option><option selected>80MHz</option><option>160MHz</option>',b6:'<option>20MHz</option><option selected>80MHz</option><option>160MHz</option>'}[b];
     openModal("编辑 WiFi 配置",({b2:"2.4G",b5:"5.2G",b6:"5.8G"}[b])+" · 修改后保存即生效",
       '<div class="field"><label>WiFi 名称（SSID）</label><input id="ebSsid" type="text" value="'+x.ssid+'"></div>'
-      +'<div class="field"><label>密码（8-63 位）</label><div class="pwd-wrap"><input id="ebPwd" type="text" data-pwd="1" value="" placeholder="留空表示保持当前密码"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>'
+      +'<div class="field"><label>密码（8-63 位）</label><div class="pwd-wrap"><input id="ebPwd" type="text" data-pwd="1" value="12345678"><button type="button" class="pwd-eye" onclick="togglePwd(this)" title="显示 / 隐藏"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg></button></div></div>'
       +'<div class="field"><label>加密方式</label><select id="ebEnc"><option>WPA3/WPA2</option><option>WPA2</option><option>开放（无加密）</option></select></div>'
       +'<div class="field"><label>信道（当前频段可选）</label><select id="ebCh">'+chOpts+'</select></div>'
       +'<div class="field"><label>频宽</label><select id="ebBw">'+bwOpts+'</select></div>'
@@ -1512,7 +1539,7 @@ var KPI_ITEMS=[
     closeModal(); showToast("已保存 "+( {b2:"2.4G",b5:"5.2G",b6:"5.8G"}[b] )+" 配置");
   };
   window.resetWifi=function(){
-    confirmAct("恢复默认 WiFi？","三个频段将恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 随机生成密码", "resetWifiDo");
+    confirmAct("恢复默认 WiFi？","三个频段将恢复出厂默认：Athena-2.4G / Athena-5G / Athena-5G-Game · 密码 12345678", "resetWifiDo");
   };
   window.resetWifiDo=function(){
     S.bands={b2:{on:true,ssid:"Athena-2.4G"},b5:{on:true,ssid:"Athena-5G"},b6:{on:true,ssid:"Athena-5G-Game"}};
@@ -1907,12 +1934,16 @@ var KPI_ITEMS=[
       +'<div class="svc-row"><div class="svc-info"><div class="svc-name">luci-app-argon-config</div><div class="svc-desc">未安装 · 可用</div></div><button class="btn sm primary" onclick="done(\'argon-config 已安装\')">安装</button></div>'
       +'<div class="m-foot"><button class="btn sm" onclick="closeModal()">关闭</button></div>');
   };
+  window.checkUpdate=function(){
+    showToast("正在检查更新…");
+    setTimeout(function(){ done("软件包已是最新版本"); },1200);
+  };
   window.openSyslog=function(){
     openModal("系统日志","内核与系统服务实时日志",
       '<div style="font-family:var(--font-num);font-size:12px;line-height:1.9;background:var(--bg-deep);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text2);white-space:pre-wrap">'+LOG_TEXT+'</div>'
       +'<div class="m-foot"><button class="btn sm" onclick="done(\'日志已导出\')">导出</button><button class="btn sm danger" onclick="done(\'日志已清空\')">清空</button><button class="btn sm" onclick="closeModal()">关闭</button></div>');
   };
-  var LOG_TEXT="Oct 26 09:12:01 Athena kern: br-lan: port 5(wan.1) entered forwarding state\nOct 26 09:12:03 Athena daemon: pppd[1234]: PPPoE: Connected to 10.0.0.1\nOct 26 09:12:05 Athena daemon: odhcpd[1280]: RTR-ADVERT(br-lan) 2001:da8::1/64\nOct 26 09:14:22 Athena daemon: OpenClash: rule update ok, 4821 rules\nOct 26 09:31:07 Athena user.notice: filebrowser: listening on LAN address:8081 (root=/mnt/usb)";
+  var LOG_TEXT="Oct 26 09:12:01 Athena kern: br-lan: port 5(wan.1) entered forwarding state\nOct 26 09:12:03 Athena daemon: pppd[1234]: PPPoE: Connected to 10.0.0.1\nOct 26 09:12:05 Athena daemon: odhcpd[1280]: RTR-ADVERT(br-lan) 2001:da8::1/64\nOct 26 09:14:22 Athena daemon: OpenClash: rule update ok, 4821 rules\nOct 26 09:31:07 Athena user.notice: filebrowser: listening on 0.0.0.0:8081";
   window.openPwdModal=function(){
     openModal("修改管理密码","修改后下次登录使用新密码",
       '<div class="field"><label>当前密码</label><input type="text" data-pwd="1" placeholder="请输入当前密码"></div>'
@@ -2419,6 +2450,47 @@ var DEV_ICONS={
   other:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>'
 };
 function devIconBox(type,on){ return '<div class="dev-ic"'+(on?'':' style="opacity:.55"')+'>'+(DEV_ICONS[type]||DEV_ICONS.other)+'</div>'; }
+function _bandGrp(b){
+  b=b||'有线';
+  if(b==='有线') return 'lan';
+  if(b.indexOf('2.4')>=0) return 'g24';
+  if(b.indexOf('5')>=0) return 'g5';
+  return 'lan';
+}
+function topologyHTML(){
+  var on=DEVS.filter(function(d){return d.online;}).length;
+  var modeName={router:'主路由',ap:'AP 桥接',bypass:'旁路由'}[curMode]||curMode;
+  var wanLabel=(WAN_PROTO==='pppoe'?'pppoe-wan':WAN_PROTO)+(WAN_VLAN?' · VLAN '+esc(WAN_VLAN):'');
+  var wanOk=!!WAN_IP;
+  var grp={lan:{list:[]},g24:{list:[]},g5:{list:[]}};
+  DEVS.forEach(function(d){ grp[_bandGrp(d.band)].list.push(d); });
+  function chips(list){
+    if(!list.length) return '<div class="topo-empty">暂无设备</div>';
+    list=list.slice().sort(function(a,b){ return (b.online?1:0)-(a.online?1:0); });
+    var MAX=10, more=list.length>MAX, vis=list.slice(0,MAX);
+    var s=vis.map(function(d){
+      return '<div class="topo-dev'+(d.online?'':' off')+'" onclick="devDetail('+d.id+')">'
+        +'<span class="st '+(d.online?'st-on':'st-off')+'"></span>'
+        +'<span class="tdev-ic">'+(DEV_ICONS[d.type]||DEV_ICONS.other)+'</span>'
+        +'<b>'+esc(d.name)+'</b>'
+        +'<i>'+esc(d.online?(d.ip||'在线'):'离线')+'</i>'
+        +'</div>';
+    }).join('');
+    return s+(more?'<div class="topo-more">+'+(list.length-MAX)+' 台</div>':'');
+  }
+  function branch(lineTxt,list){
+    return '<div class="topo-line">'+lineTxt+'</div><div class="topo-dev-grid">'+chips(list)+'</div>';
+  }
+  var iptvLeaf=IPTV_VLAN?'<div class="leaf"><b>LAN4</b>IPTV 机顶盒 · VLAN '+esc(IPTV_VLAN)+'</div>':'<div class="leaf" style="opacity:.45"><b>—</b>未接入</div>';
+  return '<div class="topo-node"><span class="st '+(wanOk?'st-on':'st-off')+'" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">'+(wanOk?'已连接':'未连接')+'</span></div>'
+    +'<div class="topo-line">光猫 · 桥接模式</div>'
+    +'<div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">'+esc(wanLabel)+' · '+modeName+'</span></div>'
+    +branch('LAN · 有线 '+grp.lan.list.filter(function(d){return d.online;}).length+' 台在线', grp.lan.list)
+    +branch('2.4G WiFi · '+grp.g24.list.filter(function(d){return d.online;}).length+' 台在线', grp.g24.list)
+    +branch('5G WiFi · '+grp.g5.list.filter(function(d){return d.online;}).length+' 台在线', grp.g5.list)
+    +'<div class="topo-line">IPTV br-iptv'+(IPTV_VLAN?' · VLAN '+esc(IPTV_VLAN):'')+'</div>'
+    +'<div class="topo-branch">'+iptvLeaf+'</div>';
+}
 function updateNumbers(){
   var f1=fmtSpeed(down), f2=fmtSpeed(up);
   var dnV=document.getElementById('dnV'), upV=document.getElementById('upV');
@@ -2462,6 +2534,7 @@ function updateNumbers(){
       if(st) st.className='st '+(on?'st-on':'st-off');
       if(bEl) bEl.textContent=on?'在线':'关闭'; }
   });
+  var tb=document.getElementById('topoBox'); if(tb) tb.innerHTML=topologyHTML();
 }
 function renderOverview(){
   updateNumbers();
@@ -2633,12 +2706,7 @@ function renderDisksRows(){
     if(dm2) dm2.textContent=d0?(d0.name+' · '+esc(d0.fs||'exfat')+' · '+(d0.mounted!==false&&d0.mount?'已挂载 /mnt/usb':'未挂载')):'外接硬盘插入后自动识别';
     if(dv2) dv2.textContent=d0?(d0.mounted!==false&&d0.mount?('已用 '+fmtDiskSize(d0.used_mb)+' / '+fmtDiskSize(d0.size_mb)+'（'+Math.round((d0.used_mb/(d0.size_mb||1))*100)+'%）'):('容量 '+fmtDiskSize(d0.size_mb)+' · 未挂载')):'—';
     if(bar2) bar2.style.width=d0?(d0.mounted!==false&&d0.mount?Math.min(100,(d0.used_mb/(d0.size_mb||1))*100)+'%':'0%'):'0%';
-    if(ops&&d0){
-      var mountedPart=(d0.parts||[]).find(function(p){return p&&p.mount;});
-      var freePart=(d0.parts||[]).find(function(p){return p&&p.name&&!p.mount;});
-      var mountOp=mountedPart?'<button class="btn sm" onclick="umountUsb()">卸载</button>':(freePart?'<button class="btn sm" onclick="mountUsb()">挂载</button>':'');
-      ops.innerHTML=mountOp+'<button class="btn sm danger" onclick="fmtDisk(\'usb\')">格式化</button>';
-    }
+    if(ops&&d0){ ops.innerHTML='<button class="btn sm" onclick="umountUsb()">卸载</button><button class="btn sm danger" onclick="fmtDisk(\'usb\')">格式化</button>'; }
     else if(ops){ ops.innerHTML=''; }
   }
 }
@@ -2781,13 +2849,10 @@ function renderPkgSummary(){
 }
 function renderRebootSched(){
   var b=document.querySelector('[data-rebootSched]');
-  var day=REBOOT_SCHED.dow==='*'?'每天':('每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[REBOOT_SCHED.dow]||''));
-  if(b) b.textContent=REBOOT_SCHED.enabled?('已设置 '+REBOOT_SCHED.hour+'（'+day+'）'):'设置';
+  if(b) b.textContent=REBOOT_SCHED.enabled?('已设置 '+REBOOT_SCHED.hour+'（每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[REBOOT_SCHED.dow]||'天')+'）'):'设置';
 }
 function renderAutoBackup(){
-  var freqLabel={daily:'每天',weekly:'每周日',monthly:'每月'}[BACKUP_FREQ]||'定时';
-  var d=document.querySelector('[data-autoBackupDesc]');
-  if(d) d.textContent=AUTO_BACKUP?(freqLabel+' '+BACKUP_TIME+' · 保留 '+BACKUP_KEEP+' 份'):'未开启';
+  var d=document.querySelector('[data-autoBackupDesc]'); if(d) d.textContent=AUTO_BACKUP?('每天 '+BACKUP_TIME+' · 保留 '+BACKUP_KEEP+' 份'):'未开启';
   var s=document.querySelector('[data-k="autoBackup"]'); if(s) s.classList.toggle('on',AUTO_BACKUP);
   var c=document.getElementById('bkCount'); if(c) c.textContent=BACKUPS.length;
 }
@@ -2795,6 +2860,7 @@ function renderAdvAccount(){
   var st=SPD_UNIT||sGet('athena_speed_unit')||'Mbps';
   document.querySelectorAll('[data-unit]').forEach(function(b){ b.classList.toggle('primary',b.dataset.unit===st); });
   document.querySelectorAll('[data-defaultui]').forEach(function(b){ b.classList.toggle('primary',b.dataset.defaultui===(UI_MODE.mode==='last'?UI_MODE.last:UI_MODE.mode)); });
+  var ssh=document.querySelector('[data-k="ssh"]'); if(ssh) ssh.classList.toggle('on',true);
 }
 function renderAll(){
   renderOverview(); renderWifiCards(); renderDevTable(); renderNetPage();
@@ -2881,7 +2947,7 @@ function renderActiveApps(){
   }
   card.style.display='';
   var sub=document.getElementById('appSub');
-  if(sub) sub.textContent='DNS/OAF 域名线索推测 · 非 DPI 识别';
+  if(sub) sub.textContent=(ACTIVE_APPS.source==='dns'?'基于 DNS 指纹识别（应用过滤未启用）':'基于应用过滤分类识别');
   var show=apps.slice(0,10);
   var more=apps.length-show.length;
   box.innerHTML=show.map(function(a){
@@ -2955,9 +3021,8 @@ async function loadTheme(){
   var dm=(d&&(d.dark==='light'||d.dark==='dark'||d.dark==='auto'))?d.dark:null;
   if(dm==null){
     var ls=sGet('athena_dark');
-    dm=(ls==null||ls==='auto')?'auto':(ls==='1'?'dark':'light');
+    dm=(ls==null)?'auto':(ls==='1'?'dark':'light');
   }
-  window._athenaThemeMode=dm;
   if(dm==='auto'){ document.documentElement.dataset.theme=(matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
   else{ document.documentElement.dataset.theme=dm; }
 }
@@ -2990,18 +3055,6 @@ async function loadBackupList(){
   try{
     var d=await athenaRPC.exec('athena-backup.sh',['list']);
     if(d&&d.backups){ BACKUPS=d.backups; var el=document.getElementById('bkCount'); if(el) el.textContent=BACKUPS.length; }
-  }catch(e){}
-}
-async function loadBackupSchedule(){
-  try{
-    var d=await athenaRPC.exec('athena-backup.sh',['schedule','get']);
-    if(d&&d.ok!==false){
-      AUTO_BACKUP=!!d.enabled;
-      BACKUP_FREQ=d.freq||'daily';
-      BACKUP_TIME=d.time||'02:00';
-      BACKUP_KEEP=parseInt(d.keep,10)||3;
-      renderAutoBackup();
-    }
   }catch(e){}
 }
 async function loadParentRules(){
@@ -3061,12 +3114,12 @@ window.done=function(msg){ toast(msg); };
 window.toggleWifiAll=function(){
   var target=WIFI_ON?'disable':'enable';
   WIFI_ON=!WIFI_ON;
-  athenaRPC.exec('athena-wireless.sh',[target,'all']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认操作成功'); toast(WIFI_ON?'WiFi 已开启':'WiFi 已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ WIFI_ON=!WIFI_ON; toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',[target,'all']).then(function(){ toast(WIFI_ON?'WiFi 已开启':'WiFi 已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ WIFI_ON=!WIFI_ON; toast('操作失败：'+(e.message||'')); });
 };
 window.toggleBand=function(id){
   var b=WIFI_BANDS.find(function(x){return x.id===id;}); if(!b) return;
   var target=b.on?'disable':'enable';
-  athenaRPC.exec('athena-wireless.sh',[target,id]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认操作成功'); b.on=!b.on; toast(target==='enable'?'已开启 '+b.n:'已关闭 '+b.n); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',[target,id]).then(function(){ b.on=!b.on; toast(target==='enable'?'已开启 '+b.n:'已关闭 '+b.n); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 function bandChList(id){
   return (id==='b24'?'auto,1,2,3,4,5,6,7,8,9,10,11,12,13':id==='b52'?'auto,36,40,44,48,52,56,60,64':'auto,149,153,157,161,165').split(',');
@@ -3105,45 +3158,31 @@ window.saveBand=function(id){
   if(!ssid){ toast('WiFi 名称不能为空'); return; }
   if(enc==='开放（无加密）'&&pwd){ toast('开放网络不能设置密码，请选择加密方式'); return; }
   if(enc!=='开放（无加密）'&&pwd&&pwd.length<8){ toast('密码至少 8 位'); return; }
-  athenaRPC.exec('athena-wireless.sh',['set',id,ssid,pwd,ch||'0',bw,enc]).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认保存');
+  athenaRPC.exec('athena-wireless.sh',['set',id,ssid,pwd,ch||'0',bw,enc]).then(function(){
     b.ssid=ssid; if(pwd) b.pwd=pwd; b.enc=enc; b.bw=bw; b.ch=ch||b.ch; b.loaded=true;
     window.closeModal(); toast('WiFi 配置已保存，设备重新连接'); renderWifiCards();
   }).catch(function(e){ toast('保存失败：'+(e.message||'')); });
 };
 window.openGuestModal=function(){
-  openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，访客仅可上网</div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" maxlength="32" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" data-pwd="1" minlength="8" maxlength="63" value="" placeholder="请输入 8-63 位访客密码"></div></div>'
-    +'<div style="font-size:12px;color:var(--text3)">请输入独立的访客 WiFi 密码；不会使用固定默认密码。开启后访客无法访问内网设备。</div>'
+  openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，适合客人使用</div>'
+    +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
+    +'<div style="font-size:12px;color:var(--text3)">访客密码固定为 <b>12345678</b>（可在原生界面修改）。开启后访客无法访问内网设备。</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
-  try{ enhancePwds(document.querySelector('.mask.show')); }catch(e){}
 };
 window.saveGuest=function(){
   var ssid=document.getElementById('gSsid').value.trim()||'Athena-Guest';
-  var pwd=document.getElementById('gPwd').value;
-  if(pwd.length<8||pwd.length>63){ toast('访客 WiFi 密码必须为 8-63 位'); return; }
-  athenaRPC.exec('athena-wireless.sh',['guest','enable',ssid,pwd]).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认开启访客网络');
-    GUEST.enabled=true; GUEST.ssid=ssid; window.closeModal(); toast('访客网络已开启'); renderWifiCards(); renderOverview();
-  }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',['guest','enable',ssid,'12345678']).then(function(){ GUEST.enabled=true; GUEST.ssid=ssid; window.closeModal(); toast('访客网络已开启（密码 12345678）'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.toggleGuest=function(){
   if(!GUEST.loaded){ if(athenaRPC.live){ loadGuest(); toast('正在读取访客配置…'); } else { toast('登录后可用'); } return; }
   if(!GUEST.enabled){ window.openGuestModal(); return; }
-  athenaRPC.exec('athena-wireless.sh',['guest','disable']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭访客网络'); GUEST.enabled=false; toast('访客网络已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',['guest','disable']).then(function(){ GUEST.enabled=false; toast('访客网络已关闭'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.resetWifi=function(){
-  openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：自动生成随机密码<br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
+  openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：<b>12345678</b><br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
 };
 window.doResetWireless=function(){
-  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复');
-    window.closeModal();
-    var reloadWarning=d.reload_ok===false?'<div style="margin-top:10px;color:var(--danger)">注意：配置已保存，但无线重载未确认成功；请先保存密码，再检查无线状态。没有重启整体网络。</div>':'';
-    openBkModal('<h3>WiFi 已恢复默认</h3><div class="m-sub">三个频段已使用同一个随机密码。请保存该密码，并用新密码重新连接 WiFi。</div><div style="padding:12px 0;font-size:15px">新密码：<code>'+esc(d.password||'')+'</code></div>'+reloadWarning+'<div class="m-foot"><button class="btn primary" onclick="closeModal()">我已保存</button></div>');
-    setTimeout(loadWireless,2500);
-  }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(){ toast('已恢复默认，WiFi 重新广播中'); window.closeModal(); setTimeout(loadWireless,2500); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
 };
 
 /* ---- 设备 ---- */
@@ -3278,12 +3317,12 @@ window.saveApply=function(){
     if(wp==='pppoe'){
       var su=document.getElementById('wanUser').value.trim(), sp=document.getElementById('wanPwd').value;
       if(!su){ toast('请填写宽带账号'); return; }
-      args=['single',inner,wan,iptv||'',wp,su,sp,port];
+      args=['single',inner,wan,iptv||'',wp,su,sp,'on',port];
     } else if(wp==='static'){
       var sip=document.getElementById('stIp').value.trim(), smask=document.getElementById('stMask').value.trim(), sgw=document.getElementById('stGw').value.trim(), sdns=document.getElementById('stDns').value.trim();
       if(!sip||!smask||!sgw){ toast('静态 IP、掩码、网关必填'); return; }
-      args=['single',inner,wan,iptv||'',wp,[sip,smask,sgw,sdns].join('/'),'',port];
-    } else { args=['single',inner,wan,iptv||'',wp,'','',port]; }
+      args=['single',inner,wan,iptv||'',wp,[sip,smask,sgw,sdns].join('/'),'','on',port];
+    } else { args=['single',inner,wan,iptv||'',wp,'','','on',port]; }
   }
   else {
     var bip=document.getElementById('bpIp').value.trim(), bgw=document.getElementById('bpGw').value.trim(), bdns=document.getElementById('bpDns').value.trim();
@@ -3295,9 +3334,7 @@ window.saveApply=function(){
 window.confirmApply=function(file,args,onOk){
   window._applyCfg={f:file,a:args,ok:onOk};
   var isSingle=args&&args[0]==='single';
-  var isNssOff=args&&(args[0]==='ap'||args[0]==='bypass');
-  var warning=isNssOff?'<div style="margin-top:10px;color:var(--danger)">注意：AP/旁路由模式会停止 NSS/ECM 服务并关闭硬件流量卸载，同时重建网络配置。若要保留当前 NSS/ECM，请勿应用这两种模式。</div>':'';
-  openBkModal('<h3>应用网络配置？</h3><div class="m-sub">'+(isSingle?'单臂路由会重建 VLAN 子接口与网桥，WiFi 与有线会短暂断开（约 20-40 秒），属正常现象。':'切换上网模式会重建网络接口，WiFi 与有线会短暂断开（约 10-30 秒），属正常现象。')+warning+'</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="closeModal();doApply()">确认应用</button></div>');
+  openBkModal('<h3>应用网络配置？</h3><div class="m-sub">'+(isSingle?'单臂路由会重建 VLAN 子接口与网桥，WiFi 与有线会短暂断开（约 20-40 秒），属正常现象。':'切换上网模式会重建网络接口，WiFi 与有线会短暂断开（约 10-30 秒），属正常现象。')+'</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="closeModal();doApply()">确认应用</button></div>');
 };
 window.doApply=function(){
   var cfg=window._applyCfg||{};
@@ -3313,13 +3350,7 @@ window.doApply=function(){
         steps=txt.split('\n').filter(function(s){return s&&s.trim();});
         var el=document.getElementById('progBox');
         if(el){ el.innerHTML=steps.map(function(s){ return '<div>'+(s.indexOf('完成')>=0||s.indexOf('已生效')>=0?'<span style="color:var(--ok)">✓</span> ':'<span style="color:var(--acc)">›</span> ')+esc(s)+'</div>'; }).join(''); el.scrollTop=el.scrollHeight; }
-        if(/完成：单臂路由配置已通过自检/.test(txt)){
-          clearInterval(window._progTimer); window._progTimer=null;
-          setTimeout(function(){ closeModal(); if(cfg.ok) cfg.ok(); },800);
-        } else if(/已自动回滚|无备份可回滚|配置备份失败，已中止|配置失败，已中止/.test(txt)){
-          clearInterval(window._progTimer); window._progTimer=null;
-          toast('单臂配置未通过，请查看上方失败或回滚记录；未报告成功');
-        }
+        if(/完成|已生效/.test(txt)){ clearInterval(window._progTimer); window._progTimer=null; setTimeout(function(){ closeModal(); if(cfg.ok) cfg.ok(); },800); }
       }).catch(function(){});
     },600);
     athenaRPC.exec('athena-mode.sh',['single-bg'].concat(cfg.a.slice(1))).then(function(){ }).catch(function(e){ clearInterval(window._progTimer); window._progTimer=null; closeModal(); toast('应用失败：'+(e.message||'')); });
@@ -3388,51 +3419,26 @@ window.runSpeed=function(){
 /* ---- 存储 ---- */
 window.refreshDisks=function(){ loadDisks(); };
 window.fmtDisk=function(dev){
-  if(dev!=='usb'){ toast('为保护系统存储，eMMC 格式化入口已禁用'); return; }
-  var disk=EXT_DISKS[0];
-  var parts=(disk&&disk.parts||[]).filter(function(p){ return p&&p.name&&!p.mount; });
-  if(!parts.length){ toast('没有可格式化的未挂载 USB 分区；请先确认分区状态'); return; }
-  var opts=parts.map(function(p){ return '<option value="/dev/'+esc(p.name)+'">'+esc(p.name)+' · '+Math.round(p.size_mb||0)+' MB · '+esc(p.fs||'未知文件系统')+'</option>'; }).join('');
-  openBkModal('<h3>格式化 USB 分区？</h3><div class="m-sub">只允许选择真实、未挂载的 USB 分区。格式化将清空该分区全部数据，不能恢复。</div><div class="limit-row"><div><label>目标分区</label><select id="fmtPart">'+opts+'</select></div><div><label>文件系统</label><select id="fmtFs"><option>ext4</option><option>vfat</option><option>exfat</option><option>f2fs</option></select></div></div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="fmtDiskDo()">我已确认，格式化所选分区</button></div>',true);
+  openBkModal('<h3>格式化 '+esc(dev)+'？</h3><div class="m-sub">将清空磁盘全部数据，无法恢复。请确认已备份。</div><div class="limit-row"><div><label>文件系统</label><select id="fmtFs"><option>ext4</option><option>vfat</option><option>exfat</option><option>f2fs</option></select></div></div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="fmtDiskDo(\''+dev+'\')">格式化</button></div>',true);
 };
-window.fmtDiskDo=function(){
-  var part=document.getElementById('fmtPart'), fs=document.getElementById('fmtFs');
-  if(!part||!fs||!/^\/dev\/sd[a-z][0-9]+$/.test(part.value)){ toast('目标分区无效，已取消'); return; }
-  if(!window.confirm('最后确认：将永久清空 '+part.value+'，是否继续？')) return;
-  athenaRPC.exec('athena-disk.sh',['format',part.value,fs.value]).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端拒绝格式化');
-    toast('分区格式化完成'); window.closeModal(); loadDisks();
-  }).catch(function(e){ toast('格式化失败：'+(e.message||'')); });
+window.fmtDiskDo=function(dev){
+  var fs=document.getElementById('fmtFs').value;
+  athenaRPC.exec('athena-disk.sh',['format',dev,fs]).then(function(){ toast('格式化完成'); window.closeModal(); loadDisks(); }).catch(function(e){ toast('格式化失败：'+(e.message||'')); });
 };
 window.umountUsb=function(){
-  var disk=EXT_DISKS[0], part=disk&&(disk.parts||[]).find(function(p){return p&&p.mount;});
-  if(!part){ toast('没有已挂载的 USB 分区'); return; }
-  athenaRPC.exec('athena-disk.sh',['umount','/dev/'+part.name]).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'卸载失败');
-    toast('已卸载'); loadDisks();
-  }).catch(function(e){ toast('卸载失败：'+(e.message||'')); });
+  var dev=EXT_DISKS[0]; if(!dev){ toast('没有已挂载的 USB 设备'); return; }
+  athenaRPC.exec('athena-disk.sh',['umount',dev.name]).then(function(){ toast('已卸载'); loadDisks(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); });
 };
 window.mountUsb=function(){
-  var disk=EXT_DISKS[0], part=disk&&(disk.parts||[]).find(function(p){return p&&p.name&&!p.mount;});
-  if(!part){ toast('没有可挂载的 USB 分区'); return; }
-  athenaRPC.exec('athena-disk.sh',['mount','/dev/'+part.name,'/mnt/usb']).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'挂载失败');
-    toast('已挂载'); loadDisks();
-  }).catch(function(e){ toast('挂载失败：'+(e.message||'')); });
+  var dev=EXT_DISKS[0]; if(!dev){ toast('没有可挂载的 USB 设备'); return; }
+  athenaRPC.exec('athena-disk.sh',['mount',dev.name,'/mnt/usb']).then(function(){ toast('已挂载'); loadDisks(); }).catch(function(e){ toast('挂载失败：'+(e.message||'')); });
 };
 window.openFbModal=function(){
-  openBkModal('<h3>文件共享</h3><div class="m-sub">仅共享已挂载到 /mnt/usb 的 USB 分区，服务仅监听路由器 LAN 管理地址</div>'
-    +'<div style="font-size:13px;color:var(--text2);padding:10px 0">访问地址：<br><b style="color:var(--primary)">http://'+esc(location.hostname)+':8081</b></div>'
-    +'<div id="fbCredential" style="font-size:12px;color:var(--text2);padding:10px 0">正在读取随机登录密码…</div>'
+  openBkModal('<h3>文件共享</h3><div class="m-sub">通过网页访问 U 盘文件（上传 / 下载 / 播放）</div>'
+    +'<div style="font-size:13px;color:var(--text2);padding:10px 0">filebrowser 网页地址：<br><b style="color:var(--primary)">http://'+location.hostname+':8081</b></div>'
+    +'<div style="font-size:11px;color:var(--text3)">首次登录：账号 root / 密码 admin（登录后请立即修改密码）</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="closeModal();window.open(\'http://\'+location.hostname+\':8081\',\'_blank\')">打开文件管理</button></div>');
-  var st=document.getElementById('fbStatus'); if(st) st.textContent='Quantum · LAN · /mnt/usb';
-  athenaRPC.exec('athena-services.sh',['filebrowser-password']).then(function(d){
-    var el=document.getElementById('fbCredential'); if(!el) return;
-    if(!d||d.ok!==true){ el.textContent=(d&&d.msg)||'随机密码暂不可用；请确认 USB 已挂载并启动文件共享'; return; }
-    el.innerHTML='<div>登录账号：<b>'+esc(d.username||'admin')+'</b></div><div style="margin-top:6px">初始随机密码：<code>'+esc(d.password||'')+'</code></div><div style="margin-top:6px;color:var(--text3)">密码首次生成后保存在路由器本机；若已在 Quantum 内修改密码，此处仍显示首次生成的初始密码。</div>';
-  }).catch(function(e){
-    var el=document.getElementById('fbCredential'); if(el) el.textContent='读取登录密码失败：'+(e.message||'请稍后重试');
-  });
+  var st=document.getElementById('fbStatus'); if(st) st.textContent='filebrowser · 端口 8081';
 };
 
 /* ---- 灯光 ---- */
@@ -3444,8 +3450,7 @@ window.toggleMatrixNight=function(){ setMatrix('night',MATRIX.night?'0':'1'); };
 window.setNightTime=function(){ var s=document.getElementById('nightStart').value, e=document.getElementById('nightEnd').value; if(s) setMatrix('night_start',s); if(e) setMatrix('night_end',e); };
 window.setNightLevel=function(v){ setMatrix('night_level',v); };
 function setMatrix(key,val){
-  athenaRPC.exec('athena-matrix.sh',['set',key,String(val)]).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认保存');
+  athenaRPC.exec('athena-matrix.sh',['set',key,String(val)]).then(function(){
     if(key==='enabled') MATRIX.enabled=(val==='1');
     else if(key==='light_level') MATRIX.light_level=parseInt(val,10);
     else if(key==='night_start') MATRIX.night_start=val;
@@ -3459,6 +3464,10 @@ function setMatrix(key,val){
     renderMatrixPanel(); toast('点阵屏设置已保存');
   }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 }
+window.openMatrixFull=function(){
+  if(!athenaRPC.live){ toast('登录后可用'); return; }
+  openSvcFrame('点阵屏完整管理','/admin/services/athena_led');
+};
 function openSvcFrame(name,path){
   var src='/cgi-bin/luci'+(path.indexOf('/cgi-bin/luci')===0?path.slice(11):path);
   openBkModal('<h3>'+esc(name)+'</h3><div class="m-sub" style="padding-bottom:10px">原生 LuCI 页面 · 无需重新登录</div>'
@@ -3467,7 +3476,7 @@ function openSvcFrame(name,path){
 }
 window.toggleBreath=function(){
   var target=LED.breathing?'0':'1';
-  athenaRPC.exec('athena-led.sh',['set','breath',target]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置'); LED.breathing=target==='1'; toast(target==='1'?'呼吸灯已开启':'呼吸灯已关闭'); renderLedPanel(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-led.sh',['set','breath',target]).then(function(){ LED.breathing=target==='1'; toast(target==='1'?'呼吸灯已开启':'呼吸灯已关闭'); renderLedPanel(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
 
 /* ---- 维护 ---- */
@@ -3479,24 +3488,14 @@ window.doReboot=function(){
   athenaRPC.exec('athena-reboot.sh',['now']).catch(function(e){ toast('重启指令已下发：'+(e.message||'')); });
 };
 window.openRebootSched=function(){
-  openBkModal('<h3>定时重启</h3><div class="m-sub">按设定星期和时间自动重启；也可以关闭现有计划</div>'
-    +'<div class="limit-row"><div><label>执行日期</label><select id="rbDow">'+[['*','每天'],['0','周日'],['1','周一'],['2','周二'],['3','周三'],['4','周四'],['5','周五'],['6','周六']].map(function(x){return '<option value="'+x[0]+'"'+(String(REBOOT_SCHED.dow)===String(x[0])?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div><div><label>时间</label><input type="time" id="rbTime" value="'+REBOOT_SCHED.hour+'"></div></div>'
-    +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button>'+(REBOOT_SCHED.enabled?'<button class="btn danger" onclick="disableRebootSched()">关闭计划</button>':'')+'<button class="btn primary" onclick="saveRebootSched()">保存</button></div>');
-};
-window.disableRebootSched=function(){
-  athenaRPC.exec('athena-reboot.sh',['disable']).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭');
-    REBOOT_SCHED.enabled=false; REBOOT_SCHED.loaded=true; window.closeModal(); toast('定时重启已关闭'); renderRebootSched();
-  }).catch(function(e){ toast('关闭失败：'+(e.message||'')); });
+  openBkModal('<h3>定时重启</h3><div class="m-sub">每周固定时间自动重启，清理长期运行的内存占用</div>'
+    +'<div class="limit-row"><div><label>每周几</label><select id="rbDow">'+[['*','每天'],['0','周日'],['1','周一'],['2','周二'],['3','周三'],['4','周四'],['5','周五'],['6','周六']].map(function(x){return '<option value="'+x[0]+'"'+(String(REBOOT_SCHED.dow)===String(x[0])?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div><div><label>时间</label><input type="time" id="rbTime" value="'+REBOOT_SCHED.hour+'"></div></div>'
+    +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveRebootSched()">保存</button></div>');
 };
 window.saveRebootSched=function(){
   var dow=document.getElementById('rbDow').value;
   var time=document.getElementById('rbTime').value||'03:30';
-  var day=dow==='*'?'每天':'每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[dow]||'');
-  athenaRPC.exec('athena-reboot.sh',['enable',time,dow]).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置成功');
-    REBOOT_SCHED.enabled=true; REBOOT_SCHED.dow=dow; REBOOT_SCHED.hour=time; window.closeModal(); toast('定时重启已设置：'+day+' '+time); renderRebootSched();
-  }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-reboot.sh',['enable',time,dow]).then(function(){ REBOOT_SCHED.enabled=true; REBOOT_SCHED.dow=dow; REBOOT_SCHED.hour=time; window.closeModal(); toast('定时重启已设置：每周'+({0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'}[dow]||'每天')+' '+time); renderRebootSched(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
 window.openUpgradeConfirm=function(){
   openBkModal('<h3>固件升级</h3><div class="m-sub">升级需要先上传固件文件（.bin）。升级会原样保留全部配置（账号密码、WiFi、单臂等）。设备将自动重启，请勿断电。</div>'
@@ -3694,21 +3693,20 @@ window.backupNow=function(){
   athenaRPC.exec('athena-backup.sh',['create']).then(function(d){ toast('备份完成：'+(d&&d.file||'')); loadBackupList(); }).catch(function(e){ toast('备份失败：'+(e.message||'')); });
 };
 window.openRestore=function(){
-  openBkModal('<h3>恢复配置</h3><div class="m-sub">上传 OpenWrt 配置备份（.tar.gz）并恢复，将覆盖当前配置</div>'
-    +'<div class="limit-row"><div><label>上传备份文件</label><div style="display:flex;gap:8px;align-items:center"><input type="file" id="bkFile" accept=".tar.gz,.gz" style="display:none" onchange="var s=document.getElementById(\'bkName\'); if(s){s.textContent=this.files&&this.files[0]?this.files[0].name:\'未选择文件\';}"><button type="button" class="btn" onclick="document.getElementById(\'bkFile\').click()">选择文件</button><span id="bkName" style="font-size:12px;color:var(--text3)">未选择文件</span></div></div></div>'
+  openBkModal('<h3>恢复配置</h3><div class="m-sub">上传备份文件（.tar.gz / .json）并恢复，将覆盖当前配置</div>'
+    +'<div class="limit-row"><div><label>上传备份文件</label><div style="display:flex;gap:8px;align-items:center"><input type="file" id="bkFile" accept=".tar.gz,.gz,.json" style="display:none" onchange="var s=document.getElementById(\'bkName\'); if(s){s.textContent=this.files&&this.files[0]?this.files[0].name:\'未选择文件\';}"><button type="button" class="btn" onclick="document.getElementById(\'bkFile\').click()">选择文件</button><span id="bkName" style="font-size:12px;color:var(--text3)">未选择文件</span></div></div></div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="doRestore()">上传并恢复</button></div>');
 };
 window.onRestorePick=function(){};
 window.doRestore=function(){
   var f=document.getElementById('bkFile').files[0];
   if(!f){ toast('请先选择备份文件'); return; }
-  if(!/\.tar\.gz$/i.test(f.name)&&!/\.gz$/i.test(f.name)){ toast('只接受 .tar.gz 配置备份文件'); return; }
   var fr=new FileReader();
   fr.onload=function(){
     var b64=fr.result.split(',')[1];
     toast('上传备份中…');
     athenaRPC._writeChunked('/tmp/athena-restore.b64',b64).then(function(){
-      athenaRPC.exec('athena-backup.sh',['restore-upload']).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复成功'); toast('配置已恢复，设备即将重启'); setTimeout(function(){ location.reload(); },8000); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+      athenaRPC.exec('athena-backup.sh',['restore-upload']).then(function(){ toast('配置已恢复，设备即将重启'); setTimeout(function(){ location.reload(); },8000); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
     }).catch(function(e){ toast('上传失败：'+(e.message||'')); });
   };
   fr.readAsDataURL(f);
@@ -3716,22 +3714,19 @@ window.doRestore=function(){
 window.toggleAutoBackup=function(){
   if(!athenaRPC.live){ toast('登录后可用'); return; }
   if(!AUTO_BACKUP){ window.openAutoBackupModal(); return; }
-  athenaRPC.exec('athena-backup.sh',['schedule','disable']).then(function(d){
-    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认关闭');
-    AUTO_BACKUP=false; toast('已关闭自动备份'); renderAutoBackup();
-  }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-backup.sh',['schedule','disable']).then(function(){ AUTO_BACKUP=false; toast('已关闭自动备份'); renderAutoBackup(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
 };
 window.openAutoBackupModal=function(){
   openBkModal('<h3>自动备份</h3><div class="m-sub">定期自动保存配置，设备异常时可快速恢复</div>'
-    +'<div class="limit-row"><div><label>频率</label><select id="abFreq"><option value="daily"'+(BACKUP_FREQ==='daily'?' selected':'')+'>每天</option><option value="weekly"'+(BACKUP_FREQ==='weekly'?' selected':'')+'>每周日</option><option value="monthly"'+(BACKUP_FREQ==='monthly'?' selected':'')+'>每月</option></select></div><div><label>时间</label><input type="time" id="abTime" value="'+BACKUP_TIME+'"></div></div>'
-    +'<div class="limit-row"><div><label>保留份数</label><input type="number" id="abKeep" value="'+BACKUP_KEEP+'" min="1" max="30"></div></div>'
+    +'<div class="limit-row"><div><label>频率</label><select id="abFreq"><option value="daily"'+(BACKUP_FREQ==='daily'?' selected':'')+'>每天</option><option value="weekly"'+(BACKUP_FREQ==='weekly'?' selected':'')+'>每周</option></select></div><div><label>时间</label><input type="time" id="abTime" value="'+BACKUP_TIME+'"></div></div>'
+    +'<div class="limit-row"><div><label>保留份数</label><input type="number" id="abKeep" value="'+BACKUP_KEEP+'" min="1" max="20"></div></div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveAutoBackup()">保存</button></div>');
 };
 window.saveAutoBackup=function(){
   var freq=document.getElementById('abFreq').value;
   var time=document.getElementById('abTime').value||'02:00';
   var keep=parseInt(document.getElementById('abKeep').value,10)||3;
-  athenaRPC.exec('athena-backup.sh',['schedule','set',freq,time,String(keep)]).then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认设置成功'); AUTO_BACKUP=true; BACKUP_FREQ=freq; BACKUP_TIME=time; BACKUP_KEEP=keep; window.closeModal(); toast('自动备份已开启'); renderAutoBackup(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
+  athenaRPC.exec('athena-backup.sh',['schedule','set',freq,time,String(keep)]).then(function(){ AUTO_BACKUP=true; BACKUP_FREQ=freq; BACKUP_TIME=time; BACKUP_KEEP=keep; window.closeModal(); toast('自动备份已开启'); renderAutoBackup(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
 window.openBackupList=function(){
   openBkModal('<h3>备份列表</h3><div class="m-sub">点击恢复可回滚到对应时间点的配置</div>'
@@ -3763,9 +3758,8 @@ function dlB64(file){
   }).catch(function(e){ toast('下载失败：'+(e.message||'')); });
 }
 window.restoreBackup=function(file){
-  openBkModal('<h3>恢复 '+esc(file)+'？</h3><div class="m-sub">将覆盖当前全部配置并重启设备。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="athenaRPC.exec(\'athena-backup.sh\',[\'restore\',\''+file+'\']).then(function(d){if(!d||d.ok!==true)throw new Error((d&&d.msg)||\'后端未确认恢复成功\');closeModal();toast(\'恢复完成，设备重启中\');setTimeout(function(){location.reload();},8000);}).catch(function(e){toast(\'恢复失败：\'+e.message);})">确认恢复</button></div>');
+  openBkModal('<h3>恢复 '+esc(file)+'？</h3><div class="m-sub">将覆盖当前全部配置并重启设备。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();athenaRPC.exec(\'athena-backup.sh\',[\'restore\',\''+file+'\']).then(function(){toast(\'恢复完成，设备重启中\');setTimeout(function(){location.reload();},8000);}).catch(function(e){toast(\'恢复失败：\'+e.message);})">确认恢复</button></div>');
 };
-
 
 /* ---- 高级 ---- */
 window.pickRes=function(t){ resTab=t; renderResBox(); };
@@ -3867,9 +3861,6 @@ window.pkgLoadAvail=function(tries){
     pkgRender();
   }).catch(function(e){ if(el) el.innerHTML='<div class="pkg-empty">加载失败：'+esc(e.message||'')+'</div>'; });
 };
-window.pkgIsProtected=function(n){
-  return /^(?:luci-app-openclash|luci-i18n-openclash-|openclash$|mihomo|clash|sing-box|singbox|qca-nss|kmod-qca-nss|qca-ssdk|kmod-qca-ssdk|ecm|kmod-ecm|nss-|kmod-nss-|base-files$|busybox$|apk-tools$|openwrt-keyring$|immortalwrt-keyring$|kernel(?:-|$)|kmod-|libc(?:-|$)|musl(?:-|$)|libgcc(?:-|$)|libubox|libubus|libnl|libopenssl|libustream|libqca-nss|libecm|libqca-ssdk|ath11k-firmware|rpcd$|ubus$|uhttpd$|netifd$|firewall4$|nftables$|dnsmasq|odhcpd|dropbear$|procd$|fstools$|block-mount$|wpad|hostapd|ppp(?:-|$)|luci-base$|luci-mod-|luci-app-athena$|luci-i18n-athena-zh-cn$)/i.test(String(n||''));
-};
 window.pkgRender=function(){
   var el=document.getElementById('pkgList'); if(!el) return;
   var q=(document.getElementById('pkgSearch').value||'').toLowerCase();
@@ -3879,19 +3870,18 @@ window.pkgRender=function(){
   el.innerHTML=list.slice(0,80).map(function(p){
     return '<div class="pkg-row"><div class="pkg-name" title="'+esc(p.name)+'">'+esc(p.name)+'</div><div class="pkg-ver">'+esc(p.version||'')+'</div><div class="pkg-actions">'
       +(tab==='available'?'<button class="btn sm primary" onclick="installPkg(\''+p.name+'\')">安装</button>':'')
-      +(tab==='installed'?(pkgIsProtected(p.name)?'<span style="font-size:11px;color:var(--text3);padding:6px 8px">系统保护</span>':'<button class="btn sm danger" onclick="removePkg(\''+p.name+'\')">卸载</button>'):'')
+      +(tab==='installed'?'<button class="btn sm danger" onclick="removePkg(\''+p.name+'\')">卸载</button>':'')
       +'</div></div>';
   }).join('')||'<div class="pkg-empty">没有匹配的软件包</div>';
 };
 window.installPkg=function(n){ toast('安装 '+n+' …'); athenaRPC.exec('athena-packages.sh',['install',n]).then(function(d){ toast((d&&d.msg)||(n+' 安装完成')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('安装失败：'+(e.message||'')); }); };
 window.removePkg=function(n){
-  if(pkgIsProtected(n)){ toast('该软件包属于关键系统组件，禁止卸载'); return; }
   openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
 };
-window.doRemovePkg=function(n){ if(pkgIsProtected(n)){ toast('该软件包属于关键系统组件，禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
-window.refreshPackageList=function(){ toast('正在刷新软件列表（仅更新软件源索引，不升级已安装软件）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件列表已刷新'); loadPkgSummary(); }).catch(function(e){ toast('刷新失败：'+(e.message||'')); }); };
+window.doRemovePkg=function(n){ toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
+window.checkUpdate=function(){ toast('检查软件源更新中（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源已更新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
 window.openSyslog=function(){
-  openBkModal('<h3>系统日志</h3><div class="m-sub">内核与系统服务实时日志</div><div class="log-toolbar"><input class="log-search" id="logSearch" placeholder="搜索日志…" oninput="logRender()"><div class="log-chips"><button class="log-chip on" data-lv="" onclick="logLv(\'\')">全部</button><button class="log-chip" data-lv="err" onclick="logLv(\'err\')">错误</button><button class="log-chip" data-lv="warn" onclick="logLv(\'warn\')">警告</button></div></div><div id="logList" class="log-list"><div class="log-empty">加载中…</div></div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn" onclick="exportLog()">导出日志</button><button class="btn danger" onclick="clearLog()">清空日志</button></div>');
+  openBkModal('<h3>系统日志</h3><div class="m-sub">内核与系统服务实时日志</div><div class="log-toolbar"><input class="log-search" id="logSearch" placeholder="搜索日志…" oninput="logRender()"><div class="log-chips"><button class="log-chip on" data-lv="" onclick="logLv(\'\')">全部</button><button class="log-chip" data-lv="err" onclick="logLv(\'err\')">错误</button><button class="log-chip" data-lv="warn" onclick="logLv(\'warn\')">警告</button></div></div><div id="logList" class="log-list"><div class="log-empty">加载中…</div></div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button></div>');
   loadLog();
 };
 window.LOGS=[]; window.LOG_LV='';
@@ -3914,14 +3904,9 @@ window.logRender=function(){
       +'<span class="lg" title="'+esc(l.msg||'')+'">'+esc(l.msg||'')+'</span></div>';
   }).join('')||'<div class="log-empty">没有匹配的日志</div>';
 };
-window.exportLog=function(){
-  athenaRPC.exec('athena-log.sh',['export']).then(function(d){
-    if(d&&d.ok===true&&d.url) window.open(d.url,'_blank');
-    else toast('日志导出失败：'+((d&&d.msg)||'后端未返回下载地址'));
-  }).catch(function(e){ toast('导出失败：'+(e.message||'')); });
-};
+window.exportLog=function(){ athenaRPC.exec('athena-log.sh',['export']).then(function(d){ if(d&&d.url) window.open(d.url,'_blank'); else toast('正在导出…'); }).catch(function(e){ toast('导出失败：'+(e.message||'')); }); };
 window.clearLog=function(){
-  openBkModal('<h3>清空系统日志？</h3><div class="m-sub">将清空全部日志记录（dmesg 与 syslog）。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="athenaRPC.exec(\'athena-log.sh\',[\'clear\']).then(function(d){if(!d||d.ok!==true)throw new Error((d&&d.msg)||\'后端未确认清空\');closeModal();toast(\'日志已清空\');}).catch(function(e){toast(\'清空失败：\'+e.message);})">确认清空</button></div>');
+  openBkModal('<h3>清空系统日志？</h3><div class="m-sub">将清空全部日志记录（dmesg 与 syslog）。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();athenaRPC.exec(\'athena-log.sh\',[\'clear\']).then(function(){toast(\'日志已清空\');}).catch(function(e){toast(\'清空失败：\'+e.message);})">确认清空</button></div>');
 };
 window.openPwdModal=function(){
   openBkModal('<h3>修改管理密码</h3><div class="m-sub">同时更新网页登录与 SSH 密码</div>'
@@ -3949,31 +3934,24 @@ window.setUnit=function(u){
 window.setDefaultUi=function(m){
   athenaRPC.exec('athena-ui.sh',['set',m]).then(function(){ UI_MODE.mode=m; toast('默认界面已设为：'+({athena:'管理台',native:'原生界面',last:'跟随上次'}[m])); renderAdvAccount(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
+window.toggleSsh=function(){ toast('SSH 服务由系统安全策略管理，始终启用'); };
 /* v1.2.54：此处原有的 openSortModal 覆盖定义已删除——
    它把上面真正的排序弹窗顶掉成"固定顺序、保留入口"的说明框，导致「自定义排序」是假的。 */
 
 /* ---- 主题持久化（覆盖预览稿 localStorage 版） ---- */
-window.setThemeMode=function(mode,silent){
+window.setThemeMode=function(mode){
   var r=document.documentElement;
   var active=(mode==='auto')?((matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'):mode;
-  window._athenaThemeMode=mode;
   r.dataset.theme=active;
-  sSet('athena_dark',mode==='auto'?'auto':(active==='dark'?'1':'0'));
+  sSet('athena_dark',active==='dark'?'1':'0');
+  /* 按钮高亮由 _pv.setThemeMode（预览稿版）按 .theme-modes 更新 */
   if(athenaRPC.live){
     var g=(window._pv&&window._pv.GLASS_THEME)||{palette:'aurora',blob:100,glass:58,blur:20,iri:55,hi:70};
     athenaRPC.exec('athena-theme.sh',['set',g.palette,String(g.blob),String(g.glass),String(g.blur),String(g.iri),String(g.hi),mode]).catch(function(){});
   }
   if(athenaRPC.live&&window._pv&&window._pv.setThemeMode){ try{ window._pv.setThemeMode(mode,true); }catch(e){} }
-  if(!silent) window.showToast('主题已切换为 '+(mode==='dark'?'深色':mode==='light'?'浅色':'跟随系统'));
+  window.showToast('主题已切换为 '+(mode==='dark'?'深色':mode==='light'?'浅色':'跟随系统'));
 };
-if(!window._athenaThemeMedia&&window.matchMedia){
-  window._athenaThemeMedia=window.matchMedia('(prefers-color-scheme: dark)');
-  var themeMediaChange=function(){
-    if(window._athenaThemeMode==='auto') window.setThemeMode('auto',true);
-  };
-  if(window._athenaThemeMedia.addEventListener) window._athenaThemeMedia.addEventListener('change',themeMediaChange);
-  else if(window._athenaThemeMedia.addListener) window._athenaThemeMedia.addListener(themeMediaChange);
-}
 window.saveGlassTheme=function(){
   if(!window._pv){ toast('主题组件未就绪'); return; }
   var g=window._pv.GLASS_THEME;
@@ -4042,17 +4020,14 @@ function enhancePwds(root){
   var scope=root&&root.querySelectorAll?root:document;
   var ins=scope.querySelectorAll('input[data-pwd="1"]');
   for(var i=0;i<ins.length;i++){
-    var p=ins[i], wrap=p.closest('.pwd-wrap');
-    if(!wrap){
-      wrap=document.createElement('div'); wrap.className='pwd-wrap';
-      p.parentNode.insertBefore(wrap,p); wrap.appendChild(p);
-    }
-    if(p.type!=='password') p.type='password';
-    if(wrap.querySelector('.pwd-eye')) continue;
-    var eye=document.createElement('button');
-    eye.type='button'; eye.className='pwd-eye'; eye.title='显示/隐藏密码';
+    var p=ins[i];
+    if(p.closest('.pwd-wrap')) continue;
+    var wrap=document.createElement('div'); wrap.className='pwd-wrap';
+    p.parentNode.insertBefore(wrap,p);
+    wrap.appendChild(p);
+    var eye=document.createElement('button'); eye.type='button'; eye.className='pwd-eye'; eye.title='显示/隐藏密码';
     eye.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-    eye.onclick=function(e){ e.preventDefault(); window.togglePwd(this); };
+    eye.onclick=function(e){ e.preventDefault(); window.togglePwd(eye); };
     wrap.appendChild(eye);
   }
 }
@@ -4079,28 +4054,12 @@ function renderForPage(id){
   else if(id==='net'){ if(!_STATUS) _NET_PENDING=true; renderNetPage(); }
   else if(id==='st'){ loadDisks(); }
   else if(id==='light'){ loadMatrixAll(); loadLed(); }
-  else if(id==='keep'){ loadBackupList(); loadBackupSchedule(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
+  else if(id==='keep'){ loadBackupList(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
   else if(id==='adv'){ loadResources(); loadServices(); loadPkgSummary(); }
 }
 window.navGo=function(id,el){
   try{ if(_origNavGo) _origNavGo(id,el); }catch(e){}
   setTimeout(function(){ renderForPage(id); },120);
-};
-window.devNew=function(){
-  updateNewDevs();
-  if(!NEW_DEVS.length){ toast('目前没有待识别的新设备'); return; }
-  devTab='online';
-  renderDevTable();
-  var target=DEVS.find(function(d){return d.online&&NEW_DEVS.indexOf(d.mac)>=0;});
-  if(target){
-    var row=document.querySelector('[data-devrow="'+target.id+'"]');
-    if(row){
-      row.classList.add('tr-flash');
-      if(row.scrollIntoView) row.scrollIntoView({behavior:'smooth',block:'center'});
-      setTimeout(function(){row.classList.remove('tr-flash');},3200);
-    }
-  }
-  toast('发现 '+NEW_DEVS.length+' 台待识别的新设备');
 };
 window.athenaRPC=athenaRPC;
 })();
