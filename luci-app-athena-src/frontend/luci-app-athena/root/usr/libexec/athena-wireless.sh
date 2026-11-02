@@ -77,6 +77,34 @@ band_caps() {
 		b58) echo "chs=auto,149,153,157,161,165|bws=20MHz,40MHz,80MHz" ;;
 	esac
 }
+valid_ssid() {
+	local n
+	n=$(printf '%s' "$1" | wc -c | tr -d ' ')
+	[ -n "$1" ] && [ "$n" -le 32 ] 2>/dev/null || return 1
+	printf '%s' "$1" | LC_ALL=C grep -q '[[:cntrl:]]' && return 1
+	return 0
+}
+valid_pass() {
+	local n
+	n=$(printf '%s' "$1" | wc -c | tr -d ' ')
+	[ "$n" -ge 8 ] 2>/dev/null && [ "$n" -le 63 ] 2>/dev/null || return 1
+	printf '%s' "$1" | LC_ALL=C grep -q '[[:cntrl:]]' && return 1
+	return 0
+}
+valid_channel() {
+	case "$1:$2" in
+		b24:auto|b24:1|b24:2|b24:3|b24:4|b24:5|b24:6|b24:7|b24:8|b24:9|b24:10|b24:11|b24:12|b24:13| \
+		b52:auto|b52:36|b52:40|b52:44|b52:48|b52:52|b52:56|b52:60|b52:64| \
+		b58:auto|b58:149|b58:153|b58:157|b58:161|b58:165) return 0 ;;
+	esac
+	return 1
+}
+valid_bw() {
+	case "$1:$2" in
+		b24:20MHz|b24:40MHz|b52:20MHz|b52:40MHz|b52:80MHz|b52:160MHz|b58:20MHz|b58:40MHz|b58:80MHz) return 0 ;;
+	esac
+	return 1
+}
 
 emit_band() {
 	local id="$1" idx="$2"
