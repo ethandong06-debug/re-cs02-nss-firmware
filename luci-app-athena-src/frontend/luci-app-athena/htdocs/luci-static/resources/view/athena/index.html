@@ -3361,7 +3361,9 @@ window.saveApply=function(){
 window.confirmApply=function(file,args,onOk){
   window._applyCfg={f:file,a:args,ok:onOk};
   var isSingle=args&&args[0]==='single';
-  openBkModal('<h3>应用网络配置？</h3><div class="m-sub">'+(isSingle?'单臂路由会重建 VLAN 子接口与网桥，WiFi 与有线会短暂断开（约 20-40 秒），属正常现象。':'切换上网模式会重建网络接口，WiFi 与有线会短暂断开（约 10-30 秒），属正常现象。')+'</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="closeModal();doApply()">确认应用</button></div>');
+  var isNssOff=args&&(args[0]==='ap'||args[0]==='bypass');
+  var warning=isNssOff?'<div style="margin-top:10px;color:var(--danger)">注意：AP/旁路由模式会停止 NSS/ECM 服务并关闭硬件流量卸载，同时重建网络配置。若要保留当前 NSS/ECM，请勿应用这两种模式。</div>':'';
+  openBkModal('<h3>应用网络配置？</h3><div class="m-sub">'+(isSingle?'单臂路由会重建 VLAN 子接口与网桥，WiFi 与有线会短暂断开（约 20-40 秒），属正常现象。':'切换上网模式会重建网络接口，WiFi 与有线会短暂断开（约 10-30 秒），属正常现象。')+warning+'</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="closeModal();doApply()">确认应用</button></div>');
 };
 window.doApply=function(){
   var cfg=window._applyCfg||{};
