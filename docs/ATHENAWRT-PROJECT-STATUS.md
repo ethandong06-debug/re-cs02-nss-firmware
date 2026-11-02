@@ -380,3 +380,14 @@
 - 不要用 Run #170 的 APK/公钥替代 Run #182；Run #182 的公钥只匹配 Run #182 主 APK。
 - 当前仅源码与 CI 通过；没有连接 Athena 路由器，没有安装 APK，没有修改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。
 - 在设备端验签和模拟升级前，不将 APK 视为已批准安装；真机 Quantum 行为仍须单独验收。
+
+
+### APK 签名与依赖模拟修复记录（2026-11-02）
+
+- 最新源码提交 `a623859e9cb038db2d9e04f24fa52fd976989600` 对应 Actions Run #185（ID `41386836386`）已完成，结果为 **failure**。
+- Run #185 的目标工具链安装和 `luci-app-athena` 1.2.60-r2 编译均通过；主 APK 与中文语言包 APK 的 SHA-256 签名验证均显示 `OK`。
+- 失败仅发生在最后的 APK 依赖模拟步骤：`ERROR: Unable to read database: No such file or directory`，退出码 99。Artifact 上传因该步骤失败而跳过。
+- 根因已定位：APK-tools 3 的 `--initdb` 是 `apk add` 子命令选项，不是当前命令中的全局选项。此前工作流把它放在 `add` 前，临时 root 数据库因此未初始化。
+- 已在提交 `ce8854f485aa65ff1bcf2226f236e2cefa522d69` 修正命令顺序，将 `--initdb` 移至 `add` 后；上游 apk-tools `src/app_add.c` 将该选项定义于 ADD_OPTIONS，并在解析时设置 `APK_OPENF_CREATE`。
+- 修复提交已触发 Actions Run #186（ID `41391283496`），当前状态 queued；以该次运行是否完成签名验证、依赖模拟及 Artifact 上传作为下一验收依据。
+- 当前仍未在 Athena 真机安装或运行本次 APK；未修改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。不得将 Run #185 的 APK 作为正式交付物。
