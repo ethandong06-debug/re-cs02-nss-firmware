@@ -58,6 +58,7 @@ case "$CMD" in
 		;;
 	set)
 		KEY="${2:-}"; VAL="${3:-0}"
+		[ "$VAL" = "0" ] || [ "$VAL" = "1" ] || { echo '{"ok":false,"msg":"呼吸灯状态只能为 0 或 1"}'; exit 1; }
 		case "$KEY" in
 			breath)
 				if [ -z "$LED_GREEN" ]; then
