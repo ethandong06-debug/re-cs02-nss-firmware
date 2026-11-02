@@ -3207,7 +3207,8 @@ window.doResetWireless=function(){
   athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){
     if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复');
     window.closeModal();
-    openBkModal('<h3>WiFi 已恢复默认</h3><div class="m-sub">三个频段已使用同一个随机密码。请保存该密码，并用新密码重新连接 WiFi。</div><div style="padding:12px 0;font-size:15px">新密码：<code>'+esc(d.password||'')+'</code></div><div class="m-foot"><button class="btn primary" onclick="closeModal()">我已保存</button></div>');
+    var reloadWarning=d.reload_ok===false?'<div style="margin-top:10px;color:var(--danger)">注意：配置已保存，但无线重载未确认成功；请先保存密码，再检查无线状态。没有重启整体网络。</div>':'';
+    openBkModal('<h3>WiFi 已恢复默认</h3><div class="m-sub">三个频段已使用同一个随机密码。请保存该密码，并用新密码重新连接 WiFi。</div><div style="padding:12px 0;font-size:15px">新密码：<code>'+esc(d.password||'')+'</code></div>'+reloadWarning+'<div class="m-foot"><button class="btn primary" onclick="closeModal()">我已保存</button></div>');
     setTimeout(loadWireless,2500);
   }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
 };
