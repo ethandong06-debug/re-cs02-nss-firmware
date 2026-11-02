@@ -18,6 +18,7 @@ valid_usb_partition() {
 	case "$part" in ''|*[!0-9]*) return 1 ;; esac
 	[ -b "$dev" ] || return 1
 	[ -f "/sys/class/block/$base/partition" ] || return 1
+	[ -z "$(ls -A "/sys/class/block/$base/holders" 2>/dev/null)" ] || return 1
 	local sys_path
 	sys_path=$(readlink -f "/sys/class/block/$base" 2>/dev/null)
 	case "$sys_path" in */usb*/*) ;; *) return 1 ;; esac
@@ -38,17 +39,23 @@ is_mounted() {
 	return 1
 }
 is_system_partition() {
-	local target src resolved rootarg
+	local target target_disk src resolved rootarg src_disk
 	target=$(readlink -f "$1" 2>/dev/null)
 	[ -n "$target" ] || return 1
+	target_disk=$(printf '%s' "$target" | sed 's/[0-9][0-9]*$//')
 	for src in $(awk '$2=="/" || $2=="/rom" || $2=="/overlay" {print $1}' /proc/mounts 2>/dev/null); do
 		resolved=$(readlink -f "$src" 2>/dev/null)
-		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
+		[ -n "$resolved" ] || continue
+		[ "$resolved" = "$target" ] && return 0
+		src_disk=$(printf '%s' "$resolved" | sed 's/[0-9][0-9]*$//')
+		[ "$src_disk" = "$target_disk" ] && return 0
 	done
 	rootarg=$(sed -n 's/.*root=\([^ ]*\).*/\1/p' /proc/cmdline 2>/dev/null)
 	if [ -n "$rootarg" ]; then
 		resolved=$(readlink -f "$rootarg" 2>/dev/null)
-		[ -n "$resolved" ] && [ "$resolved" = "$target" ] && return 0
+		[ "$resolved" = "$target" ] && return 0
+		src_disk=$(printf '%s' "$resolved" | sed 's/[0-9][0-9]*$//')
+		[ -n "$resolved" ] && [ "$src_disk" = "$target_disk" ] && return 0
 	fi
 	return 1
 }
