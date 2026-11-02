@@ -10,15 +10,18 @@ FB_PASS=/etc/filebrowser.password
 FB_PORT=8081
 
 lan_address() {
-	local dev ip
+	local dev ip configured
 	dev=$(uci -q get network.lan.device 2>/dev/null)
 	[ -z "$dev" ] && dev=$(uci -q get network.lan.ifname 2>/dev/null)
 	[ -z "$dev" ] && dev=br-lan
-	ip=$(uci -q get network.lan.ipaddr 2>/dev/null)
+	configured=$(uci -q get network.lan.ipaddr 2>/dev/null)
+	if [ -n "$configured" ]; then
+		ip -4 -o addr show dev "$dev" 2>/dev/null | awk -v want="$configured" '{ split($4,a,"/"); if (a[1] == want) found=1 } END { exit !found }' || return 1
+		ip="$configured"
+	else
+		ip=$(ip -4 -o addr show dev "$dev" 2>/dev/null | awk '{ split($4,a,"/"); if (a[1] !~ /^169\\.254\\./ && a[1] != "127.0.0.1") { print a[1]; exit } }')
+	fi
 	[ -n "$ip" ] || return 1
-	ip -4 -o addr show dev "$dev" 2>/dev/null \
-		| awk -v want="$ip" '{ split($4,a,"/"); if (a[1] == want) found=1 } END { exit !found }' \
-		|| return 1
 	printf '%s' "$ip"
 }
 
