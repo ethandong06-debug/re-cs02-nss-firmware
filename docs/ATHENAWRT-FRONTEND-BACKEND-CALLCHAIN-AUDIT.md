@@ -208,3 +208,48 @@ SPA 顶部提供 8 个主页面：
 ## 8. 本次审计未执行的事项
 
 本次只读取 GitHub 源码与文档。没有修改前端/后端源码，没有运行 GitHub Actions 构建，没有连接路由器，没有调用任何会更改设备配置或运行状态的 RPC，也没有执行网络切换、服务启停、格式化、升级、恢复出厂或回滚测试。
+
+
+## 9. 网络模式与启动保护链专项审计（静态）
+
+### 9.1 启动脚本顺序与职责
+
+| 脚本 | START | 条件 | 作用 |
+|---|---:|---|---|
+| `athena-vlan-pre` | 40 | `athena.system.mode=single` 且父设备 wan 存在 | 在 netifd/network（START 50）前，按 UCI 中的 8021q device 段预创建 `wan.X` VLAN 子接口 |
+| `athena-netcheck` | 98 | 单臂模式 | 开机后后台等待 45 秒，检查 `br-lan` 是否存在预期管理 IPv4；失败则记录异常配置并触发主路由回退 |
+| `athena-boot` | 99 | 无模式限制 | 恢复呼吸灯状态，并从 UCI 恢复设备拉黑规则 |
+
+### 9.2 当前存在的三条不同回退路径
+
+1. **前端使用的 `single-bg` 路径：**
+   - 先备份 `network/wireless/dhcp/firewall/athena` 五份 UCI 配置。
+   - 配置并提交五份配置，后台重启 network。
+   - 最多等待 15 秒检查管理地址、内网 VLAN、拨号 VLAN，以及启用时的 IPTV VLAN。
+   - 检查失败时导入五份备份并重启 network、WiFi、firewall。
+   - 前端通过 `progress` 轮询结果。
+2. **直接调用 `single` 的同步路径：**
+   - 主流程提交 network/wireless/dhcp/firewall/athena 并重启 network。
+   - 另起 8 秒自检；失败时只恢复最近的 `network.*.uci`，设置 Athena 模式为 router 并重启 network。
+   - 该路径与 `single-bg` 的五配置备份/15 秒检查并不等价；ACL 允许执行同一脚本，不能假设只有 UI 调用者。
+3. **开机 `athena-netcheck` 路径：**
+   - 等待 45 秒后只用 `br-lan` 是否存在管理 IP 判断健康。
+   - 不检查 PPPoE、拨号 VLAN、内网回传 VLAN、IPTV VLAN、IPv6、DHCP 或防火墙状态。
+   - 失败时先保存 `network.broken.<timestamp>.uci`，再调用 `athena-mode.sh router pppoe` 并重启 network。
+   - 这不是 UCI apply-with-rollback，也不等价于 `single-bg` 的完整五配置恢复。
+
+### 9.3 NSS/ECM 与网络副作用
+
+- `config_single()` 通过 `nss_on()` 启动 qca-nss-ecm，并将软件 flow_offloading 设为 0；注释明确单臂模式保持 NSS/ECM 启用。
+- `config_router()` 同样调用 `nss_on()`。
+- `config_ap()` 和 `config_bypass()` 调用 `nss_off()`：关闭 firewall flow_offloading，并停止 qca-nss-ecm。
+- 模式脚本会清理/重建 VLAN device、bridge、LAN/WAN interface、DHCP 及部分 firewall zone 引用；单臂还会改变 `wan6.device` 指向拨号 VLAN。
+- 因此 AP/旁路由按钮不是普通网络偏好开关；对当前要求保留 NSS/ECM 的设备必须保持禁用/不可误触，不能在审计阶段执行。
+
+### 9.4 原生 LuCI/UCI 回滚的真实接入限制
+
+- LuCI UCI `apply(true)` 的回滚语义依赖 rpcd UCI 的 session/rollback 状态；`confirm()` 用于确认并取消待回滚任务。
+- Athena 当前 `athena-mode.sh` 直接通过 CLI `uci set/delete/add_list` 修改配置，随后执行 `uci commit`，并在后台重启 network；它没有把这些变更放入当前 LuCI 登录会话的 UCI pending changes 中。
+- 因此不能只在现有脚本外围调用一次 `apply(true)` 就宣称原生回滚覆盖所有副作用。若要真正复用原生机制，需要重构配置提交路径，使网络配置变更进入同一 rpcd UCI session 的 staged changes，再由原生 apply/confirm/rollback 管理；同时仍需验证无线、DHCP、防火墙、Athena 私有配置、硬件 VLAN 预创建与重启脚本是否都在回滚覆盖范围内。
+- 在完成设备当前 LuCI 版本、RPC/ACL、会话权限与覆盖范围核对前，现有手工备份/回退逻辑不能删除，也不能假定原生回滚已接管。
+- 本节只作静态审计，没有执行任何模式切换或回滚测试。
