@@ -391,3 +391,13 @@
 - 已在提交 `ce8854f485aa65ff1bcf2226f236e2cefa522d69` 修正命令顺序，将 `--initdb` 移至 `add` 后；上游 apk-tools `src/app_add.c` 将该选项定义于 ADD_OPTIONS，并在解析时设置 `APK_OPENF_CREATE`。
 - 修复提交已触发 Actions Run #186（ID `41391283496`），当前状态 queued；以该次运行是否完成签名验证、依赖模拟及 Artifact 上传作为下一验收依据。
 - 当前仍未在 Athena 真机安装或运行本次 APK；未修改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。不得将 Run #185 的 APK 作为正式交付物。
+
+
+### Run #186 失败复盘与临时数据库修正（2026-11-02）
+
+- 当前分支 HEAD 在修复前为 `a6e380073208d8d6b9847ac9889a36db4b427222`；Run #186（ID `41391283496`）已完成，结论 **failure**。
+- Run #186 的静态检查、Quantum ARM64 QEMU smoke test、ImmortalWrt host tools、目标工具链、Athena 主 APK/中文语言包编译均通过；两个 APK 的签名验证均显示 `OK`。
+- 失败发生在临时 root 的依赖模拟：将 `--initdb` 放在 `add` 后虽修正了选项位置，但仍与 `--simulate` 放在同一事务中；该模拟事务未创建 APK 数据库，报 `Unable to read database: No such file or directory`，退出码 99。Artifact 未上传。
+- 修复方案：在一次独立的、仅针对 mktemp 临时 root 的非模拟事务中，使用本次构建匹配的公钥安装目标 `libc` 与 `libgcc1` 基础运行库并初始化 APK 数据库；随后对 Athena 主 APK 与中文语言包执行独立的 `--simulate` 依赖求解。此过程不访问路由器、不触碰主机包数据库，也不绕过签名验证。
+- 已更新工作流文件 `.github/workflows/build-athena-apk.yml`；等待本次提交触发的 Actions 运行，以实际结果验收。若模拟阶段仍失败，继续依据 job log 定位，不将失败产物交付。
+- 设备端验签、模拟升级、Quantum 真机功能验收和正式安装仍未执行；用户现有 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash、NSS/ECM 均未触碰。
