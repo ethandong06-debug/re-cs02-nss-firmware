@@ -602,3 +602,14 @@
 - 以上仅静态审查，无任何危险命令或设备操作。
 - 审计文档更新提交：`d682c92832fa6a7e8b18745bb16ec8466c5df884`。
 - 下一步：完成所有 24 个 RPC 入口的参数矩阵和 ACL 最小权限映射；再形成按 P0/P1/P2 排序的最终整改建议与页面去留表。
+
+
+### 阶段 A 补充：rpcd ACL 实际调用映射与最小权限建议（2026-11-02）
+
+- 已复核完整 SPA 适配层：直接使用 ubus `session.login`、`system.info`、`file.exec`、`file.write`。
+- `file.exec` 命令被前端封装固定为 `/usr/libexec/<script>`；`file.write` 当前只用于配置备份分块上传至 `/tmp/athena-restore.b64`。
+- 当前 ACL 对七份 UCI 配置开放 read/write，但 SPA 没有直接调用 ubus UCI；专用脚本在后端执行 UCI。此项为 P0 最小权限收敛候选。
+- 当前 ACL 额外授权 `/etc/init.d/network`、`ping`、`nslookup`、`ubus` 直接执行；完整 SPA 未发现调用。历史固件升级页面还引用 `/tmp/athena-fw.b64`，当前主 SPA 已改用原生 cgi-upload multipart 通道上传到 `/tmp/athena-fw-upload.bin`，因此相关旧写权限与上传文件 read/write 权限均需核实并考虑移除。
+- ACL 目标建议缩至明确的 Athena 脚本 `file.exec` 路径和备份上传单一路径 `file.write`；不使用通配符或通用 shell/ubus 执行入口。
+- 任何 ACL 修改前仍需核对设备 rpcd 版本、ACL 解析行为、LuCI 登录桥接和其他调用者；本轮没有修改 ACL 或重载 rpcd。
+- 审计文档更新提交：`e1939cea7f29d3d745440f4a7f1de4fdc1230f6a`。
