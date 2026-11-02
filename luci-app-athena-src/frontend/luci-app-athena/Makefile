@@ -19,7 +19,7 @@ LUCI_PKGARCH:=all
 include $(TOPDIR)/feeds/luci/luci.mk
 
 define Package/luci-app-athena/install
-	# ---- 后端脚本（23 个）----
+	# ---- libexec 后端文件（36 个，含 Shell / ucode / legacy 回退与 helper）----
 	$(INSTALL_DIR) $(1)/usr/libexec
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status.sh $(1)/usr/libexec/athena-status.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status-legacy.sh $(1)/usr/libexec/athena-status-legacy.sh
