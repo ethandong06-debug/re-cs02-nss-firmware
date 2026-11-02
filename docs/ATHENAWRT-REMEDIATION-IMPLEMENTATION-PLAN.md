@@ -295,3 +295,42 @@
 - 已根据当前分支源码核对 ACL、动态服务启停、升级、恢复出厂、网络模式、访客网络、设备拉黑、家长控制、备份恢复、进程管理的关键实现。
 - 上述设计是整改方案，不是实施结果。
 - 阶段 B 的下一步应是确认方案边界和任务排序；在确认前不修改源码、ACL、工作流，不构建 APK，不操作当前 Athena 设备。
+
+
+## 15. 现有 GitHub Actions 与测试基础设施盘点（Batch 0 补充）
+
+### 15.1 已有自动检查
+
+当前 `.github/workflows/build-athena-apk.yml` 已执行：
+- 对 libexec 下所有 `*.sh`、`root/etc/init.d`、`root/etc/uci-defaults`、`root/etc/hotplug.d/block` 执行 `sh -n`。
+- 解析 LuCI 菜单 JSON 和 rpcd ACL JSON。
+- 提取 SPA inline JavaScript 并执行 `node --check`。
+- 静态核对 SPA 直接 RPC 脚本、Makefile 安装列表和 ACL exec 白名单的一致性。
+- 编译 Athena APK，校验签名，并在临时 root 中模拟 APK 依赖解析。
+
+### 15.2 当前缺口
+
+- 当前仓库根目录未发现独立的 `tests/` 测试目录。
+- `luci-app-athena-src/tools/` 中存在 `_audit.py`、`_audit2.py`、`_cfgchk.py` 和 APK 检查工具，但它们不是针对高危后端行为的 mock 回归套件。
+- 当前 workflow 没有 ShellCheck；`sh -n` 只能检查语法，不能发现多数变量引用、命令返回码、路径边界和逻辑问题。
+- 没有发现对 `athena-upgrade.sh`、`athena-services-legacy.sh`、`athena-reset.sh` 等脚本的 PATH mock / 失败注入测试。
+- 没有自动验证 nftables 规则语法、UCI 多配置回滚、访客网络隔离、备份上传并发和 USB 设备热插拔竞态。
+- 当前 workflow 的 push paths 主要覆盖 Athena 前端源码、设备 seed 和 workflow 文件；若测试目录放在仓库其他路径，需同步把测试路径加入 workflow 触发条件，否则新增测试不会自动运行。
+- 本轮只提交 docs 文件，不匹配当前 workflow 的源码触发路径，因此不能把最近的文档提交误报为产生了新 APK 构建。
+
+### 15.3 Batch 0 推荐最小测试目录
+
+建议在用户确认开始源码整改后新增：
+- `luci-app-athena-src/tests/run-static.sh`：统一执行 shell syntax、JSON、ACL、RPC 调用链核对。
+- `luci-app-athena-src/tests/mock-bin/`：只放测试专用的 uci、nft、fw4、sysupgrade、firstboot、reboot、wifi、mkfs 等 mock 命令。
+- `luci-app-athena-src/tests/cases/`：服务名边界、固件包结构、确认票据、配置事务、nft 规则生成等离线用例。
+- `luci-app-athena-src/tests/README.md`：说明所有测试均在临时目录执行，禁止指向当前设备或真实系统路径。
+- workflow 增加该测试目录的 push paths，并在 APK 编译前运行；测试失败则停止构建。
+
+安全要求：测试脚本不得通过 `sudo`、SSH、scp、curl 等方式访问路由器；所有高危命令必须由 mock-bin 截获并记录调用参数。测试运行时校验目标临时根目录标识，防止误指向宿主机真实 /etc、/tmp、/dev 或设备分区。
+
+### 15.4 当前基线结论
+
+- 现有 CI 已有基础语法/元数据/调用链/构建验签能力，保留并扩展，不另造重复构建流程。
+- Batch 0 的核心工作是增加可重复的离线行为测试，而不是重写现有 workflow。
+- 是否新增测试文件和修改 workflow 属于源码/CI 变更；本轮没有实施，需进入用户明确确认后的实现阶段。
