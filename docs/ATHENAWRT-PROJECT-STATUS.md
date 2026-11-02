@@ -334,3 +334,49 @@
 - 随后为 procd 启动命令增加 `umask 077`，确保 Quantum 运行时创建的 SQLite/WAL 等文件使用私有权限。该改动提交为 `1f375cebb021273115e70fbd3d60d6e9914033a2`。
 - 最新 Actions Run #182：ID `41378970658`，对应上述提交；静态语法/元数据/调用链检查通过，Quantum 二进制下载与校验通过，当前正在安装构建依赖。QEMU smoke test 与完整 package-only 构建仍待完成。
 - Run #181 为较早源码快照；最终以 Run #182（或更新提交对应的后续 Run）作为 Quantum 版本的构建验收依据。
+
+
+### FileBrowser Quantum 替换完成与 Run #182 验收（2026-11-02）
+
+用户已明确确认采用 FileBrowser Quantum v2.0.2-stable。当前源码对应提交 `1f375cebb021273115e70fbd3d60d6e9914033a2`，Actions Run #182（ID `41378970658`）已 **success**，14 个步骤全部通过。
+
+**依赖与二进制**
+- 上游 Release：`gtsteffaniak/filebrowser v2.0.2-stable`，非 beta/prerelease；官方 Linux ARM64 asset 名为 `linux-arm64-filebrowser`，大小 26,498,676 bytes。
+- 上游 Release asset SHA-256：`03eac074efc1b0ef3cb39882c04eeee26027049d261b6b6706650d4ac2d8e21c`；workflow 下载后执行 sha256sum 校验。
+- 该二进制以 musl/aarch64 构建，目标架构与 Athena IPQ6018 / aarch64 Cortex-A53 / musl 相符。
+- Workflow 使用 QEMU 在 x86_64 runner 上运行 ARM64 二进制：`version` 命令通过；使用 `user set admin --password ... -a --no-input -c config.yaml` 成功初始化 SQLite 数据库。
+- 构建日志确认二进制被安装到 APK staging 的 `/usr/bin/filebrowser`，且 init.d、hotplug 与服务脚本均被安装。Quantum 二进制随主 APK 打包，不是设备端运行时下载。
+
+**当前服务配置**
+- Quantum 配置使用 YAML；监听地址为检测到的当前 LAN IPv4，端口 8081，不监听 0.0.0.0。
+- 唯一共享 source 固定为 `/mnt/usb`；仅当真实 USB 分区挂载在该路径且 LAN 地址可确认时启动。
+- SQLite 数据库位于 `/etc/filebrowser-quantum.sqlite`；配置位于 `/etc/filebrowser-quantum.yaml`；缓存位于 USB 内隐藏目录 `/mnt/usb/.athena-filebrowser-cache`。
+- 首次初始化生成 24 字节随机密码，保存于 `/etc/filebrowser.password`，权限 0600；配置不持久写入 `auth.adminPassword`，避免服务重启覆盖用户在 Web UI 修改的密码。
+- procd 运行命令使用 `umask 077`；USB block hotplug 在共享分区移除时停止服务，插入时延迟尝试重启；磁盘挂载/卸载流程与服务启停联动。
+- LuCI 显示 Quantum 名称、LAN 访问地址和首次随机管理员凭据；若用户之后在 Quantum Web UI 修改密码，LuCI 仍显示首次生成密码并明确提示不会同步更新。
+- 原版 File Browser 数据库不迁移、不覆盖；USB 用户文件仍位于 `/mnt/usb`，Quantum 创建独立数据库。旧数据库文件不主动删除。
+
+**Run #182 构建产物**
+- Artifact：`luci-app-athena-apk`，ID `13114103893`，ZIP 大小 24,586,232 bytes，创建于 2026-11-02 03:36 UTC，预计 2026-11-16 03:36 UTC 过期。
+- Artifact ZIP 已下载并检查，含主 APK、中文语言包 APK、匹配公钥、SHA256SUMS、构建日志与源码元数据。
+- 主 APK：`luci-app-athena-1.2.60-r1.apk`，24,548,134 bytes；SHA-256 `0661b4cf4626c6a85c078b655e9c0c479fcfc23529ef429fd34f4921eeeaea3c`。
+- 中文语言包：`luci-i18n-athena-zh-cn-0.apk`，957 bytes；SHA-256 `ecb94a56f80f51a6d8007a616540537a94327aa88dcce462445ebe6c3a1e5d09`。
+- 匹配公钥：`athenawrt-build-signing.pub`，178 bytes；SHA-256 `caf2624aa6c4852bf293db613ed45629be4eff23cd1f2cf0ebc764d810e120f1`。OpenSSL 已成功解析为 ECDSA P-256 公钥。
+- 对 Artifact 解出的三个文件重新计算 SHA-256，均与 `SHA256SUMS.txt` 一致。
+- 构建目标为 `aarch64_cortex-a53_musl`，仅构建独立 LuCI APK 与中文语言包，没有构建或刷写整机固件。
+
+**验收边界**
+- [x] Quantum v2.0.2-stable 版本固定、ARM64 二进制 SHA-256 校验。
+- [x] QEMU ARM64 CLI 版本检查及管理员/SQLite 初始化 smoke test。
+- [x] Shell/JavaScript/JSON 静态检查及前后端调用链检查。
+- [x] ImmortalWrt host tools、目标工具链、package-only APK 构建。
+- [x] 主 APK、中文语言包、公钥及 SHA-256 清单上传和校验。
+- [ ] Athena 真机运行、内存占用、登录/改密、上传/下载/删除、USB 拔除/重插、LAN 监听范围验收。
+- [ ] 设备端导入本次构建匹配公钥、APK 签名验证及模拟升级。
+- [ ] 用户确认后才正式安装。
+
+**安全边界**
+- 本次构建仍使用每次 Actions runner 临时生成的签名私钥；Artifact 只含本次匹配公钥，不能用于验证其他构建。
+- 不要用 Run #170 的 APK/公钥替代 Run #182；Run #182 的公钥只匹配 Run #182 主 APK。
+- 当前仅源码与 CI 通过；没有连接 Athena 路由器，没有安装 APK，没有修改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。
+- 在设备端验签和模拟升级前，不将 APK 视为已批准安装；真机 Quantum 行为仍须单独验收。
