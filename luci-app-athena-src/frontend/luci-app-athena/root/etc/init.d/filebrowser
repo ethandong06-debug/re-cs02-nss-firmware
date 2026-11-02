@@ -1,13 +1,15 @@
 #!/bin/sh /etc/rc.common
-# AthenaWrt filebrowser：仅在真实 USB 分区挂载到 /mnt/usb 且 LAN 地址可用时启动。
-# 初次启动生成随机密码并保存为 root-only 文件 /etc/filebrowser.password。
+# AthenaWrt FileBrowser Quantum：仅在 USB 分区挂载到 /mnt/usb 且 LAN 地址可用时启动。
+# 首次启动密码随机生成并保存在 /etc/filebrowser.password（0600）。
 START=98
 USE_PROCD=1
 
 FB_BIN=/usr/bin/filebrowser
-FB_DB=/etc/filebrowser-data.db
+FB_CONFIG=/etc/filebrowser-quantum.yaml
+FB_DB=/etc/filebrowser-quantum.sqlite
 FB_PASS=/etc/filebrowser.password
 FB_PORT=8081
+FB_CACHE=/mnt/usb/.athena-filebrowser-cache
 
 lan_address() {
 	local dev ip configured
@@ -33,40 +35,58 @@ random_password() {
 	od -An -N24 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n'
 }
 
+write_config() {
+	local lan_ip="$1"
+	cat > "$FB_CONFIG" <<EOF
+http:
+  listen: "$lan_ip"
+  port: $FB_PORT
+  disableRateLimit: false
+server:
+  database:
+    path: "$FB_DB"
+  cacheDir: "$FB_CACHE"
+  sources:
+    - path: "/mnt/usb"
+      config:
+        defaultEnabled: true
+auth:
+  adminUsername: "admin"
+  methods:
+    password:
+      enabled: true
+EOF
+	chmod 600 "$FB_CONFIG"
+}
+
 start_service() {
 	local LAN_IP PASS
 	umask 077
-	[ -x "$FB_BIN" ] || { logger -t filebrowser "binary missing; service not started"; return 0; }
+	[ -x "$FB_BIN" ] || { logger -t filebrowser "Quantum binary missing; service not started"; return 0; }
 	usb_mounted || { logger -t filebrowser "USB partition is not mounted at /mnt/usb; service not started"; return 0; }
 	[ -d /mnt/usb ] || { logger -t filebrowser "/mnt/usb is unavailable; service not started"; return 0; }
 	LAN_IP=$(lan_address) || { logger -t filebrowser "LAN address unavailable; service not started"; return 0; }
 
-	if [ ! -f "$FB_DB" ]; then
-		"$FB_BIN" -d "$FB_DB" config init --commands "" --perm.execute=false >/dev/null 2>&1 || {
-			logger -t filebrowser "database initialization failed"
-			return 1
-		}
-		chmod 600 "$FB_DB" 2>/dev/null
-	fi
-	chmod 600 "$FB_DB" "$FB_PASS" 2>/dev/null
-
-	# 首次部署或从旧版固定 root/admin 迁移时，生成随机密码并旋转默认管理员密码。
-	# 密码只写入权限 0600 的本地文件，不写入日志。
 	if [ ! -s "$FB_PASS" ]; then
 		PASS=$(random_password)
 		[ "${#PASS}" -eq 48 ] || { logger -t filebrowser "secure password generation failed"; return 1; }
-		if ! "$FB_BIN" -d "$FB_DB" users update root --password "$PASS" --perm.execute=false --commands "" >/dev/null 2>&1; then
-			"$FB_BIN" -d "$FB_DB" users add root "$PASS" --perm.admin --perm.execute=false --commands "" >/dev/null 2>&1 || {
-				logger -t filebrowser "administrator initialization failed"
-				return 1
-			}
-		fi
 		( umask 077; printf '%s\n' "$PASS" > "$FB_PASS" ) || return 1
-		chmod 600 "$FB_PASS" 2>/dev/null
+		chmod 600 "$FB_PASS"
 	fi
+	PASS=$(cat "$FB_PASS" 2>/dev/null)
+	case "$PASS" in
+		????????????????????????????????????????????????) ;;
+		*) logger -t filebrowser "stored initial password has invalid length"; return 1 ;;
+	esac
+	case "$PASS" in *[!0-9a-f]*) logger -t filebrowser "stored initial password has invalid format"; return 1 ;; esac
+
+	mkdir -p "$FB_CACHE" || { logger -t filebrowser "cache directory unavailable"; return 1; }
+	chmod 700 "$FB_CACHE" 2>/dev/null
+	write_config "$LAN_IP" || { logger -t filebrowser "Quantum config creation failed"; return 1; }
+	chmod 600 "$FB_DB" 2>/dev/null
 
 	procd_open_instance
-	procd_set_param command "$FB_BIN" -d "$FB_DB" -a "$LAN_IP" -p "$FB_PORT" -r /mnt/usb
+	procd_set_param command /usr/libexec/athena-filebrowser-run.sh "$LAN_IP"
 	procd_set_param respawn 3600 5 5
 	procd_close_instance
 }
