@@ -22,7 +22,7 @@ if [ "$1" = "stop" ] || [ "$1" = "restart" ]; then
 	[ "$PID" -le 2 ] && { echo '{"ok":false,"msg":"系统核心进程受保护"}'; exit 1; }
 	# 关键系统服务进程保护：误停会断网/丢 WiFi/失联（网络、无线、管理、拨号、DNS 等）
 	case "|$NAME|" in
-		*"|wpad|"*|*"|hostapd|"*|*"|hostapd_cli|"*|*"|netifd|"*|*"|dnsmasq|"*|*"|odhcpd|"*|*"|odhcp6c|"*|*"|ubusd|"*|*"|rpcd|"*|*"|uhttpd|"*|*"|lighttpd|"*|*"|dropbear|"*|*"|logd|"*|*"|syslogd|"*|*"|pppd|"*|*"|pppoe|"*)
+		*"|wpad|"*|*"|hostapd|"*|*"|hostapd_cli|"*|*"|netifd|"*|*"|dnsmasq|"*|*"|odhcpd|"*|*"|odhcp6c|"*|*"|ubusd|"*|*"|rpcd|"*|*"|uhttpd|"*|*"|lighttpd|"*|*"|dropbear|"*|*"|logd|"*|*"|syslogd|"*|*"|pppd|"*|*"|pppoe|"*|*"|openclash|"*|*"|clash|"*|*"|mihomo|"*|*"|ecm|"*|*"|qca-nss-ecm|"*|*"|qca-nss-drv|"*)
 			echo '{"ok":false,"msg":"关键系统服务受保护，不允许停止/重启（会导致断网或失联）"}'; exit 1 ;;
 	esac
 	kill -9 "$PID" 2>/dev/null
