@@ -2,7 +2,7 @@
 # Copyright (C) 2026 AthenaWrt
 # AthenaWrt 专属产品级管理界面（luci-app-athena）
 # 液态玻璃单页前端（htdocs/luci-static/resources/view/athena/index.html）
-# + 23 个后端 shell 脚本（root/usr/libexec/athena-*.sh）
+# + 24 个前端 RPC 脚本入口及内部 helper / ucode 实现
 #
 include $(TOPDIR)/rules.mk
 
@@ -85,6 +85,10 @@ define Package/luci-app-athena/install
 	$(INSTALL_BIN) ./root/etc/init.d/filebrowser $(1)/etc/init.d/filebrowser
 	$(INSTALL_BIN) ./root/etc/init.d/athena-vlan-pre $(1)/etc/init.d/athena-vlan-pre
 	$(INSTALL_BIN) ./root/etc/init.d/athena-netcheck $(1)/etc/init.d/athena-netcheck
+
+	# ---- USB block hotplug（拔除共享 U 盘时立即停止 filebrowser）----
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/block
+	$(INSTALL_BIN) ./root/etc/hotplug.d/block/99-athena-filebrowser $(1)/etc/hotplug.d/block/99-athena-filebrowser
 
 	# ---- filebrowser 预编译二进制（官方 release，aarch64 静态链接，34.5MB）----
 	$(INSTALL_DIR) $(1)/usr/bin
