@@ -9,6 +9,17 @@
 
 CMD="${1:-check}"
 json_str() { sed 's/\\/\\\\/g; s/"/\\"/g'; }
+valid_host_arg() {
+	case "$1" in ''|-*|*[!A-Za-z0-9._:-]*) return 1 ;; esac
+	[ "${#1}" -le 253 ] || return 1
+	return 0
+}
+valid_domain_arg() {
+	case "$1" in ''|-*|*[!A-Za-z0-9._-]*) return 1 ;; esac
+	[ "${#1}" -le 253 ] || return 1
+	case "$1" in *..*|.*|*.) return 1 ;; esac
+	return 0
+}
 
 # 内置测速节点（信通院等公共节点，域名形式，真机按需替换为 IP）
 NODES='[
@@ -25,6 +36,9 @@ case "$CMD" in
 		;;
 	ping)
 		HOST="${2:-114.114.114.114}"; CNT="${3:-4}"
+		valid_host_arg "$HOST" || { echo '{"ok":false,"msg":"目标地址格式无效"}'; exit 1; }
+		case "$CNT" in ""|*[!0-9]*) echo '{"ok":false,"msg":"ping 次数必须为 1-10"}'; exit 1 ;; esac
+		[ "$CNT" -ge 1 ] 2>/dev/null && [ "$CNT" -le 10 ] 2>/dev/null || { echo '{"ok":false,"msg":"ping 次数必须为 1-10"}'; exit 1; }
 		raw=$(ping -c "$CNT" -W 2 "$HOST" 2>/dev/null)
 		[ -z "$raw" ] && { echo "{\"ok\":false,\"msg\":\"ping 失败或无响应\"}"; exit 1; }
 	# 提取丢包率 / 平均时延 / 抖动（mdev）
@@ -37,6 +51,8 @@ case "$CMD" in
 		;;
 	dns)
 		DOMAIN="${2:-www.qq.com}"; DNS="${3:-}"
+		valid_domain_arg "$DOMAIN" || { echo '{"ok":false,"msg":"域名格式无效"}'; exit 1; }
+		if [ -n "$DNS" ]; then valid_host_arg "$DNS" || { echo '{"ok":false,"msg":"DNS 服务器地址格式无效"}'; exit 1; }; fi
 		if [ -n "$DNS" ]; then
 			out=$(nslookup "$DOMAIN" "$DNS" 2>/dev/null)
 		else
