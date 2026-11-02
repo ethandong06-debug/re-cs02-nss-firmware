@@ -109,6 +109,28 @@ jobs:
           install -m 0755 "${binary}" luci-app-athena-src/frontend/luci-app-athena/root/usr/bin/filebrowser
           file luci-app-athena-src/frontend/luci-app-athena/root/usr/bin/filebrowser
           "${binary}" version
+          smoke="$(mktemp -d)"
+          mkdir -p "${smoke}/files"
+          cat > "${smoke}/config.yaml" <<EOF
+          http:
+            listen: "127.0.0.1"
+            port: 18081
+          server:
+            database:
+              path: "${smoke}/filebrowser.sqlite"
+            sources:
+              - path: "${smoke}/files"
+                config:
+                  defaultEnabled: true
+          auth:
+            adminUsername: "admin"
+            methods:
+              password:
+                enabled: true
+          EOF
+          "${binary}" user set admin --password 'athena-ci-smoke-password' -a --no-input -c "${smoke}/config.yaml"
+          test -s "${smoke}/filebrowser.sqlite"
+          rm -rf "${smoke}"
 
 
       - name: Install build dependencies
