@@ -40,7 +40,10 @@ jobs:
         run: |
           set -euo pipefail
           pkg='luci-app-athena-src/frontend/luci-app-athena'
-          find "$pkg/root/usr/libexec" "$pkg/root/etc/init.d" "$pkg/root/etc/uci-defaults" "$pkg/root/etc/hotplug.d/block" -type f -print0 | while IFS= read -r -d '' f; do
+          {
+            find "$pkg/root/usr/libexec" -type f -name '*.sh' -print0
+            find "$pkg/root/etc/init.d" "$pkg/root/etc/uci-defaults" "$pkg/root/etc/hotplug.d/block" -type f -print0
+          } | while IFS= read -r -d '' f; do
             sh -n "$f"
           done
           python3 - <<'PY'
