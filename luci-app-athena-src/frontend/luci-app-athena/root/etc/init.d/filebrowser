@@ -48,7 +48,7 @@ start_service() {
 	# 密码只写入权限 0600 的本地文件，不写入日志。
 	if [ ! -s "$FB_PASS" ]; then
 		PASS=$(random_password)
-		[ "\${#PASS}" -eq 48 ] || { logger -t filebrowser "secure password generation failed"; return 1; }
+		[ "${#PASS}" -eq 48 ] || { logger -t filebrowser "secure password generation failed"; return 1; }
 		if ! "$FB_BIN" -c "$FB_DB" users update 1 --password "$PASS" >/dev/null 2>&1; then
 			"$FB_BIN" -c "$FB_DB" users add root "$PASS" --perm.admin >/dev/null 2>&1 || {
 				logger -t filebrowser "administrator initialization failed"
