@@ -223,7 +223,7 @@ jobs:
           # The temporary key directory is isolated from any host/system trust store.
           keys_dir="$(mktemp -d)"
           trap 'rm -rf "$keys_dir"' EXIT
-          install -m 0644 output/athenawrt-build-signing.pub "$keys_dir/athenawrt-build-signing.pub"
+          install -m 0644 output/athenawrt-build-signing.pub "$keys_dir/public-key.pem"
           apk_bin="$PWD/immortalwrt/staging_dir/host/bin/apk"
           "$apk_bin" --keys-dir "$keys_dir" verify output/*.apk
 
