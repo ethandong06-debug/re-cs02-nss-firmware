@@ -40,7 +40,7 @@ jobs:
         run: |
           set -euo pipefail
           pkg='luci-app-athena-src/frontend/luci-app-athena'
-          find "$pkg/root/usr/libexec" -type f -name '*.sh' -print0 | while IFS= read -r -d '' f; do
+          find "$pkg/root/usr/libexec" "$pkg/root/etc/init.d" "$pkg/root/etc/uci-defaults" -type f -print0 | while IFS= read -r -d '' f; do
             sh -n "$f"
           done
           python3 - <<'PY'
@@ -141,13 +141,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p output
-          mapfile -t apks < <(find immortalwrt/bin/packages -type f -name 'luci-app-athena*.apk' -print)
-          if [ "${#apks[@]}" -ne 1 ]; then
-            echo "Expected exactly one luci-app-athena APK; found ${#apks[@]}" >&2
+          mapfile -t main_apks < <(find immortalwrt/bin/packages -type f -name 'luci-app-athena-*.apk' -print)
+          mapfile -t i18n_apks < <(find immortalwrt/bin/packages -type f -name 'luci-i18n-athena-zh-cn-*.apk' -print)
+          if [ "${#main_apks[@]}" -ne 1 ] || [ "${#i18n_apks[@]}" -ne 1 ]; then
+            echo "Expected exactly one main Athena APK and one Chinese language APK." >&2
+            echo "Main APK count: ${#main_apks[@]} ; Chinese language APK count: ${#i18n_apks[@]}" >&2
             find immortalwrt/bin/packages -type f -name '*.apk' -print >&2 || true
             exit 1
           fi
-          cp "${apks[0]}" output/
+          cp "${main_apks[0]}" "${i18n_apks[0]}" output/
           # Preserve only the public half of the exact ephemeral key used by this build.
           # The private key remains inside the disposable GitHub Actions runner.
           test -s immortalwrt/public-key.pem
