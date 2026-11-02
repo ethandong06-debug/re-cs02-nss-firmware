@@ -3492,7 +3492,7 @@ window.openFbModal=function(){
   }).catch(function(e){
     var el=document.getElementById('fbCredential'); if(el) el.textContent='读取登录密码失败：'+(e.message||'请稍后重试');
   });
-}
+};
 
 /* ---- 灯光 ---- */
 window.toggleMatrix=function(){ setMatrix('enabled',MATRIX.enabled?'0':'1'); };
@@ -3947,6 +3947,7 @@ window.pkgRender=function(){
 };
 window.installPkg=function(n){ toast('安装 '+n+' …'); athenaRPC.exec('athena-packages.sh',['install',n]).then(function(d){ toast((d&&d.msg)||(n+' 安装完成')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('安装失败：'+(e.message||'')); }); };
 window.removePkg=function(n){
+  if(pkgIsProtected(n)){ toast('该软件包属于关键系统组件，禁止卸载'); return; }
   openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
 };
 window.doRemovePkg=function(n){ if(pkgIsProtected(n)){ toast('该软件包属于关键系统组件，禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
