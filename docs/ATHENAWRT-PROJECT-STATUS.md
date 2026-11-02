@@ -265,3 +265,9 @@
 - Workflow 已修正为：libexec 仅检查 `*.sh`；`etc/init.d`、`etc/uci-defaults`、`etc/hotplug.d/block` 中的脚本仍检查。不会把 `.uc` 误判为 Shell。
 - Run #168（`41367634146`，提交 `09c531ac...`）的静态语法与元数据检查已通过；File Browser 固定版本二进制下载步骤也已通过。当前正在安装构建依赖，后续 ImmortalWrt 获取、host tools、目标工具链和 APK 编译仍未完成。
 - Workflow concurrency 已改为按分支分组并取消同分支过期构建，避免新提交长期排在旧构建之后。
+
+### APK 签名边界（重要）
+
+- 当前 workflow 使用每次 Actions runner 生命周期内的临时签名密钥；Artifact 只保留与该 APK 匹配的公钥，私钥留在临时 runner 中销毁。
+- 这不是跨构建持久化的固定密钥。每次构建都必须使用同一 Artifact 中的匹配公钥；不能拿 Run #24 的公钥验签 Run #168 的 APK。
+- 尚未创建或配置长期私钥 Secret，也未把任何公钥导入 Athena 路由器。若要实现跨构建稳定信任，需要用户另行确认安全密钥保管方案；当前不擅自把私钥提交到仓库或配置 Secret。
