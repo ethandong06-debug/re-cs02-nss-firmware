@@ -240,7 +240,7 @@ jobs:
           fi
           # Bootstrap the disposable APK database with the matching target runtime libraries.
           # A simulated transaction does not create the database, so initialize it first.
-          "$apk_bin" --root "$root" --arch aarch64_cortex-a53 --keys-dir "$keys_dir" --repositories-file /dev/null --no-network add --initdb --no-scripts --no-commit-hooks "${runtime_libs[@]}"
+          "$apk_bin" --root "$root" --arch aarch64_cortex-a53 --keys-dir "$keys_dir" --repositories-file /dev/null --no-network add --initdb --usermode --no-scripts --no-commit-hooks "${runtime_libs[@]}"
 
           # Now resolve Athena's dependencies without modifying the disposable root.
           "$apk_bin" --root "$root" --arch aarch64_cortex-a53 --keys-dir "$keys_dir" --repositories-file /dev/null --no-network add --simulate --no-scripts --no-commit-hooks output/luci-app-athena-*.apk output/luci-i18n-athena-zh-cn-*.apk
