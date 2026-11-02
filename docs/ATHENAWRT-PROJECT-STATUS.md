@@ -533,3 +533,12 @@
 - ACL 还包含 `/tmp/athena-fw.b64` 写权限，本次完整 SPA 未发现该路径引用，暂列为待确认的陈旧授权候选；不能在未核对其他包/上传处理链前直接删除。
 - 本次发现已补入审计文档，尚未修改 ACL 或源码。
 - 补充文档提交：`978b76d6b3aba5d56a479249307438d5b11febac`。
+
+
+### 阶段 A 补充：SPA 实际 ubus 方法清单（2026-11-02）
+
+- 已核对完整 `athenaRPC` 适配层：SPA 实际调用 `session.login`、`system.info`（登录/会话心跳）、`file.exec`（命令固定到 `/usr/libexec/<script>`）和 `file.write`（配置备份分块上传）。
+- 完整 SPA 未发现直接调用 `uci`、`athena.status`、`network.device`、`network.wireless`，也未直接执行 `/etc/init.d/network`、`ping`、`nslookup`、`ubus`。
+- ACL 仍为上述未在 SPA 使用的 UCI 配置开放读写，并授权额外 `file.exec` 路径。由于浏览器可以绕过前端封装直接构造 ubus 请求，这些权限本身构成可调用面。
+- 这项发现已写入调用链审计文档，属于 P0 权限收敛候选；暂不修改 ACL，先核对是否存在其他合法调用者及原生 LuCI 会话关联。
+- 补充提交：`1d5defc097d19075ec21fb84c4b724405f55ec73`。
