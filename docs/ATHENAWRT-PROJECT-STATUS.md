@@ -304,3 +304,25 @@
 - **文件共享依赖阻断仍然存在**：Artifact 内仍打包原版 File Browser v2.63.23。原版项目已归档，不再有安全维护；在替代方案确认和重新构建前，不将此 Artifact 作为可安装交付物。
 - 本轮没有连接或操作 Athena 路由器，没有安装 APK，没有修改 PPPoE、VLAN、IPv6、防火墙、OpenClash 或 NSS/ECM。
 - 当前结论：**源码 CI 构建通过，Artifact 文件与哈希核验通过；设备端签名验收、模拟升级、依赖风险处置和正式安装均未完成。**
+
+
+### FileBrowser Quantum 替换实施记录（2026-11-02，CI 验证中）
+
+用户已明确同意将原版 File Browser 替换为 FileBrowser Quantum v2.0.2-stable。当前分支已完成以下源码修改：
+
+- 构建工作流固定下载上游 Release `v2.0.2-stable` 的 `linux-arm64-filebrowser`，SHA-256 固定为 `03eac074efc1b0ef3cb39882c04eeee26027049d261b6b6706650d4ac2d8e21c`；下载后安装为包内 `/usr/bin/filebrowser`。
+- 上游二进制实际识别为 ELF 64-bit ARM aarch64、静态链接；其 GoReleaser 配置对 Linux ARM64 使用 `aarch64-linux-musl`，与 Athena 的 musl 用户态匹配。该信息来自上游 v2.0.2-stable 源码构建配置。
+- init.d 改为 Quantum YAML 配置：监听当前 LAN IPv4、端口 8081、SQLite 数据库独立存放于 `/etc/filebrowser-quantum.sqlite`、共享源固定为 `/mnt/usb`、缓存放在 USB 内隐藏目录 `/mnt/usb/.athena-filebrowser-cache`；USB 未真实挂载或 LAN 地址不可确认时不启动。
+- 首次启动时使用 Quantum 官方 CLI `user set admin --password ... -a --no-input -c ...` 初始化管理员；随机密码沿用本机 24 字节随机十六进制值并保存在 `/etc/filebrowser.password`（0600）。密码仅在数据库不存在时用于初始化，不写入 YAML 持久配置，因此之后在 Quantum Web UI 修改密码不会被服务重启覆盖。
+- 服务启停仍由 procd 管理；SQLite 与配置文件权限限制为 root-only；保留原 USB block hotplug 自动停止/恢复逻辑。
+- LuCI 文件共享弹窗改为显示 Quantum 管理员账号 `admin`，状态名称改为 FileBrowser Quantum。
+- 原版 File Browser 数据库不会被当成 Quantum SQLite 数据库复用或自动迁移；USB 上的用户文件仍在原目录，Quantum 会创建自己的新数据库。原版数据库文件不主动删除。
+
+### Quantum CI 运行情况
+
+- Run #180（ID `41378831412`）失败于二进制版本检查：Actions runner 是 x86_64，工作流直接执行了 AArch64 文件，返回 Permission denied / exit 126。静态检查、前后端调用链检查、二进制下载和 SHA-256 校验均已通过；这不是二进制损坏。
+- 已修正工作流：安装 `qemu-user-static`，通过 `qemu-aarch64-static` 在 x86_64 runner 上执行 Quantum ARM64 的版本检查和 SQLite 管理员初始化 smoke test。
+- Run #181（ID `41378905625`，提交 `50399117936121f2e481d2d7d1e60bce111ca61a`）当前进行中：静态语法与调用链检查通过；Quantum ARM64 二进制下载与 SHA-256 校验通过；正在安装构建依赖；QEMU smoke test、ImmortalWrt package-only 编译、Artifact 校验仍待完成。
+- 目前尚未证明 Quantum 在 Athena 真机上的运行时内存占用或 USB 文件操作兼容性；需要后续真机验收。不得把 CI 通过等同于设备功能验收。
+- 本阶段仅修改 GitHub 源码与 Actions；没有操作路由器，没有安装 APK，没有改动 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。
+- 新 Artifact 在 Quantum 构建成功且完成哈希检查前，不得作为可安装包交付；之后仍须先完成设备端匹配公钥验签与 APK 模拟升级，再由用户明确确认安装。
