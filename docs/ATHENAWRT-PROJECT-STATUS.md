@@ -283,3 +283,24 @@
 - 当前构建仍包含原版 File Browser v2.63.23。上游已归档且停止安全维护，因此即使已实施 LAN 绑定、随机密码、/mnt/usb 限定、命令执行禁用和 USB 拔除停止服务，也不能把它描述为无已知维护风险。
 - 已核对一个可替代方案：FileBrowser Quantum v2.0.2-stable，提供 linux-arm64 单文件构建，配置支持 `http.listen`、独立 source path 和随机初始管理员密码，且近期版本持续修复安全问题；但它改用 YAML 配置和 SQLite，二进制体积也明显大于当前版本，需重做 init、密码展示和服务验收。
 - 未经用户确认，不自动切换依赖。当前 Run #170 只用于验证现有源码构建流程；即使 APK 构建成功，也不应在用户确认文件共享依赖前正式安装。
+
+
+### Run #170 构建完成与 Artifact 核验（2026-11-02）
+
+- Actions Run #170：`41367892120`，源码/工作流提交 `340f8dc017997d0eadcfa800875aea985d6096bc`，结论 **success**。
+- 13 个主要步骤全部成功：静态 Shell/JavaScript/JSON 检查、File Browser 依赖下载与校验、ImmortalWrt 构建系统获取、host tools、目标工具链、仅编译 luci-app-athena、APK/SHA256 校验、Artifact 上传。
+- Artifact：`luci-app-athena-apk`，ID `13109568947`，大小 14,693,926 bytes，创建于 2026-11-02 01:33 UTC，预计 2026-11-16 01:33 UTC 过期。
+- Artifact ZIP 已下载并检查，包含：
+  - `luci-app-athena-1.2.60-r1.apk`，14,690,354 bytes。
+  - `luci-i18n-athena-zh-cn-0.apk`，952 bytes。
+  - `athenawrt-build-signing.pub`，178 bytes。
+  - `SHA256SUMS.txt`、`size.txt`、`file-type.txt`、`athena-source-build-metadata.tar.gz`、`athena-package-build.log`。
+- SHA-256 已对 Artifact 中实际解出的三个文件重新计算，并与 `SHA256SUMS.txt` 完全一致：
+  - 主 APK：`d605a078fa86c1a6a679129dca7c5d9122847952524bcc7e501c0dfd6b1be12e`
+  - 中文语言包 APK：`ebf03be9e5d779f9f1170058bae78e3a656dcb0e72c76ff035abb1fb3f434bf3`
+  - 本次构建公钥：`e1e1de6584b5d04d45cb5d54be0ef7a4b8cdbd33cb407a3b36b1a0d59b9af1b9`
+- 构建日志确认目标为 `aarch64_cortex-a53_musl`，只构建 `luci-app-athena` 与中文语言包，没有构建整机固件。
+- **签名限制仍然存在**：公钥只匹配 Run #170 的 APK；私钥未导出，当前没有跨构建固定信任密钥。设备端导入公钥、验签、模拟升级均未执行。
+- **文件共享依赖阻断仍然存在**：Artifact 内仍打包原版 File Browser v2.63.23。原版项目已归档，不再有安全维护；在替代方案确认和重新构建前，不将此 Artifact 作为可安装交付物。
+- 本轮没有连接或操作 Athena 路由器，没有安装 APK，没有修改 PPPoE、VLAN、IPv6、防火墙、OpenClash 或 NSS/ECM。
+- 当前结论：**源码 CI 构建通过，Artifact 文件与哈希核验通过；设备端签名验收、模拟升级、依赖风险处置和正式安装均未完成。**
