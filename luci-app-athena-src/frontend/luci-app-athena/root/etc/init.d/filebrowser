@@ -5,7 +5,7 @@ START=98
 USE_PROCD=1
 
 FB_BIN=/usr/bin/filebrowser
-FB_DB=/etc/filebrowser.db
+FB_DB=/etc/filebrowser-data.db
 FB_PASS=/etc/filebrowser.password
 FB_PORT=8081
 
@@ -41,7 +41,7 @@ start_service() {
 	LAN_IP=$(lan_address) || { logger -t filebrowser "LAN address unavailable; service not started"; return 0; }
 
 	if [ ! -f "$FB_DB" ]; then
-		"$FB_BIN" -c "$FB_DB" config init >/dev/null 2>&1 || {
+		"$FB_BIN" -d "$FB_DB" config init >/dev/null 2>&1 || {
 			logger -t filebrowser "database initialization failed"
 			return 1
 		}
@@ -52,8 +52,8 @@ start_service() {
 	if [ ! -s "$FB_PASS" ]; then
 		PASS=$(random_password)
 		[ "${#PASS}" -eq 48 ] || { logger -t filebrowser "secure password generation failed"; return 1; }
-		if ! "$FB_BIN" -c "$FB_DB" users update root --password "$PASS" >/dev/null 2>&1; then
-			"$FB_BIN" -c "$FB_DB" users add root "$PASS" --perm.admin >/dev/null 2>&1 || {
+		if ! "$FB_BIN" -d "$FB_DB" users update root --password "$PASS" >/dev/null 2>&1; then
+			"$FB_BIN" -d "$FB_DB" users add root "$PASS" --perm.admin >/dev/null 2>&1 || {
 				logger -t filebrowser "administrator initialization failed"
 				return 1
 			}
@@ -63,7 +63,7 @@ start_service() {
 	fi
 
 	procd_open_instance
-	procd_set_param command "$FB_BIN" -c "$FB_DB" -a "$LAN_IP" -p "$FB_PORT" -r /mnt/usb
+	procd_set_param command "$FB_BIN" -d "$FB_DB" -a "$LAN_IP" -p "$FB_PORT" -r /mnt/usb
 	procd_set_param respawn 3600 5 5
 	procd_close_instance
 }
