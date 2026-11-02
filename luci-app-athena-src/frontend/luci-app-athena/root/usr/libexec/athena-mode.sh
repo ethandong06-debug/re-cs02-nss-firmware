@@ -103,6 +103,23 @@ add_vlan_dev() {
 	uci set network.@device[-1].ifname="$base"
 	uci set network.@device[-1].vid="$vid"
 }
+valid_ipv4() {
+	printf '%s\n' "$1" | awk -F. 'NF != 4 { exit 1 } { for (i=1; i<=4; i++) if ($i !~ /^[0-9]+$/ || length($i) > 3 || $i+0 > 255) exit 1 }'
+}
+valid_netmask() {
+	printf '%s\n' "$1" | awk -F. 'NF != 4 { exit 1 } { b=""; for (i=1; i<=4; i++) { if ($i !~ /^[0-9]+$/ || length($i) > 3 || $i+0 > 255) exit 1; n=$i+0; for (j=7; j>=0; j--) b=b int(n/(2^j))%2 } if (b !~ /^1+0*$/) exit 1 }'
+}
+valid_text_arg() {
+	local n
+	n=$(printf '%s' "$1" | wc -c | tr -d ' ')
+	[ -n "$1" ] && [ "$n" -le 128 ] 2>/dev/null || return 1
+	printf '%s' "$1" | LC_ALL=C grep -q '[[:cntrl:]]' && return 1
+	return 0
+}
+valid_proto() {
+	case "$1" in pppoe|dhcp|static) return 0 ;; esac
+	return 1
+}
 
 # ---- 按 name 查找 firewall zone 段（如 lan/wan）----
 find_zone() {
