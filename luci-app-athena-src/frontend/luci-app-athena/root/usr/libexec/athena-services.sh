@@ -8,6 +8,14 @@
 #   ucode 不可用或输出异常时自动回退 athena-services-legacy.sh，页面不会空。
 
 case "$1" in
+filebrowser-password)
+	PASS=$(cat /etc/filebrowser.password 2>/dev/null)
+	case "$PASS" in
+		''|*[!0-9a-f]*) echo '{"ok":false,"msg":"随机密码尚未生成；请先挂载 USB 并启动文件共享"}'; exit 1 ;;
+	esac
+	printf '{"ok":true,"username":"root","password":"%s"}\n' "$PASS"
+	exit 0
+	;;
 set)
 	exec /usr/libexec/athena-services-legacy.sh "$@"
 	;;
