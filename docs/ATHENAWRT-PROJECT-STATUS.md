@@ -195,3 +195,48 @@
 - athena-diag.sh ping 命令将用户提供的 count 直接传给 ping -c；目前没有限定为 1-10 的纯数字。需要在后端校验，不能信任前端输入。
 
 注意：本轮仅更新项目审计记录，没有修改这些后端脚本，也没有运行会改变路由器配置的命令。
+
+## 10. 第一阶段安全修复提交记录（2026-11-02，待 CI 验证）
+
+以下均为 GitHub 源码变更，不代表已在 Athena 路由器安装或执行。用户现有 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash、NSS/ECM 配置未被本轮操作触碰。
+
+### 已提交的源码修复
+
+**磁盘与文件共享**
+- 磁盘格式化增加 sysfs USB 设备确认、真实分区检查、块设备 holders 检查、挂载/交换分区别名解析，并拒绝系统分区及与系统分区同一物理盘上的分区。
+- USB 管理挂载点固定为 /mnt/usb；挂载后复核 /proc/mounts，再尝试启动 filebrowser；卸载前停止 filebrowser，卸载失败则尝试恢复服务。
+- filebrowser 改为随机 24 字节十六进制管理员密码，保存在 /etc/filebrowser.password（权限 0600）；绑定当前 LAN 静态或 DHCP 地址，根目录固定 /mnt/usb。USB 未挂载或 LAN 地址不可确认时不启动。
+- LuCI 通过已授权的 athena-services.sh 子命令读取密码；仅在 /mnt/usb 确认挂载且 filebrowser 进程运行时返回密码。
+- 新增 block hotplug：共享 USB 分区移除时停止 filebrowser，插入时延迟尝试重启；Makefile 已加入安装清单。
+- 旧 99-athena-filebrowser.sh 改为说明性 no-op，避免继续写入未被 init 脚本读取的 UCI root_dir。
+
+**软件包、服务和进程保护**
+- 软件包后端增加包名校验和受保护包名单；卸载、单包升级拒绝 OpenClash、NSS/ECM、内核模块、网络/防火墙/DNS/PPPoE/无线、LuCI 与 Athena 关键组件。
+- 已安装的受保护包不能通过“安装”入口变相升级；前端对受保护包隐藏卸载按钮，后端仍做最终拦截。
+- 服务管理把 openclash、qca-nss-ecm、qca-nss-drv、qca-nss 纳入不可启停名单；资源管理保护 OpenClash/Mihomo/ECM/NSS 进程。
+- 资源进程操作增加 PID starttime 与 comm 二次核验，并限制 init.d 重启路径，降低 PID 复用和进程名路径注入风险。
+
+**维护、诊断和网络参数**
+- 备份 restore/download/export 限定备份目录内文件名，拒绝路径穿越和目录外 symlink；自动备份保留数限制为 1-30。
+- 诊断 ping 次数限制 1-10，目标地址、域名和 DNS 参数增加字符/长度校验。
+- 家长控制和设备管理增加 MAC 校验；设备名称/备注限制长度并拒绝控制字符。
+- 偏好设置限制 key 白名单（kpi_order、res_kth、ui_zoom、speed_unit）和对应 value 格式；点阵屏/灯光设置增加后端范围校验。
+- 无线配置增加 SSID、密码、频段、信道、频宽校验；不再以 network restart 作为 wifi reload 的回退，避免无线操作连带重启 PPPoE/VLAN 网络。
+- 访客网络不再使用固定默认密码，要求明确输入密码；清理匿名 br-guest device，避免重复启用后叠加桥设备。
+- WiFi 恢复默认时生成随机密码并由 LuCI 显示；即使无线重载未确认，也会返回已生成密码及 reload 状态。
+- 组网模式增加协议、PPPoE 凭据、静态 IPv4/掩码/网关/DNS 校验；单臂模式可沿用现有 PPPoE 凭据，主路由模式切换协议时清除不相关的旧 WAN 字段。AP/旁路由确认框明确警告会停止 NSS/ECM。
+- 密码修改增加 8-128 字节、冒号和控制字符校验。
+
+### 调用链统计口径（最终待复核）
+
+- 当前正式 SPA 页面扫描到 81 处 athenaRPC.exec 调用，24 个不同的直接后端脚本目标；ACL 中 24 个直接目标均有 file.exec 授权。
+- Makefile 安装 36 个 libexec 文件：31 个 Shell 文件 + 5 个 ucode 文件。
+- 其中 6 个 Shell 文件为内部回退/依赖：status-legacy、services-legacy、resources-legacy、packages-legacy、wanip、logcap；另有 athena-single.sh 虽安装，但当前正式 SPA 与 athena-mode.sh 未发现调用它的证据。
+- 所以不能将当前代码描述为“25 个前端直接入口”。目前准确口径为 24 个直接入口、6 个已识别内部依赖、1 个未证实调用的单臂 helper。用户所指的第 25 个入口仍待与原清单逐项对照。
+
+### CI 与交付
+
+- Workflow Shell 语法检查扩展到 usr/libexec、etc/init.d、etc/uci-defaults 和 etc/hotplug.d/block；JavaScript 语法检查保留。
+- Artifact 收集规则已要求同一构建中恰好存在 1 个 luci-app-athena 主 APK 与 1 个 luci-i18n-athena-zh-cn 中文语言包 APK，并一并上传匹配公钥。
+- 本轮最新 workflow run 仍待完成；尚未获得这些修复源码的最终构建成功结果，也尚未核验最终 Artifact 内容。
+- 设备端公钥验签、模拟升级、安装和真机功能验收均未执行。未经用户明确同意不安装，不刷机，不改动现有网络配置。
