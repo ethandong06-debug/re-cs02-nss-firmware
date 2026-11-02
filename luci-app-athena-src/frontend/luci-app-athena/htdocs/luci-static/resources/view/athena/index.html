@@ -1420,14 +1420,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     if(tag){ tag.textContent=S.ssh?"已启用":"已关闭"; tag.className="tag "+(S.ssh?"green":"gray"); }
     showToast(S.ssh?"SSH 已启用（端口 22）":"SSH 已关闭");
   };
-  window.openFbModal=function(){
-    openModal("文件共享 · filebrowser","手机 / 电脑浏览器打开下方地址，即可上传、下载、播放文件",
-      '<div class="info-row"><span>访问地址</span><span style="font-weight:600">http://192.168.10.1:8081</span></div>'
-      +'<div class="info-row"><span>状态</span><span class="tag green">运行中</span></div>'
-      +'<div class="info-row"><span>根目录</span><span>/mnt/usb</span></div>'
-      +'<div style="font-size:12px;color:var(--text3);margin-top:8px">登录账号与路由器管理密码一致。</div>'
-      +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="done(\'已打开 filebrowser 页面\');closeModal()">打开</button></div>');
-  };
+  
   /* v1.2.54：SVC_DETAIL 假表已删除（pid 3108 / 内存 18 MB / 版本 v2.31.0 全部是写死的）；
      服务详情改为读 athena-services 的真实字段（见下方 openSvcWin）。 */
 var KPI_ITEMS=[
@@ -3487,12 +3480,19 @@ window.mountUsb=function(){
   }).catch(function(e){ toast('挂载失败：'+(e.message||'')); });
 };
 window.openFbModal=function(){
-  openBkModal('<h3>文件共享</h3><div class="m-sub">通过网页访问 U 盘文件（上传 / 下载 / 播放）</div>'
-    +'<div style="font-size:13px;color:var(--text2);padding:10px 0">filebrowser 网页地址：<br><b style="color:var(--primary)">http://'+location.hostname+':8081</b></div>'
-    +'<div style="font-size:11px;color:var(--text3)">首次登录：账号 root / 密码 admin（登录后请立即修改密码）</div>'
+  openBkModal('<h3>文件共享</h3><div class="m-sub">仅共享已挂载到 /mnt/usb 的 USB 分区，服务仅监听路由器 LAN 管理地址</div>'
+    +'<div style="font-size:13px;color:var(--text2);padding:10px 0">访问地址：<br><b style="color:var(--primary)">http://'+esc(location.hostname)+':8081</b></div>'
+    +'<div id="fbCredential" style="font-size:12px;color:var(--text2);padding:10px 0">正在读取随机登录密码…</div>'
     +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="closeModal();window.open(\'http://\'+location.hostname+\':8081\',\'_blank\')">打开文件管理</button></div>');
-  var st=document.getElementById('fbStatus'); if(st) st.textContent='filebrowser · 端口 8081';
-};
+  var st=document.getElementById('fbStatus'); if(st) st.textContent='filebrowser · LAN · /mnt/usb';
+  athenaRPC.exec('athena-services.sh',['filebrowser-password']).then(function(d){
+    var el=document.getElementById('fbCredential'); if(!el) return;
+    if(!d||d.ok!==true){ el.textContent=(d&&d.msg)||'随机密码暂不可用；请确认 USB 已挂载并启动文件共享'; return; }
+    el.innerHTML='<div>登录账号：<b>'+esc(d.username||'root')+'</b></div><div style="margin-top:6px">随机密码：<code>'+esc(d.password||'')+'</code></div><div style="margin-top:6px;color:var(--text3)">密码仅在此处读取，不使用固定默认密码。</div>';
+  }).catch(function(e){
+    var el=document.getElementById('fbCredential'); if(el) el.textContent='读取登录密码失败：'+(e.message||'请稍后重试');
+  });
+}
 
 /* ---- 灯光 ---- */
 window.toggleMatrix=function(){ setMatrix('enabled',MATRIX.enabled?'0':'1'); };
