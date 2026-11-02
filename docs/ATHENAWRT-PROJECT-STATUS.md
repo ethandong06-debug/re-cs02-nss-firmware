@@ -411,3 +411,18 @@
 - 对应 Run #188（ID `41436896339`）已启动，静态检查、Quantum QEMU smoke test、ImmortalWrt 获取和 package-only 配置均通过；最近检查时正在执行 `Build required host tools`，尚未进入目标工具链、APK 编译和依赖模拟阶段。
 - 下一步：等待 Run #188 完成；若失败，读取本次 job log 的首个真实错误再修复，不重复猜测参数。只有签名验证、临时数据库初始化、Athena 主 APK/中文语言包依赖模拟全部通过并成功上传 Artifact，才进入 Artifact 文件与哈希核验。
 - 本次仍未连接 Athena 真机、未导入公钥、未安装 APK、未刷写固件，也未更改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。
+
+### Run #188 构建成功与 Artifact 核验（2026-11-02）
+
+- Actions Run #188：ID `41436896339`，分支 `athenawrt/apk-fixed-signing`，提交 `ecff7b81ba62421aae80b645ac84435a1ca9a68f`，结论 **success**。
+- Job `Build luci-app-athena for Athena IPQ60xx` 已完成；14 个主要步骤全部成功，包括静态语法/元数据检查、FileBrowser Quantum ARM64 QEMU smoke test、ImmortalWrt host tools、目标工具链、仅编译 Athena APK、APK 签名与依赖验证、Artifact 上传。
+- Artifact：`luci-app-athena-apk`，ID `13141127620`，ZIP 大小 24,585,952 bytes，创建于 2026-11-02 12:12:17 UTC，预计 2026-11-16 12:12:16 UTC 过期。
+- Artifact ZIP 已下载并检查，包含主 APK、中文语言包 APK、本次匹配公钥、SHA256SUMS、构建日志、源码元数据：
+  - 主 APK：`luci-app-athena-1.2.60-r2.apk`，24,548,136 bytes；SHA-256 `417db3ef8d4012f1977fb0941ab858703a1e43c5ce130e68a2a2b031ccf7ad78`。
+  - 中文语言包：`luci-i18n-athena-zh-cn-0.apk`，954 bytes；SHA-256 `347bbfa24a29f2f7f75ea85eb08269bd249a3fbf64604a93e6a025bda9464654`。
+  - 本次构建公钥：`athenawrt-build-signing.pub`，178 bytes；SHA-256 `a2d0c1168d114ba03dd332b295d31a63928faad899ab4d02c090b8d9b84b31f0`；OpenSSL 成功解析为 ECDSA P-256 公钥。
+- 已从 Artifact ZIP 实际解出上述三个文件并重新计算 SHA-256，均与 `SHA256SUMS.txt` 完全一致；Artifact 本身未过期。
+- 构建日志确认目标为 `aarch64_cortex-a53_musl`，只构建独立 `luci-app-athena` APK 与中文语言包，没有构建或刷写整机固件。
+- **验收边界**：CI 的 APK 验签和临时 root 依赖模拟步骤均成功；这仅证明构建流水线通过。设备端尚未导入本次公钥、验签或模拟升级；FileBrowser Quantum 的 Athena 真机功能也尚未验收。
+- **签名限制**：本次仍使用 Actions runner 临时签名密钥；Artifact 中的公钥只匹配 Run #188 的 APK。不能用于验证其他 Run 的 APK，私钥不在 Artifact 中。
+- 本轮没有连接 Athena 真机、没有安装 APK、没有刷写固件，也没有修改 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 或 NSS/ECM。正式安装仍须等待设备端验签、模拟升级通过及用户明确确认。
