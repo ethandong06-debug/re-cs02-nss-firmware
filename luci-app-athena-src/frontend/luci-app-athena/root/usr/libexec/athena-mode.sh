@@ -189,6 +189,10 @@ config_router() {
 	local proto="${2:-pppoe}" user="${3:-}" pass="${4:-}" ip="${5:-}" mask="${6:-}" gw="${7:-}" dns="${8:-}"
 	valid_proto "$proto" || { echo '{"ok":false,"msg":"上网协议仅支持 PPPoE、DHCP 或静态 IP"}'; return 1; }
 	if [ "$proto" = "pppoe" ]; then
+		if [ -z "$user" ] && [ -z "$pass" ]; then
+			user=$(uci -q get network.wan.username 2>/dev/null)
+			pass=$(uci -q get network.wan.password 2>/dev/null)
+		fi
 		[ -n "$user" ] && [ -n "$pass" ] || { echo '{"ok":false,"msg":"PPPoE 账号或密码为空，且无法从现有配置读取"}'; return 1; }
 		valid_text_arg "$user" && valid_text_arg "$pass" || { echo '{"ok":false,"msg":"PPPoE 账号和密码必须为 1-128 字节且不能包含控制字符"}'; return 1; }
 	fi
@@ -284,7 +288,12 @@ config_single() {
 	# 归一化 IPTV 参数：off/none/关闭/留空 一律视为不开启（前端旧版曾传 'off' 字符串）
 	case "$vlan_iptv" in off|none|OFF|NONE|"关闭"|"无") vlan_iptv='' ;; esac
 	valid_proto "$proto" || { echo '{"ok":false,"msg":"上网协议仅支持 PPPoE、DHCP 或静态 IP"}'; return 1; }
-	if [ "$proto" = "pppoe" ] && { [ -n "$user" ] || [ -n "$pass" ]; }; then
+	if [ "$proto" = "pppoe" ] && [ -z "$user" ] && [ -z "$pass" ]; then
+		user=$(uci -q get network.wan.username 2>/dev/null)
+		pass=$(uci -q get network.wan.password 2>/dev/null)
+	fi
+	if [ "$proto" = "pppoe" ]; then
+		[ -n "$user" ] && [ -n "$pass" ] || { echo '{"ok":false,"msg":"PPPoE 账号或密码为空，且无法从现有配置读取"}'; return 1; }
 		valid_text_arg "$user" && valid_text_arg "$pass" || { echo '{"ok":false,"msg":"PPPoE 账号和密码必须为 1-128 字节且不能包含控制字符"}'; return 1; }
 	fi
 	if [ "$proto" = "static" ]; then
