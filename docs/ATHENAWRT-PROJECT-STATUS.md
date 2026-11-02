@@ -613,3 +613,15 @@
 - ACL 目标建议缩至明确的 Athena 脚本 `file.exec` 路径和备份上传单一路径 `file.write`；不使用通配符或通用 shell/ubus 执行入口。
 - 任何 ACL 修改前仍需核对设备 rpcd 版本、ACL 解析行为、LuCI 登录桥接和其他调用者；本轮没有修改 ACL 或重载 rpcd。
 - 审计文档更新提交：`e1939cea7f29d3d745440f4a7f1de4fdc1230f6a`。
+
+
+### 阶段 A 补充：24 个 RPC 入口参数矩阵完成（2026-11-02）
+
+- 已在调用链审计文档第 14 节列出 24 个专用 RPC 脚本入口、前端实际使用的命令/参数、主要副作用与风险。
+- 补充核对只读 ucode 路径：`athena-status.sh`、`athena-services.uc`、`athena-packages.uc`、`athena-resources.uc`；只读性能优化与 legacy 写操作分离，不能把 ucode 只读实现误判为新的写权限。
+- 活跃应用识别依赖 DNS/OAF 映射与缓存，不是 DPI；应标注域名线索推测。
+- 进程管理有 PID starttime/comm 二次核验和关键服务保护，但对目标进程直接使用 SIGKILL，没有 TERM 宽限期；建议改为 TERM 后复核再按需 KILL。
+- 参数矩阵、ACL 差异、主要页面控件和高风险调用链已纳入同一审计文档。
+- 本轮只修改审计 Markdown；没有改源码、ACL、工作流或设备。
+- 审计文档提交：`35bf3295a3c2fcb0e0260b05c87b067530a35635`。
+- 下一步进入阶段 A 收尾：形成页面功能去留初表和 P0/P1/P2 整改顺序，标明哪些依赖真机/当前固件版本验证，供用户确认后再进入实现阶段。
