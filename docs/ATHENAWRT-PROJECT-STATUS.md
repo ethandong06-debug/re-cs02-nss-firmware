@@ -187,3 +187,13 @@ Run #198 必须全部通过后才能提供 APK：
 - NAS 实际绑定、445 端口冲突、SMB 登录、热拔出/热插入行为均尚未设备验证；CI 通过不等于设备 NAS 已可用。
 - athena-mode.sh 仍使用已有命令行 UCI commit 路径；本批次未完成原生 LuCI UCI session/apply_rollback 接入。不能把现有自检称为原生管理端失联自动回滚。
 - 本次没有在路由器上安装 r5、变更网络、重启服务、安装/卸载 NAS、格式化磁盘或刷写固件；PPPoE、VLAN 2044、IPv6、防火墙/NAT、OpenClash、NSS/ECM 现网保持未触碰。
+
+
+## 2026-11-03：固定 APK 签名修复状态（Run #201）
+
+- Run #200（ID 41576784657）r5 APK 编译成功，但使用本次临时生成的公钥签名；其公钥 SHA-256 为 05488b1d16319f94ce217b633f18ed50c59fddf6ffdcf55503580f87b4516ad8，与 Run #188 设备曾信任的构建公钥不同。Run #200 只作为构建记录，不得绕过信任检查直接安装。
+- 已恢复历史固定签名流程：commit 70cbb80601a96d4ab0f224f837cab124c03991d4。流程从 GitHub Actions repository secret ATHENAWRT_APK_SIGNING_KEY 读取 PEM 私钥、检查 PEM、派生 public-key.pem，并启用 CONFIG_USE_APK 与 CONFIG_SIGN_EACH_PACKAGE；Secret 缺失时明确失败，不再回退到临时密钥。
+- Run #201（ID 41586151703，source commit 70cbb80601a96d4ab0f224f837cab124c03991d4）静态检查及 FileBrowser ARM64 smoke test 通过，但在 Import persistent APK signing key 步骤失败。Actions log 明确显示 ATHENAWRT_APK_SIGNING_KEY 环境变量为空并输出 Missing repository secret ATHENAWRT_APK_SIGNING_KEY。未生成 APK Artifact。
+- 当前阻塞：必须在本仓库 Settings → Secrets and variables → Actions 中恢复名为 ATHENAWRT_APK_SIGNING_KEY 的有效 PEM 私钥 Secret。GitHub 集成无法读取或写入 Secrets 值；不要把私钥提交进 Git 仓库或公开聊天。
+- 秘钥恢复后重新触发构建；确认构建成功并核对 artifact 内的公钥 fingerprint。设备当前旧公钥必须保留；若新持久公钥不同，先备份再作为新的信任公钥追加到 /etc/apk/keys/，不要覆盖或删除已有系统/第三方 key。
+- 完成设备端 apk verify 与 APK 事务模拟、明确用户授权之前，不安装 r5；不使用 --allow-untrusted。网络、PPPoE、VLAN 2044、IPv6、防火墙/NAT、OpenClash、NSS/ECM 均不得变更。
