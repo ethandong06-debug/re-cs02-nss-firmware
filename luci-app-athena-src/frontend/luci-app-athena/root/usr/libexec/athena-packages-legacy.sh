@@ -46,6 +46,26 @@ protected_pkg() {
 	return 1
 }
 
+# 预演 APK 事务：禁止 Athena 页面间接升级、降级或移除关键组件。
+transaction_safe() {
+	local plan rc changed name
+	plan=$("$@" 2>&1); rc=$?
+	if [ "$rc" -ne 0 ]; then
+		echo '{"ok":false,"msg":"无法完成软件包事务预演，已拒绝执行"}'
+		return 1
+	fi
+	changed=$(printf '%s\n' "$plan" | awk '
+		$1 ~ /^\([0-9]+\/[0-9]+\)$/ && ($2 == "Upgrading" || $2 == "Downgrading" || $2 == "Removing") { print $3 }
+	')
+	for name in $changed; do
+		if protected_pkg "$name"; then
+			printf '{"ok":false,"msg":"事务将变更受保护组件 %s，已拒绝执行"}\n' "$name"
+			return 1
+		fi
+	done
+	return 0
+}
+
 # apk list 输出 name-version（version 以数字开头），拆成 name|version
 split_pv() {
 	awk '{
@@ -164,11 +184,13 @@ case "$CMD" in
 				echo '{"ok":false,"msg":"该关键软件包已安装，禁止通过安装入口变相升级"}'; exit 1
 			fi
 		fi
+		transaction_safe apk add --simulate "$PKG" || exit 1
 		apk add "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 安装成功\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 安装失败\"}"
 		;;
 	remove)
 		PKG="${2:-}"; valid_pkg_name "$PKG" || { echo '{"ok":false,"msg":"软件包名称无效"}'; exit 1; }
 		protected_pkg "$PKG" && { echo '{"ok":false,"msg":"该软件包属于 OpenClash、NSS/ECM 或关键系统组件，已禁止卸载"}'; exit 1; }
+		transaction_safe apk del --simulate "$PKG" || exit 1
 		apk del "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 已卸载\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 卸载失败\"}"
 		;;
 	update)
@@ -182,6 +204,7 @@ case "$CMD" in
 		valid_pkg_name "$PKG" || { echo '{"ok":false,"msg":"软件包名称无效"}'; exit 1; }
 		protected_pkg "$PKG" && { echo '{"ok":false,"msg":"该软件包属于 OpenClash、NSS/ECM 或关键系统组件，已禁止升级"}'; exit 1; }
 		if [ -z "$PKG" ]; then echo '{"ok":false,"msg":"为安全起见不支持全量升级，请指定单个包"}'; exit 1; fi
+		transaction_safe apk upgrade --simulate "$PKG" || exit 1
 		apk upgrade "$PKG" >/dev/null 2>&1 && echo "{\"ok\":true,\"msg\":\"$PKG 已更新\"}" || echo "{\"ok\":false,\"msg\":\"$PKG 更新失败\"}"
 		;;
 	*)
