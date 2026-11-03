@@ -61,21 +61,18 @@ luci-app-athena-src/
 
 ---
 
-## 二、完整功能与页面清单
+## 二、完整功能与页面清单（全新 5 菜单收敛架构）
 
-经过对 `index.html`（4210 行）及后端 38 个脚本的全量静态扫描，Athena 共有 **8 个顶层主菜单页面** 与 **1 个全局界面设置弹窗**，包含 46 个业务卡片/子视图、82 个 RPC 触发点及 16 个交互模态框：
+经过对当前代码库的全量静态审计与重构设计，AthenaWrt 从原本分散的 8 菜单收敛为 **5 个核心一级主菜单** 与 **1 个全局界面设置体系**，彻底解决移动端导航拥挤、功能归属割裂（网络/维护/高级三处分散）及轻量功能独占一级菜单的问题：
 
-| 顶层页面 | 对应 DOM ID | 核心模块 / 卡片 | 交互按钮 / 弹窗 | 后端实现入口 |
+| 顶层主菜单 (5 导航) | 对应 DOM ID / 区域 | 核心功能模块 / 卡片 | 交互按钮 / 弹窗与控制台 | 后端实现入口与技术支撑 |
 |---|---|---|---|---|
-| **1. 概览** | `pg-home` | 实时网速仪表盘、核心指标卡 (CPU/内存/连接数/时长)、WAN 状态摘要、设备数量分类、活跃应用推测、网络拓扑示意图、快捷入口 | 测速跳转、体检跳转、指标卡拖拽/排序、快速重启 | `athena-status.sh` (含 `rate` 与 ucode), `athena-apps.sh`, `athena-prefs.sh`, `athena-client.sh` |
-| **2. WiFi** | `pg-wifi` | 三频总开关、2.4G 频段卡、5.2G 游戏频段卡、5.8G 频段卡、访客网络卡、三频能力说明 | 单频开关、频段配置弹窗 (SSID/密码/信道/频宽/加密)、恢复默认 WiFi 弹窗、访客开关/配置 | `athena-wireless.sh` (get/set/enable/disable/guest/reset-defaults) |
-| **3. 设备** | `pg-dev` | 在线设备统计、设备列表筛选器 (全部/在线/离线/已拉黑)、设备详情行、流量与信号强度、家长控制规则列表 | 设备改名弹窗、已知设备标记/取消、拉黑/解除拉黑、添加/修改家长控制规则弹窗、删除规则 | `athena-client.sh`, `athena-parent.sh`, `athena-status.sh` |
-| **4. 网络** | `pg-net` | 组网模式切换器 (主路由/单臂/旁路由/AP)、WAN 接入配置 (PPPoE/DHCP/静态)、单臂 VLAN 拓扑示意与参数配置、网口物理链路状态、一键网络体检、Ping 诊断、外网测速 | 保存应用模式确认弹窗、单臂配置进度轮询浮层、开始体检、开始 Ping、开始测速 | `athena-mode.sh` (含 `single-bg`, `progress`), `athena-scan.sh`, `athena-diag.sh`, `athena-speedtest.sh` |
-| **5. 存储** | `pg-st` | 存储中心总览、物理磁盘与分区列表、USB 挂载/卸载管理、FileBrowser 网页文件管理卡、NAS 网络共享卡 (KSMBD / Samba4 双方案) | 磁盘挂载/卸载、USB 格式化确认弹窗 (防错二次输入)、FileBrowser 启停/查看密码弹窗、NAS 安装/切换方案/启停/卸载弹窗、重置 NAS 凭据 | `athena-disk.sh`, `athena-services.sh` (filebrowser-password), `athena-nas.sh` |
-| **6. 灯光** | `pg-light` | 前面板点阵屏开关、夜间免打扰模式、显示内容循环选择 (时间/网速/天气/CPU/连接数)、顶部三色呼吸灯状态与色彩选择 | 点阵屏开关、夜间模式时间段设定、显示项勾选保存、LED 颜色/效果切换 | `athena-matrix.sh`, `athena-led.sh` |
-| **7. 维护** | `pg-keep` | 设备重启管理、定时重启计划、固件手动升级与校验、恢复出厂设置 (安全挑战码)、配置备份与恢复、系统日志与内核日志查看、管理员密码修改 | 立即重启、保存定时计划、固件上传校验/刷写弹窗、恢复出厂二次确认、立即备份、下载备份、上传恢复配置、刷新日志、修改密码 | `athena-reboot.sh`, `athena-upgrade.sh`, `athena-reset.sh`, `athena-backup.sh`, `athena-log.sh`, `athena-passwd.sh` |
-| **8. 高级** | `pg-adv` | 硬件资源监控与进程管理器、受控系统服务列表、硬件加速组件只读状态 (NSS/ECM/PPE)、软件包管理器 (APK) | 进程杀死 (SIGTERM)、服务启动/停止/重启、刷新软件源索引、安装/卸载白名单软件包、跳转原生 LuCI | `athena-resources.sh`, `athena-services.sh`, `athena-accel.sh`, `athena-packages.sh` |
-| **全局设置** | `ui-prefs-modal` | 主题选择 (浅色/深色/跟随系统)、默认启动页面、网速单位 (MB/s / Mbps)、界面缩放比例 (85%–115%)、首页指标卡排序 | 保存偏好、重置默认 | `athena-prefs.sh`, `athena-theme.sh`, `athena-ui.sh` |
+| **1. 概览 (Dashboard)** | `pg-home` | 实时网速 EMA 仪表盘、核心指标卡 (CPU/内存/连接数/时长)、动态网络拓扑 (随组网模式自适应)、在线终端总览、活跃应用推测 (DNS 启发式) | 测速直达、体检直达、指标卡自定义排序/拖拽、快速安全重启 | `athena-status.sh` (含 `rate` 与 ucode), `athena-apps.sh`, `athena-prefs.sh`, `athena-client.sh` |
+| **2. 网络与无线 (Network & WiFi)** | `pg-net` | 组网模式切换器 (主路由/单臂/旁路由/AP)、WAN 接入配置 (PPPoE/DHCP/静态)、单臂 VLAN 拓扑示意与参数、三频 WiFi 调控 (2.4G/5.2G/5.8G)、访客网络隔离、网口物理链路状态、网络体检、Ping 诊断、外网测速 | 保存应用模式 (接入原生 LuCI 60s 回滚)、频段配置弹窗、恢复默认 WiFi 弹窗 (固定 12345678)、访客网络独立配置、一键体检/Ping/测速 | `athena-mode.sh` (含 `single-bg`, `progress`), `athena-wireless.sh`, `athena-scan.sh`, `athena-diag.sh`, `athena-speedtest.sh` |
+| **3. 终端与安全 (Devices & Security)** | `pg-dev` | 在线设备统计与列表 (支持按在线/离线/黑名单筛选)、设备指纹库识别 (OUI)、实时速率与信号强度、访问控制黑名单、家长控制规则列表 | 设备改名/图标设置弹窗、已知设备标记、一键拉黑/解封 (fw4 专属 set)、添加/修改家长控制规则弹窗 (跨午夜星期自适应计算)、删除规则 | `athena-client.sh`, `athena-parent.sh`, `athena-status.sh` |
+| **4. 存储中心 (Storage & NAS)** | `pg-st` | 磁盘与卷管理列表 (真实 USB 分区)、USB 挂载/安全弹出/格式化、FileBrowser 网页文件管理 (8081 端口)、**NAS 网络共享 (按需动态部署状态机：未安装向导 / 已安装控制台)** | 磁盘挂载/卸载、USB 格式化二次确认弹窗、FileBrowser 启停与凭据遮罩查看、**[一键安装 NAS]** (KSMBD / Samba4 二选一)、**[查看/重置 NAS 凭据]**、**[启动/停止服务]**、**[一键卸载 NAS]** (绝对不删用户数据) | `athena-disk.sh`, `athena-services.sh` (filebrowser-password), `athena-nas.sh` (含 APK 依赖预演与生命周期管理) |
+| **5. 系统控制台 (System & Tools)** | `pg-sys` | ① **雅典娜硬件**：前面板 LED 点阵屏 (显示项/夜间免打扰)、顶部三色呼吸灯调色；<br>② **系统与性能**：CPU/内存负载、进程管理器 (TERM/KILL 流程)、NSS/ECM 硬件加速只读状态；<br>③ **扩展与第三方应用**：受控系统服务 (ddns/ttyd/matrix)、第三方独立 Web 应用启动台 (FileBrowser/AdGuard/Docker 等)、原生 LuCI 插件跳转；<br>④ **维护与安全**：管理员密码修改、配置备份下载与安全恢复、固件上传校验与升级、256-bit Token 恢复出厂、定时重启计划、脱敏系统日志；<br>⑤ **高级模式直达**：原生 LuCI 后台入口 | 点阵屏与 LED 开关/颜色调节、杀死异常进程、服务启停、**[打开第三方控制台 ↗]** (新标签页直达独立端口)、**[进入原生高级设置 ↗]**、立即备份/下载/恢复配置、固件刷写确认、恢复出厂挑战码确认、日志刷新 | `athena-matrix.sh`, `athena-led.sh`, `athena-resources.sh`, `athena-accel.sh`, `athena-services.sh`, `athena-packages.sh`, `athena-backup.sh`, `athena-upgrade.sh`, `athena-reset.sh`, `athena-reboot.sh`, `athena-log.sh`, `athena-passwd.sh` |
+| **全局界面设置** | `ui-prefs-modal` | 顶栏常驻调色板/齿轮入口：明暗主题 (浅色/深色/跟随系统)、液态玻璃毛玻璃模糊度 (强/适中/关闭)、背景环境光斑开关、界面缩放比例 (85%~115%)、网速单位 (MB/s / Mbps)、首页指标卡拖拽排序 | 保存偏好设置 (持久化写入 UCI athena.prefs)、重置默认主题 | `athena-prefs.sh`, `athena-theme.sh`, `athena-ui.sh` |
 
 ---
 
