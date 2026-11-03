@@ -44,20 +44,23 @@
 用户要求相关工作一次完成时，将同一范围的 Athena 源码修改合并为完整批次；完成全部修改后再统一验证和构建。若用户没有要求拆分，不逐项请求操作确认。
 
 
-## 7. 网络配置变更的失联回退
+## 7. 网络配置变更：复用原生 UCI 回滚
 
-- 网络切换不能把“本机 br-lan 有 IP”当作“管理端已恢复”。应区分本机链路健康、LAN 管理接口健康、客户端重新访问管理页面三个条件。
-- 对所有会影响管理链路的模式/接口/VLAN 变更，使用有期限的 pending transaction：先保存相关配置快照、生成随机 token、启动独立 watchdog，再应用网络配置。
-- 用户端只有在重新连上管理页面后才能执行确认；服务端核验 token 和事务状态后才提交确认。到期未确认或本机健康检查失败，watchdog 自动恢复修改前快照。
-- watchdog 不能依赖浏览器计时器、当前 rpcd 请求或 LuCI session 存活；须由独立 procd/init 服务管理，并保证重启/异常退出时 pending 状态可被恢复处理。
-- 当前 single-bg 的 IP/VLAN 自检与 athena-netcheck 冷启动回退只是局部保护，不能宣传为所有模式的失联回退。完成统一机制前，应对 router/AP/bypass/single 的回退覆盖逐一标注。
+- 不另造 Athena watchdog、pending 守护进程、第二套 token 或自定义回滚框架；复用目标 ImmortalWrt/LuCI 自带的 UCI apply-with-rollback 能力。
+- 预期流程：Athena 将本次网络修改暂存到当前 LuCI RPC 会话的 UCI transaction，再调用原生 `/admin/uci/apply_rollback`。原生后端生成确认 token 并启动回滚倒计时；用户管理端重新连通后走原生 `/admin/uci/confirm` 确认，超时未确认则由原生机制回滚。
+- 当前 `athena-mode.sh` 使用命令行 UCI 修改和 `uci commit` 的路径不能直接视为 LuCI session staged changes。必须先完成调用链改造与会话绑定验证；禁止先 commit 再调用 apply_rollback，造成回滚事务没有捕获原始配置。
+- 覆盖 router/AP/single/bypass 所有可能改变管理链路的操作；保留现有单臂本机 IP/VLAN 检查作为补充检查的可能性，但不把它当成客户端失联检测，不新增重复 watchdog。
+- 仅修改 Athena 自有脚本、RPC 接入及前端提示，不修改原生 LuCI 页面、菜单、ACL 或后端。前端只清楚说明短暂断网及原生回滚保护，避免增加 SSH 手动恢复步骤。
+- 实施前核对目标设备的 LuCI 版本、原生回滚 endpoint、RPC session、UCI staged changes 与现有 Athena RPC 封装；确保只应用本次 Athena 变更，不提交用户在其他 LuCI 页面中未应用的配置。离线/CI 验证完成后再安排带外救援条件下的设备验收。
 
-## 8. 存储中心与未来 NAS 扩展
+## 8. 存储中心与 KSMBD 按需 NAS
 
-- Athena 存储页定位为“存储中心”，而不是只为当前 FileBrowser 设计的一次性页面。
-- 逻辑拆分为三个子模块：**磁盘与卷管理**、**网页文件管理（FileBrowser）**、**网络共享/NAS（未来 SMB/ksmbd，按需评估 NFS）**。
-- 块设备/文件系统/挂载由 athena-disk.sh 单独管理；未来 NAS 新增 athena-nas.sh，负责共享服务状态、共享目录、账户、权限与启动依赖，不把 NAS 服务逻辑耦合进磁盘脚本。
-- 为兼容当前 FileBrowser，主数据卷仍挂载至 /mnt/usb；当前格式化白名单和 USB 校验不放宽。未来以 UUID/LABEL 识别卷，避免重启或热插拔后设备节点从 sda1 变 sdb1 导致挂错盘；额外数据卷使用独立稳定挂载点。
-- SMB/NFS/FileBrowser 等共享服务只能访问已登记且真实挂载的数据卷目录；启动前验证 mount source/UUID，卸载前停止消费者并检查 busy 状态，热拔出后停止服务。共享路径 realpath 必须限制在卷根目录内。
-- 默认仅允许 LAN 访问，不开放 WAN；访客共享默认关闭；用户、目录、读写权限必须由后端实施。系统分区、overlay、rootfs 不得成为 NAS 共享卷或格式化目标。
-- r4 只保留现有 USB + FileBrowser 能力，不在此批次安装 NAS 服务或改动设备挂载配置。新增 NAS 是单独功能批次，构建为独立 APK 并先做依赖/资源/权限验证。
+- 存储中心采用一个入口、三个独立模块：**磁盘与卷管理**、**网页文件管理（FileBrowser）**、**NAS 网络共享**。NAS 未安装时显示“安装 NAS”；安装成功后以真实后端状态动态显示 NAS 管理区域。
+- NAS 第一阶段采用 KSMBD + SMB，不默认安装 NFS。只有确认存在 NFS 客户端需求，且目标固件软件源/内核模块满足要求时再扩展。
+- 一键安装是完整后端事务，不只是前端按钮：检查软件源签名、架构、运行内核 ABI、磁盘空间、端口和依赖；先做 APK transaction simulate；任何事务会改变 OpenClash、NSS/ECM、内核、网络栈或关键系统包时拒绝安装。由目标固件的已配置签名软件源解析依赖，不猜测内核包版本。
+- 新增独立 `athena-nas.sh` 管理 NAS 软件包所有权、服务状态、共享、账户、权限与生命周期；`athena-disk.sh` 只管理块设备和卷。Makefile 安装清单、RPC ACL、后端 allowlist、前端入口和动态 NAS 页面要成套实现。
+- 安装后初始化 LAN-only SMB 服务，默认禁用 guest/匿名访问；安全生成访问凭据；共享路径只允许落在已登记且真实挂载的数据卷内，默认兼容 `/mnt/usb`。不共享系统目录、overlay、未挂载目录，不开放 WAN。
+- 页面提供真实安装/运行状态、共享信息、访问地址、凭据管理和启停/卸载入口。安装完成自动刷新显示 NAS 模块；安装失败显示后端真实错误，不伪报成功。
+- “停止”只停止服务并禁用自启，保留软件包、配置、账户和数据；“卸载”才移除 Athena 拥有的 NAS 软件及集成。卸载必须检查依赖关系和软件包所有权，不删除磁盘文件、不格式化分区、不卸载其他软件正在使用的共享依赖；必要时备份用户配置。
+- FileBrowser 继续使用 `/mnt/usb`，不改变现有 USB 分区校验/格式化安全约束。卸载卷前先停止 NAS/FileBrowser 消费者并检查 busy；热拔出时停止依赖服务。后续再逐步以 UUID/LABEL 识别卷，避免设备节点变化挂错盘。
+- NAS 属当前 r4 之后的独立批次；未经用户明确授权不在设备上安装/卸载软件包。交付前必须验证软件源、APK 事务、内核 ABI、包依赖、ACL、路径隔离、停止/卸载边界及动态页面状态。
