@@ -2828,8 +2828,8 @@ function renderResBox(){
     else metric=pct.toFixed(1)+'%'+(g.mb>0?' · 约 '+(g.mb>=10?Math.round(g.mb):g.mb.toFixed(1))+' MB':'');
     return '<div class="proc-row"><div class="proc-name">'+esc(g.app)+(sub?'<em>'+esc(sub)+'</em>':'')+'</div><div class="proc-bar"><i style="width:'+w.toFixed(1)+'%'+(resTab==='mem'?';background:var(--warn)':'')+'"></i></div><div class="proc-m">'+esc(metric)+'</div>'
       +(g.kth?'<span class="tag gray" style="flex:none">内核</span>'
-        :'<button class="btn sm" onclick="procGrpAct(\''+esc(app).replace(/'/g,"\\'")+'\',\'restart\')">重启</button>'
-        +(resTab==='cpu'?'<button class="btn sm danger" onclick="procGrpAct(\''+esc(app).replace(/'/g,"\\'")+'\',\'stop\')">停止</button>':''))
+        :'<button class="btn sm" onclick="procGrpAct(\''+esc(app).replace(/'/g,"\'")+'\',\'restart\')">重启</button>'
+        +(resTab==='cpu'?'<button class="btn sm danger" onclick="procGrpAct(\''+esc(app).replace(/'/g,"\'")+'\',\'stop\')">停止</button>':''))
       +'</div>';
   }).join(''):'<div class="proc-row"><div class="proc-name">暂无数据</div></div>');
 }
@@ -3687,7 +3687,7 @@ window.openResetConfirm=function(){
   athenaRPC.exec('athena-reset.sh',['prepare']).then(function(d){
     if(!d||d.ok!==true||!/^[0-9a-f]{64}$/.test(d.token||'')){ toast('无法生成恢复出厂确认码'); return; }
     var token=d.token;
-    openBkModal('<h3>恢复出厂设置？</h3><div class="m-sub">将清除全部配置（网络 / WiFi / 密码 / 主题等）并重启。此操作不可撤销！确认码有效期 '+Number(d.expires_in||60)+' 秒，仅可使用一次。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doReset(\\''+token+'\\')">确认恢复出厂</button></div>');
+    openBkModal('<h3>恢复出厂设置？</h3><div class="m-sub">将清除全部配置（网络 / WiFi / 密码 / 主题等）并重启。此操作不可撤销！确认码有效期 '+Number(d.expires_in||60)+' 秒，仅可使用一次。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doReset(\''+token+'\')">确认恢复出厂</button></div>');
   }).catch(function(e){ toast('确认码生成失败：'+(e.message||'')); });
 };
 window.doReset=function(token){
@@ -3885,15 +3885,15 @@ window.pkgRender=function(){
     var locked=window.athenaPkgProtected(p.name);
     return '<div class="pkg-row"><div class="pkg-name" title="'+esc(p.name)+'">'+esc(p.name)+'</div><div class="pkg-ver">'+esc(p.version||'')+'</div><div class="pkg-actions">'
       +(locked?'<span class="tag gray">关键组件受保护</span>':'')
-      +(!locked&&tab==='available'?'<button class="btn sm primary" onclick="installPkg(\\''+p.name+'\\')">安装</button>':'')
-      +(!locked&&tab==='installed'?'<button class="btn sm danger" onclick="removePkg(\\''+p.name+'\\')">卸载</button>':'')
+      +(!locked&&tab==='available'?'<button class="btn sm primary" onclick="installPkg(\''+p.name+'\')">安装</button>':'')
+      +(!locked&&tab==='installed'?'<button class="btn sm danger" onclick="removePkg(\''+p.name+'\')">卸载</button>':'')
       +'</div></div>';
   }).join('')||'<div class="pkg-empty">没有匹配的软件包</div>';
 };
 window.installPkg=function(n){ if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止安装或变相升级'); return; } toast('安装 '+n+' …'); athenaRPC.exec('athena-packages.sh',['install',n]).then(function(d){ if(!d||d.ok===false) throw new Error((d&&d.msg)||'后端拒绝安装'); toast((d&&d.msg)||(n+' 安装完成')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('安装失败：'+(e.message||'')); }); };
 window.removePkg=function(n){
   if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止卸载'); return; }
-  openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\\''+n+'\\')">确认卸载</button></div>');
+  openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
 };
 window.doRemovePkg=function(n){ if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ if(!d||d.ok===false) throw new Error((d&&d.msg)||'后端拒绝卸载'); toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
 window.checkUpdate=function(){ toast('检查软件源更新中（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源已更新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
