@@ -35,15 +35,12 @@ svc_on() {
 	echo false
 }
 
-# 是否支持一键启停（uci 字段或 init 至少其一可用，且非核心服务）
+# 仅允许静态表中经过审计的 Athena 服务执行启停；动态发现项只读展示。
 svc_toggle() {
-	local uci_key="$1" init="$2"
+	local id="$1" uci_key="$2" init="$3"
+	case "$id" in ddns|ttyd|matrix) ;; *) echo false; return ;; esac
 	case " $CORE_INIT " in *" $init "*) echo false; return ;; esac
-	if { [ -n "$uci_key" ] && [ "$uci_key" != "none" ]; } || { [ -n "$init" ] && [ "$init" != "none" ]; }; then
-		echo true
-	else
-		echo false
-	fi
+	if { [ -n "$uci_key" ] && [ "$uci_key" != "none" ]; } || { [ -n "$init" ] && [ "$init" != "none" ]; }; then echo true; else echo false; fi
 }
 
 emit_list() {
@@ -53,7 +50,7 @@ emit_list() {
 	while IFS='|' read -r id name desc uci_key init plugin path; do
 		[ -z "$id" ] && continue
 		on=$(svc_on "$uci_key" "$init")
-		toggle=$(svc_toggle "$uci_key" "$init")
+		toggle=$(svc_toggle "$id" "$uci_key" "$init")
 		[ -n "$first" ] && printf ','
 		first=1
 		printf '{"id":"%s","name":"%s","desc":"%s","on":%s,"toggle":%s' \
@@ -87,7 +84,7 @@ EOF
 		if $core; then continue; fi
 		# 已安装即显示；enabled（开机自启）视为"运行中"，未启用显示为关闭
 		if /etc/init.d/$base enabled >/dev/null 2>&1; then on=true; else on=false; fi
-		toggle=true
+		toggle=false
 		dpath=""
 		# 在 LuCI 菜单注册文件里找同名应用的菜单路径（menu.d 的 key 行带 TAB 缩进，
 		# 必须容忍前导空白，否则永远探不到 → 服务只能显示"无独立界面"、无法打开）
@@ -123,39 +120,28 @@ EOF
 }
 
 set_svc() {
-	local id="$1" en="$2" line uci_key init val=0
-	line=$(printf '%s\n' "$SERVICES" | grep "^$id|" | head -n1)
-	if [ -z "$line" ]; then
-		# 动态 init.d 服务：id 即 init 名
-		init="$id"
-		uci_key="none"
-		if [ ! -x "/etc/init.d/$init" ]; then
-			echo '{"ok":false,"error":"unknown service"}'; return
-		fi
-		# 核心服务保护：不允许一键启停（防误操作断网/失联）
-		case " $CORE_INIT " in *" $init "*) echo '{"ok":false,"msg":"核心系统服务受保护，不允许在此启停"}'; return ;; esac
+	local id="$1" en="$2" line uci_key init val=0 old=""
+	case "$id" in ddns|ttyd|matrix) ;; *) echo '{"ok":false,"msg":"该服务不在 Athena 允许启停的白名单中"}'; return 1 ;; esac
+	case "$en" in 0) val=0 ;; 1) val=1 ;; *) echo '{"ok":false,"msg":"服务目标状态必须为 0 或 1"}'; return 1 ;; esac
+	line=$(printf '%s\n' "$SERVICES" | awk -F'|' -v id="$id" '$1 == id { print; exit }')
+	[ -n "$line" ] || { echo '{"ok":false,"msg":"未知服务"}'; return 1; }
+	uci_key=$(printf '%s' "$line" | cut -d'|' -f4)
+	init=$(printf '%s' "$line" | cut -d'|' -f5)
+	case "$init" in ddns|ttyd|athena_led) ;; *) echo '{"ok":false,"msg":"服务 init 名未通过白名单校验"}'; return 1 ;; esac
+	[ -x "/etc/init.d/$init" ] || { echo '{"ok":false,"msg":"服务未安装或 init 脚本不可执行"}'; return 1; }
+	old=$(uci -q get "$uci_key" 2>/dev/null)
+	uci set "$uci_key=$val" 2>/dev/null && uci commit 2>/dev/null || { echo '{"ok":false,"msg":"服务配置写入失败"}'; return 1; }
+	if [ "$en" = "1" ]; then
+		/etc/init.d/"$init" enable >/dev/null 2>&1 && /etc/init.d/"$init" start >/dev/null 2>&1 || {
+			[ -n "$old" ] && uci set "$uci_key=$old" 2>/dev/null && uci commit 2>/dev/null
+			echo '{"ok":false,"msg":"服务启动失败，已尝试恢复原配置"}'; return 1;
+		}
 	else
-		uci_key=$(printf '%s' "$line" | cut -d'|' -f4)
-		init=$(printf '%s' "$line" | cut -d'|' -f5)
+		/etc/init.d/"$init" stop >/dev/null 2>&1
+		/etc/init.d/"$init" disable >/dev/null 2>&1 || { echo '{"ok":false,"msg":"服务停用失败"}'; return 1; }
 	fi
-	[ "$en" = "1" ] && val=1
-
-	if [ -n "$uci_key" ] && [ "$uci_key" != "none" ]; then
-		uci set "$uci_key=$val" 2>/dev/null
-		uci commit 2>/dev/null
-	fi
-	if [ -n "$init" ] && [ "$init" != "none" ] && [ -x "/etc/init.d/$init" ]; then
-		if [ "$en" = "1" ]; then
-			/etc/init.d/$init enable >/dev/null 2>&1
-			/etc/init.d/$init start >/dev/null 2>&1
-		else
-			/etc/init.d/$init stop >/dev/null 2>&1
-			/etc/init.d/$init disable >/dev/null 2>&1
-		fi
-	fi
-
 	if [ "$en" = "1" ]; then on=true; else on=false; fi
-	echo "{\"ok\":true,\"id\":\"$id\",\"on\":$on}"
+	printf '{"ok":true,"id":"%s","on":%s}\n' "$id" "$on"
 }
 
 case "$1" in

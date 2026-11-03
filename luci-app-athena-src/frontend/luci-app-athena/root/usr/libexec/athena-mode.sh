@@ -172,10 +172,9 @@ detach_wan_from_bridge() {
 
 # ---- NSS 开关 ----
 nss_off() {
-	log "关闭软件 flow offload（旁路由/AP 用）"
-	uci -q set firewall.@defaults[0].flow_offloading='0'
-	uci -q delete firewall.@defaults[0].flow_offloading_hw 2>/dev/null
-	[ -x /etc/init.d/qca-nss-ecm ] && /etc/init.d/qca-nss-ecm stop 2>/dev/null
+	# 兼容既有 AP/旁路由流程调用点，但禁止通过 Athena 模式切换关闭 NSS/ECM。
+	log "拒绝关闭 NSS/ECM；按 Athena 设备策略保持硬件加速"
+	nss_on
 }
 
 nss_on() {

@@ -3677,16 +3677,26 @@ window.doFlashConfirm=function(){
   var keep=(keepEl && !keepEl.checked)?'0':'1';
   var b=document.getElementById('upGo2'); if(b){ b.disabled=true; b.textContent='刷写中…'; }
   toast(keep==='1'?'正在写入固件并保留配置，请勿断电…':'正在全新刷写（不保留配置），请勿断电…');
-  athenaRPC.exec('athena-upgrade.sh',['flash',window._fwPath,keep])
-    .then(function(d){ toast((d&&d.msg)||'升级已开始，路由器将重启'); setTimeout(function(){ location.reload(); },15000); })
+  athenaRPC.exec('athena-upgrade.sh',['flash',window._fwPath,keep,String(window._localSha||'')])
+    .then(function(d){ if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认刷写'); toast((d&&d.msg)||'升级已开始，路由器将重启'); setTimeout(function(){ location.reload(); },15000); })
     .catch(function(e){ toast('刷写失败：'+(e.message||'')); if(b){ b.disabled=false; b.textContent='确认升级'; } });
 };
 window.openResetConfirm=function(){
-  openBkModal('<h3>恢复出厂设置？</h3><div class="m-sub">将清除全部配置（网络 / WiFi / 密码 / 主题等）并重启。此操作不可撤销！</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doReset()">确认恢复出厂</button></div>');
+  if(!athenaRPC || !athenaRPC.live){ toast('登录后可用'); return; }
+  toast('正在生成一次性确认码…');
+  athenaRPC.exec('athena-reset.sh',['prepare']).then(function(d){
+    if(!d||d.ok!==true||!/^[0-9a-f]{64}$/.test(d.token||'')){ toast('无法生成恢复出厂确认码'); return; }
+    var token=d.token;
+    openBkModal('<h3>恢复出厂设置？</h3><div class="m-sub">将清除全部配置（网络 / WiFi / 密码 / 主题等）并重启。此操作不可撤销！确认码有效期 '+Number(d.expires_in||60)+' 秒，仅可使用一次。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doReset(\\''+token+'\\')">确认恢复出厂</button></div>');
+  }).catch(function(e){ toast('确认码生成失败：'+(e.message||'')); });
 };
-window.doReset=function(){
+window.doReset=function(token){
+  if(!/^[0-9a-f]{64}$/.test(token||'')){ toast('恢复出厂确认码无效'); return; }
   toast('正在恢复出厂并重启，页面将断开…');
-  athenaRPC.exec('athena-reset.sh',['--confirm']).catch(function(e){ toast('指令已下发：'+(e.message||'')); });
+  athenaRPC.exec('athena-reset.sh',['confirm',token]).then(function(d){
+    if(!d||d.ok!==true) throw new Error((d&&d.msg)||'后端未确认恢复出厂');
+    toast((d&&d.msg)||'恢复出厂已安排');
+  }).catch(function(e){ toast('恢复出厂失败：'+(e.message||'')); });
 };
 window.backupNow=function(){
   toast('正在备份配置…');
@@ -3861,6 +3871,10 @@ window.pkgLoadAvail=function(tries){
     pkgRender();
   }).catch(function(e){ if(el) el.innerHTML='<div class="pkg-empty">加载失败：'+esc(e.message||'')+'</div>'; });
 };
+window.athenaPkgProtected=function(n){
+  n=String(n||'');
+  return /^(luci-app-openclash|luci-i18n-openclash-|openclash$|mihomo|clash|sing-box|singbox|qca-nss|kmod-qca-nss|qca-ssdk|kmod-qca-ssdk|ecm|kmod-ecm|nss-|kmod-nss-|base-files$|busybox$|apk-tools$|openwrt-keyring$|immortalwrt-keyring$|kernel($|-)|kmod-|libc($|-)|musl($|-)|libgcc($|-)|libubox|libubus|libnl|libopenssl|libustream|libqca-nss|libecm|libqca-ssdk|ath11k-firmware|rpcd($|-)|ubus$|uhttpd$|netifd$|firewall4$|nftables$|dnsmasq|odhcpd|dropbear$|procd$|fstools$|block-mount$|wpad|hostapd|ppp($|-)|luci-base$|luci-mod-|luci-app-firewall$|luci-app-athena$|luci-theme-jdc-athena$|luci-i18n-athena-zh-cn$)/.test(n);
+};
 window.pkgRender=function(){
   var el=document.getElementById('pkgList'); if(!el) return;
   var q=(document.getElementById('pkgSearch').value||'').toLowerCase();
@@ -3868,17 +3882,20 @@ window.pkgRender=function(){
   var list=PKGS.filter(function(p){ return tab==='installed'?p.installed:!p.installed; });
   if(q) list=list.filter(function(p){ return (p.name||'').toLowerCase().indexOf(q)>=0; });
   el.innerHTML=list.slice(0,80).map(function(p){
+    var locked=window.athenaPkgProtected(p.name);
     return '<div class="pkg-row"><div class="pkg-name" title="'+esc(p.name)+'">'+esc(p.name)+'</div><div class="pkg-ver">'+esc(p.version||'')+'</div><div class="pkg-actions">'
-      +(tab==='available'?'<button class="btn sm primary" onclick="installPkg(\''+p.name+'\')">安装</button>':'')
-      +(tab==='installed'?'<button class="btn sm danger" onclick="removePkg(\''+p.name+'\')">卸载</button>':'')
+      +(locked?'<span class="tag gray">关键组件受保护</span>':'')
+      +(!locked&&tab==='available'?'<button class="btn sm primary" onclick="installPkg(\\''+p.name+'\\')">安装</button>':'')
+      +(!locked&&tab==='installed'?'<button class="btn sm danger" onclick="removePkg(\\''+p.name+'\\')">卸载</button>':'')
       +'</div></div>';
   }).join('')||'<div class="pkg-empty">没有匹配的软件包</div>';
 };
-window.installPkg=function(n){ toast('安装 '+n+' …'); athenaRPC.exec('athena-packages.sh',['install',n]).then(function(d){ toast((d&&d.msg)||(n+' 安装完成')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('安装失败：'+(e.message||'')); }); };
+window.installPkg=function(n){ if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止安装或变相升级'); return; } toast('安装 '+n+' …'); athenaRPC.exec('athena-packages.sh',['install',n]).then(function(d){ if(!d||d.ok===false) throw new Error((d&&d.msg)||'后端拒绝安装'); toast((d&&d.msg)||(n+' 安装完成')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('安装失败：'+(e.message||'')); }); };
 window.removePkg=function(n){
-  openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
+  if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止卸载'); return; }
+  openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\\''+n+'\\')">确认卸载</button></div>');
 };
-window.doRemovePkg=function(n){ toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
+window.doRemovePkg=function(n){ if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ if(!d||d.ok===false) throw new Error((d&&d.msg)||'后端拒绝卸载'); toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
 window.checkUpdate=function(){ toast('检查软件源更新中（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源已更新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
 window.openSyslog=function(){
   openBkModal('<h3>系统日志</h3><div class="m-sub">内核与系统服务实时日志</div><div class="log-toolbar"><input class="log-search" id="logSearch" placeholder="搜索日志…" oninput="logRender()"><div class="log-chips"><button class="log-chip on" data-lv="" onclick="logLv(\'\')">全部</button><button class="log-chip" data-lv="err" onclick="logLv(\'err\')">错误</button><button class="log-chip" data-lv="warn" onclick="logLv(\'warn\')">警告</button></div></div><div id="logList" class="log-list"><div class="log-empty">加载中…</div></div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button></div>');

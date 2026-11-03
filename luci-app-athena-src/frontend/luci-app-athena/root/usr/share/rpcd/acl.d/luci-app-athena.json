@@ -1,20 +1,8 @@
 {
 	"luci-app-athena": {
-		"description": "Grant UCI and ubus access to AthenaWrt",
-		"read": {
-			"ubus": {
-				"athena": [ "status" ],
-				"system": [ "board", "info" ],
-				"network.device": [ "status" ],
-				"network.wireless": [ "status" ]
-			},
-			"uci": [ "athena", "network", "wireless", "dhcp", "system", "ddns", "ttyd" ]
-		},
+		"description": "Grant least-privilege RPC access to the AthenaWrt interface",
 		"write": {
-			"ubus": {
-				"file": [ "exec", "write" ]
-			},
-			"uci": [ "athena", "network", "wireless", "dhcp", "system", "ddns", "ttyd" ],
+			"ubus": { "file": [ "exec", "write" ] },
 			"file": {
 				"/usr/libexec/athena-status.sh": [ "exec" ],
 				"/usr/libexec/athena-mode.sh": [ "exec" ],
@@ -40,14 +28,7 @@
 				"/usr/libexec/athena-parent.sh": [ "exec" ],
 				"/usr/libexec/athena-apps.sh": [ "exec" ],
 				"/usr/libexec/athena-prefs.sh": [ "exec" ],
-				"/etc/init.d/network": [ "exec" ],
-				"/bin/ping": [ "exec" ],
-				"/usr/bin/nslookup": [ "exec" ],
-				"/usr/bin/ubus": [ "exec" ],
-				"/bin/ubus": [ "exec" ],
-				"/tmp/athena-restore.b64": [ "write" ],
-				"/tmp/athena-fw.b64": [ "write" ],
-				"/tmp/athena-fw-upload.bin": [ "write", "read" ]
+				"/tmp/athena-restore.b64": [ "write" ]
 			}
 		}
 	}

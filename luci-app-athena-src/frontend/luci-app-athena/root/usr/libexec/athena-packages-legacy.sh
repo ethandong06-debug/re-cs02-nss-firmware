@@ -39,8 +39,8 @@ protected_pkg() {
 		qca-nss*|kmod-qca-nss*|qca-ssdk*|kmod-qca-ssdk*|ecm*|kmod-ecm*|nss-*|kmod-nss-*| \
 		base-files|busybox|apk-tools|openwrt-keyring|immortalwrt-keyring|kernel|kernel-*|kmod-*| \
 		libc|libc-*|musl|musl-*|libgcc|libgcc-*|libubox*|libubus*|libnl*|libopenssl*|libustream*|libqca-nss*|libecm*|libqca-ssdk*|ath11k-firmware*| \
-		rpcd|ubus|uhttpd|netifd|firewall4|nftables|dnsmasq*|odhcpd*|dropbear|procd|fstools|block-mount| \
-		wpad*|hostapd*|ppp|ppp-*|luci-base|luci-mod-*|luci-app-athena|luci-i18n-athena-zh-cn)
+		rpcd|rpcd-mod-*|ubus|uhttpd|netifd|firewall4|nftables|dnsmasq*|odhcpd*|dropbear|procd|fstools|block-mount| \
+		wpad*|hostapd*|ppp|ppp-*|luci-base|luci-mod-*|luci-app-firewall|luci-app-athena|luci-theme-jdc-athena|luci-i18n-athena-zh-cn)
 			return 0 ;;
 	esac
 	return 1
