@@ -229,9 +229,7 @@ do_set() {
 
 # ---- 恢复出厂默认无线（随机密码 / CN / 信道 auto）----
 do_reset_defaults() {
-	local RESET_PWD
-	RESET_PWD=$(od -An -N8 -tx1 /dev/urandom 2>/dev/null | tr -d ' \n')
-	[ "${#RESET_PWD}" -eq 16 ] || { echo '{"ok":false,"msg":"无法生成随机 WiFi 密码，未修改配置"}'; return 1; }
+	local RESET_PWD='12345678'
 	for r in 0 1 2; do
 		band=$(uci -q get "wireless.radio${r}.band" 2>/dev/null)
 		[ -z "$band" ] && continue
@@ -261,7 +259,7 @@ do_reset_defaults() {
 	uci commit wireless 2>/dev/null
 	RELOAD_OK=true
 	wifi reload >/dev/null 2>&1 || RELOAD_OK=false
-	echo "{\"ok\":true,\"msg\":\"无线已恢复默认，请使用新随机密码连接\",\"password\":\"$RESET_PWD\",\"reload_ok\":$RELOAD_OK}"
+	echo "{\"ok\":true,\"msg\":\"无线已恢复默认；请使用公开默认密码并尽快修改\",\"password\":\"$RESET_PWD\",\"reload_ok\":$RELOAD_OK}"
 }
 
 # ---- 访客网络（2.4G 多 BSS + guest 独立桥 + 防火墙隔离）----

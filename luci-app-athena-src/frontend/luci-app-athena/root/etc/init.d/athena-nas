@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+START=99
+STOP=05
+
+start() {
+  /usr/libexec/athena-nas.sh service-start >/dev/null 2>&1
+}
+
+stop() {
+  /usr/libexec/athena-nas.sh service-stop >/dev/null 2>&1
+}

@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=luci-app-athena
 # 版本号与固件发布版本同步（登录页/状态页展示一致）；每次固件迭代递增
 PKG_VERSION:=1.2.60
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_LICENSE:=Apache-2.0
 
@@ -19,9 +19,11 @@ LUCI_PKGARCH:=all
 include $(TOPDIR)/feeds/luci/luci.mk
 
 define Package/luci-app-athena/install
-	# ---- libexec 后端文件（36 个，含 Shell / ucode / legacy 回退与 helper）----
+	# ---- libexec 后端文件（38 个，含 Shell / ucode / legacy 回退与 helper）----
 	$(INSTALL_DIR) $(1)/usr/libexec
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status.sh $(1)/usr/libexec/athena-status.sh
+	$(INSTALL_BIN) ./root/usr/libexec/athena-nas.sh $(1)/usr/libexec/athena-nas.sh
+	$(INSTALL_BIN) ./root/usr/libexec/athena-accel.sh $(1)/usr/libexec/athena-accel.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status-legacy.sh $(1)/usr/libexec/athena-status-legacy.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status.uc $(1)/usr/libexec/athena-status.uc
 	$(INSTALL_BIN) ./root/usr/libexec/athena-mode.sh $(1)/usr/libexec/athena-mode.sh
@@ -83,10 +85,11 @@ define Package/luci-app-athena/install
 	$(INSTALL_BIN) ./root/etc/init.d/athena-boot $(1)/etc/init.d/athena-boot
 	$(INSTALL_BIN) ./root/etc/init.d/athena-ui $(1)/etc/init.d/athena-ui
 	$(INSTALL_BIN) ./root/etc/init.d/filebrowser $(1)/etc/init.d/filebrowser
+	$(INSTALL_BIN) ./root/etc/init.d/athena-nas $(1)/etc/init.d/athena-nas
 	$(INSTALL_BIN) ./root/etc/init.d/athena-vlan-pre $(1)/etc/init.d/athena-vlan-pre
 	$(INSTALL_BIN) ./root/etc/init.d/athena-netcheck $(1)/etc/init.d/athena-netcheck
 
-	# ---- USB block hotplug（拔除共享 U 盘时立即停止 filebrowser）----
+	# ---- USB block hotplug（拔除共享 U 盘时停止 FileBrowser 与 NAS）----
 	$(INSTALL_DIR) $(1)/etc/hotplug.d/block
 	$(INSTALL_BIN) ./root/etc/hotplug.d/block/99-athena-filebrowser $(1)/etc/hotplug.d/block/99-athena-filebrowser
 

@@ -646,6 +646,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <button class="theme-toggle" id="themeBtn" title="主题设置" onclick="openThemeModal()">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.2-1.5-.5-1.2.4-2.5 1.7-2.5H17a4 4 0 0 0 4-4c0-5-4-10-9-10z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="8" r="1"/></svg>
     </button>
+    <button class="theme-toggle" id="uiPrefsBtn" title="界面设置" onclick="openUiPrefs()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
     <button class="theme-toggle" id="nativeBtn" title="打开原生 LuCI 后台（逃生通道）" onclick="openNativeLuCI()">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
     </button>
@@ -967,7 +968,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
   <div class="page" id="pg-st">
     <div class="phead">
       <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span>
-      <div><div class="t">磁盘与文件共享</div><div class="d">内置 eMMC 与 USB 外接存储管理</div></div>
+      <div><div class="t">存储中心</div><div class="d">磁盘与卷 · 网页文件管理 · NAS 网络共享</div></div>
     </div>
     <div class="grid">
       <div class="card">
@@ -978,7 +979,6 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
             <div class="disk-bar"><i style="width:58%"></i></div>
             <div class="dv">正在读取容量…</div>
           </div>
-          <button class="btn sm danger" onclick="fmtDisk('emmc')">格式化</button>
         </div>
         <div class="disk-row" data-disk="usb">
           <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 21h16"/></svg></div>
@@ -998,8 +998,15 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
           <div style="flex:1;min-width:200px"><div class="ct">网页文件管理</div><div style="font-size:12px;color:var(--text3);margin-top:5px">手机 / 电脑浏览器打开一个网页，就能上传、下载、播放文件</div></div>
           <button class="btn primary" onclick="openFbModal()">打开文件共享</button>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">filebrowser 运行中 · 端口 8081</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px" id="fbStatus">正在读取 FileBrowser 状态…</div>
       </div>
+      <div class="card" id="nasCard"><h3>NAS 网络共享 <span class="sub">局域网 SMB 文件共享 · 需独立安装</span></h3>
+        <div class="info-row"><span>服务状态</span><b id="nasStatus">正在读取…</b></div><div class="info-row"><span>实现方案</span><b id="nasMethod">尚未安装</b></div>
+        <div class="info-row"><span>共享目录</span><span id="nasShare">/mnt/usb/AthenaShare</span></div><div class="info-row"><span>访问地址</span><span id="nasAddress">—</span></div>
+        <div class="field" style="margin-top:12px"><label>选择 NAS 实现方案（只安装其中一种）</label><select id="nasMethodSelect"><option value="ksmbd">KSMBD 轻量方案（推荐）</option><option value="samba4">Samba4 兼容方案</option></select></div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.6;margin:8px 0">两种方案互斥，不会同时安装。共享仅绑定 LAN、默认需要账号密码；必须先有真实 USB 分区挂载到 /mnt/usb。安装前会模拟 APK 依赖事务并检查关键系统组件。</div>
+        <div id="nasActions" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" onclick="nasInstall()">安装所选 NAS 方案</button></div>
+        <div id="nasCredentialHint" style="font-size:11px;color:var(--text3);margin-top:10px">安装后可主动查看 NAS 登录凭据。</div></div>
     </div>
   </div>
 
@@ -1084,65 +1091,19 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="info-row"><span>备份列表</span><button class="btn sm" onclick="openBackupList()">查看（<span id="bkCount">0</span>）</button></div>
         <div style="font-size:12px;color:var(--text3);margin-top:8px">备份包含网络 / 无线 / 防火墙 / 插件等全部配置，不含磁盘数据。</div>
       </div>
+      <div class="card"><h3>日志与诊断</h3><div class="info-row"><span>系统日志</span><button class="btn sm" onclick="openSyslog()">查看日志</button></div><div class="info-row"><span>导出日志</span><button class="btn sm" onclick="exportLog()">导出</button></div><div class="info-row"><span>清空日志</span><button class="btn sm danger" onclick="clearLog()">清空</button></div></div>
+      <div class="card"><h3>账号安全</h3><div class="info-row"><span>管理账号</span><b>root</b></div><div class="info-row"><span>管理密码</span><button class="btn sm" onclick="openPwdModal()">修改密码</button></div><div class="info-row"><span>SSH 管理</span><span class="tag gray">由系统安全策略管理</span></div><div class="info-row"><span>SSH 配置</span><button class="btn sm" onclick="openNativeLuCI()">前往原生 LuCI</button></div></div>
     </div>
   </div>
 
   <!-- ======================= 高级 ======================= -->
-  <div class="page" id="pg-adv">
-    <div class="phead">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span>
-      <div><div class="t">高级</div><div class="d">资源监控 · 服务管理 · 软件包 · 日志</div></div>
-    </div>
+  <div class="page" id="pg-adv"><div class="phead"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/></svg></span><div><div class="t">高级</div><div class="d">资源监控 · 服务管理 · 硬件加速状态 · 软件包管理</div></div></div>
     <div class="grid">
-      <div class="card">
-        <h3>资源占用</h3>
-        <div class="res-head"><div class="tabs"><button class="on" data-restab="cpu" onclick="pickRes('cpu')">CPU 占用</button><button data-restab="mem" onclick="pickRes('mem')">内存占用</button></div><span class="res-kth" onclick="toggleResKth()" title="内核线程（kworker / ksoftirqd / irq / sugov 等）默认不显示，排查时再打开"><span>显示内核线程</span><div class="switch" id="resKthSw"></div></span></div>
-        <div class="res-hint" id="resHint"></div>
-        <div data-resCpu>
-        <div class="empty">正在读取 CPU 进程数据…</div>
-      </div>
-      <div data-resMem style="display:none">
-        <div class="empty">正在读取内存进程数据…</div>
-      </div>
-      </div>
-      <div class="card">
-        <h3>运行中的服务 <span class="sub">第三方应用服务</span></h3>
-        <div id="svcBox"><div class="empty">正在读取服务状态…</div></div>
-      </div>
-      <div class="row2">
-        <div class="card">
-          <h3>软件包管理 <span class="sub">apk</span></h3>
-          <div class="info-row"><span>已安装</span><span style="font-weight:600" id="pkgCount">—</span></div>
-          <div class="info-row"><span>可用更新</span><span style="font-weight:600;color:var(--ok)" id="pkgUpd">—</span></div>
-          <div class="info-row"><span>总存储</span><span style="font-weight:600" id="pkgStore">—</span></div>
-          <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openPkgManager()">管理软件包</button><button class="btn sm" onclick="checkUpdate()">检查更新</button></div>
-        </div>
-        <div class="card">
-          <h3>系统日志</h3>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:8px">内核与系统服务实时日志，用于排查异常</div>
-          <div class="info-row"><span>最近记录</span><button class="btn sm" onclick="openSyslog()">查看日志</button></div>
-          <div class="info-row"><span>操作</span><span style="display:flex;gap:8px"><button class="btn sm" onclick="done('日志已导出')">导出</button><button class="btn sm danger" onclick="done('日志已清空')">清空</button></span></div>
-        </div>
-      </div>
-      <div class="card">
-        <h3>账号与全局设置</h3>
-        <div class="info-row"><span>登录用户</span><span style="font-weight:600">root</span></div>
-        <div class="info-row"><span>管理密码</span><button class="btn sm" onclick="openPwdModal()">修改密码</button></div>
-        <div class="info-row"><span>SSH 访问</span><span style="display:flex;align-items:center;gap:8px"><span class="tag green">已启用</span><div class="switch on" data-k="ssh" onclick="toggleSsh()"></div></span></div>
-        <div class="info-row"><span>网速显示单位</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-unit="Mbps" onclick="setUnit('Mbps')">Mbps</button><button class="btn sm" data-unit="MB/s" onclick="setUnit('MB/s')">MB/s</button></span></div>
-        <div class="info-row"><span>界面主题</span><button class="btn sm" onclick="openThemeModal()">主题设置（深浅 / 液态玻璃）</button></div>
-        <div class="info-row"><span>默认界面</span><span style="display:flex;gap:6px"><button class="btn sm primary" data-defaultui="athena" onclick="setDefaultUi('athena')">管理台</button><button class="btn sm" data-defaultui="native" onclick="setDefaultUi('native')">原生界面</button><button class="btn sm" data-defaultui="last" onclick="setDefaultUi('last')">跟随上次</button></span></div>
-        <div class="info-row"><span>指标卡排序</span><button class="btn sm" onclick="openSortModal()">自定义排序</button></div>
-        <div class="info-row"><span>界面缩放</span><span id="uiZoomVal" style="font-weight:600">100%</span></div>
-        <div style="display:flex;align-items:center;gap:8px;padding:4px 2px 2px">
-          <button class="btn sm" onclick="stepUiZoom(-5)" title="缩小">−</button>
-          <input type="range" id="uiZoomRange" min="80" max="120" step="5" value="100" oninput="setUiZoom(this.value)" style="flex:1;min-width:0;accent-color:var(--primary)">
-          <button class="btn sm" onclick="stepUiZoom(5)" title="放大">＋</button>
-        </div>
-        <div style="font-size:12px;color:var(--text3);padding:2px 2px 0">仅影响当前浏览器并本地保存；觉得内容太大可调到 85%~90%。</div>
-      </div>
-    </div>
-  </div>
+      <div class="card"><h3>资源监控</h3><div class="res-head"><div class="tabs"><button class="on" data-restab="cpu" onclick="pickRes('cpu')">CPU 占用</button><button data-restab="mem" onclick="pickRes('mem')">内存占用</button></div><span class="res-kth" onclick="toggleResKth()"><span>显示内核线程</span><div class="switch" id="resKthSw"></div></span></div><div class="res-hint" id="resHint"></div><div data-resCpu><div class="empty">正在读取 CPU 进程数据…</div></div><div data-resMem style="display:none"><div class="empty">正在读取内存进程数据…</div></div></div>
+      <div class="card"><h3>服务管理</h3><div id="svcBox"><div class="empty">正在读取服务状态…</div></div></div>
+      <div class="card"><h3>硬件加速组件状态 <span class="sub">只读</span></h3><div id="accelBox"><div class="empty">正在读取内核模块状态…</div></div><div style="font-size:12px;color:var(--text3);margin-top:10px">这里只显示模块是否已加载，不代表实际硬件卸载流量命中率；不提供 NSS/ECM 开关。</div></div>
+      <div class="card"><h3>软件包管理 <span class="sub">APK</span></h3><div class="info-row"><span>已安装</span><b id="pkgCount">—</b></div><div class="info-row"><span>可用更新</span><b id="pkgUpd">—</b></div><div class="info-row"><span>软件包存储</span><b id="pkgStore">—</b></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openPkgManager()">管理软件包</button><button class="btn sm" onclick="checkUpdate()">刷新软件源索引</button></div></div>
+    </div></div>
 
 </div>
 
@@ -2749,9 +2710,11 @@ function modeFormHTML(){
       +(_wp==='pppoe'?'<div class="limit-row"><div><label>宽带账号</label><input id="wanUser" value="'+esc(WAN_USER)+'"></div><div><label>宽带密码</label><div class="pwd-wrap"><input type="text" data-pwd="1" id="wanPwd" value="'+esc(WAN_PWD)+'"></div></div></div>'
       :_wp==='dhcp'?'<div style="font-size:13px;color:var(--text2);padding:8px 0">路由器将自动从光猫获取 IP（光猫已拨号）</div>'
       :'<div class="limit-row"><div><label>IP 地址</label><input id="stIp" value="'+esc(WAN_STATIC.ip)+'"></div><div><label>掩码</label><input id="stMask" value="'+esc(WAN_STATIC.mask)+'"></div></div><div class="limit-row"><div><label>网关</label><input id="stGw" value="'+esc(WAN_STATIC.gw)+'"></div><div><label>DNS</label><input id="stDns" value="'+esc(WAN_STATIC.dns)+'"></div></div>')
-      +'<div class="limit-row"><div><label>内网回传 VLAN</label><input id="sgInner" value="'+esc(INNER_VLAN||'1')+'"></div><div><label>拨号 VLAN</label><input id="sgWan" value="'+esc(WAN_VLAN||'2044')+'"></div></div>'
-      +'<div class="limit-row"><div><label>IPTV VLAN（留空关闭）</label><input id="sgIptv" value="'+esc(IPTV_VLAN||'3066')+'"></div><div><label>IPTV 透传口</label><select id="sgPort">'+['lan1','lan2','lan3','lan4'].map(function(p){return '<option value="'+p+'"'+(IPTV_PORT===p?' selected':'')+'>'+p+'</option>';}).join('')+'</select></div></div>'
-      +'<div style="font-size:12px;color:var(--text2);padding:6px 0;line-height:1.5">单臂路由：2.5G wan 口接交换机 Trunk（Tagged '+esc(INNER_VLAN||'1')+'/'+esc(WAN_VLAN||'2044')+'/'+esc(IPTV_VLAN||'3066')+'，PVID=1），内网回传、拨号、IPTV 共线。</div>'
+      +'<div class="field-help" style="font-size:12px;color:var(--text2);padding:8px 0;line-height:1.6"><b>这三项分别代表不同业务：</b><br>· 内网回传 VLAN：家庭电脑、手机等内网数据回到路由器。<br>· 宽带拨号 VLAN：运营商指定的上网业务 VLAN，PPPoE 在此承载。<br>· IPTV VLAN：机顶盒电视业务；不使用 IPTV 时留空关闭。</div>'
+      +'<div class="limit-row"><div><label>内网回传 VLAN</label><input id="sgInner" value="'+esc(INNER_VLAN||'1')+'"><div class="field-help">用于家庭局域网数据回传。</div></div><div><label>宽带拨号 VLAN</label><input id="sgWan" value="'+esc(WAN_VLAN||'2044')+'"><div class="field-help">填写运营商提供的拨号 VLAN。</div></div></div>'
+      +'<div class="limit-row"><div><label>IPTV VLAN（留空关闭）</label><input id="sgIptv" value="'+esc(IPTV_VLAN)+'"><div class="field-help">没有 IPTV 需求时留空；当前布局固定使用 LAN4。</div></div><div><label>IPTV 透传口</label><select id="sgPort"><option value="lan4" selected>LAN4（当前支持的 IPTV 端口）</option></select></div></div>'
+      +'<details style="font-size:12px;color:var(--text2);padding:8px 0;line-height:1.6"><summary style="cursor:pointer;font-weight:600">带标签 / 不带标签是什么意思？</summary><p>带标签：数据帧携带 VLAN 编号，适合路由器与交换机之间共用一根上行网线传输多种业务。</p><p>不带标签：数据帧不携带 VLAN 编号，适合连接普通电脑、电视等终端设备。</p><p>当前单臂布局由后端按固定端口关系生成配置，不提供未经后端支持的任意 VLAN 端口映射。</p></details>'
+      +'<div style="font-size:12px;color:var(--text2);padding:6px 0;line-height:1.5">修改前请确认交换机上行端口的 VLAN 允许列表与路由器配置一致。</div>'
       +'<button class="btn primary" style="margin-top:10px" onclick="saveApply()">保存并应用</button>'; }
   if(curMode==='ap'){ return '<div style="font-size:13px;color:var(--text2);padding:8px 0">AP 桥接模式：雅典娜通过 2.5G 口接主路由 LAN，扩展无线信号，由主路由统一管理 IP。</div><button class="btn primary" style="margin-top:10px" onclick="saveApply()">保存并应用</button>'; }
   if(curMode==='bypass'){ return '<div class="limit-row"><div><label>旁路由 IP</label><input id="bpIp" value="'+esc(WAN_STATIC.ip||'192.168.10.2')+'"></div><div><label>主路由网关</label><input id="bpGw" value="'+esc(WAN_STATIC.gw||'192.168.10.1')+'"></div></div><div class="limit-row"><div><label>DNS（留空=网关）</label><input id="bpDns" value=""></div></div><button class="btn primary" style="margin-top:10px" onclick="saveApply()">保存并应用</button>'; }
@@ -3085,6 +3048,16 @@ async function loadGuest(){
     if(d){ GUEST.enabled=!!d.enabled; GUEST.ssid=d.ssid||GUEST.ssid; GUEST.loaded=true; renderWifiCards(); renderOverview(); }
   }catch(e){}
 }
+async function loadNas(){try{var d=await athenaRPC.exec('athena-nas.sh',['status']);window.ATHENA_NAS=d||{};renderNas();}catch(e){window.ATHENA_NAS={ok:false,msg:e.message||'状态读取失败'};renderNas();}}
+function renderNas(){var n=window.ATHENA_NAS||{},st=document.getElementById('nasStatus'),me=document.getElementById('nasMethod'),ad=document.getElementById('nasAddress'),sel=document.getElementById('nasMethodSelect'),act=document.getElementById('nasActions'),hint=document.getElementById('nasCredentialHint');if(!st||!me||!act)return;st.textContent=n.installed?(n.running?'运行中':(n.enabled?'已启用，等待 USB 挂载':'已停止')):(n.unmanaged?'检测到非 Athena 管理的 SMB 软件':'未安装');me.textContent=n.method==='ksmbd'?'KSMBD':(n.method==='samba4'?'Samba4':'未安装');if(ad)ad.textContent=n.address||'—';if(sel){if(n.method==='ksmbd'||n.method==='samba4')sel.value=n.method;sel.disabled=!!n.installed;}var b='';if(n.installed){b+='<button class="btn" onclick="nasCredentials()">查看登录凭据</button>';b+=n.enabled?'<button class="btn" onclick="nasStop()">停止并禁用自启</button>':'<button class="btn primary" onclick="nasStart()">启动 NAS</button>';b+='<button class="btn danger" onclick="nasRemove()">卸载 NAS 软件</button>';if(hint)hint.textContent='停止保留软件、账户、配置和数据；卸载不会删除共享文件。';}else{b+='<button class="btn primary" onclick="nasInstall()">安装所选 NAS 方案</button>';if(hint)hint.textContent=n.unmanaged?'发现非 Athena 管理的 SMB 服务，Athena 不会接管。':'安装前检查 USB、445 端口、签名软件源、内核 ABI 和 APK 事务。';}act.innerHTML=b;}
+window.nasInstall=function(){var s=document.getElementById('nasMethodSelect'),m=s?s.value:'ksmbd';if(!/^(ksmbd|samba4)$/.test(m))return;openBkModal('<h3>安装 NAS？</h3><div class="m-sub">选择 '+(m==='ksmbd'?'KSMBD 轻量方案':'Samba4 兼容方案')+'。仅绑定 LAN、关闭匿名访问，共享真实 USB 下的 /mnt/usb/AthenaShare。</div><div class="m-sub">APK 模拟事务若涉及 OpenClash、NSS/ECM、内核或网络关键组件，将拒绝安装。不格式化磁盘。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="closeModal();nasRun(\'install\','+JSON.stringify(m)+')">确认安装</button></div>');};
+window.nasStart=function(){nasRun('start','');};
+window.nasStop=function(){openBkModal('<h3>停止 NAS？</h3><div class="m-sub">只停止服务并禁用自启动；软件包、配置、账号和文件保留。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="closeModal();nasRun(\'stop\',\'\')">确认停止</button></div>');};
+window.nasRemove=function(){openBkModal('<h3>卸载 NAS？</h3><div class="m-sub">只移除 Athena 明确拥有且 APK 事务确认安全的服务包；不会删除数据或格式化磁盘。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();nasRun(\'remove\',\'\')">确认卸载</button></div>');};
+window.nasRun=async function(a,m){var el=document.getElementById('nasActions');if(el)el.innerHTML='<span class="empty">NAS 操作执行中…</span>';try{var args=[a];if(m)args.push(m);var d=await athenaRPC.exec('athena-nas.sh',args,240000);if(!d||d.ok===false)throw new Error((d&&d.msg)||'后端失败');toast(d.msg||'NAS 操作完成');await loadNas();}catch(e){toast('NAS 操作失败：'+(e.message||''));await loadNas();}};
+window.nasCredentials=async function(){try{var d=await athenaRPC.exec('athena-nas.sh',['credentials']);if(!d||d.ok!==true||!d.password)throw new Error((d&&d.msg)||'凭据不可用');window._nasPassword=d.password;openBkModal('<h3>NAS 登录凭据</h3><div class="info-row"><span>账号</span><b>'+esc(d.username)+'</b></div><div class="info-row"><span>密码</span><b id="nasPasswordText">••••••••••••••••</b></div><div class="info-row"><span>共享地址</span><b>'+esc(d.address||'—')+'</b></div><div class="m-foot"><button class="btn" onclick="document.getElementById(\'nasPasswordText\').textContent=window._nasPassword">显示密码</button><button class="btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(window._nasPassword).then(function(){toast(\'已复制 NAS 密码\')})">复制密码</button><button class="btn primary" onclick="closeModal()">关闭</button></div>');}catch(e){toast('读取 NAS 凭据失败：'+(e.message||''));}};
+window.loadAccel=async function(){try{var d=await athenaRPC.exec('athena-accel.sh'),el=document.getElementById('accelBox');if(!el)return;var ms=d.modules||[];el.innerHTML=ms.map(function(m){return '<div class="info-row"><span>'+esc(m.name)+'</span><span class="tag '+(m.loaded?'green':'gray')+'">'+(m.loaded?'已加载':'未加载')+'</span></div>';}).join('');}catch(e){var el=document.getElementById('accelBox');if(el)el.textContent='模块状态读取失败：'+(e.message||'');}};
+async function loadFileBrowserStatus(){var el=document.getElementById('fbStatus');if(!el)return;try{var d=await athenaRPC.exec('athena-services.sh',['filebrowser-status']);el.textContent=d&&d.running?'FileBrowser 正在运行 · LAN 端口 8081':(d.msg||'FileBrowser 当前未运行');}catch(e){el.textContent='状态读取失败：'+(e.message||'');}}
 async function loadDisks(){
   try{
     var d=await athenaRPC.exec('athena-disk.sh',['list']);
@@ -3279,14 +3252,16 @@ window.saveBand=function(id){
   }).catch(function(e){ toast('保存失败：'+(e.message||'')); });
 };
 window.openGuestModal=function(){
-  openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，适合客人使用</div>'
-    +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
-    +'<div style="font-size:12px;color:var(--text3)">访客密码固定为 <b>12345678</b>（可在原生界面修改）。开启后访客无法访问内网设备。</div>'
-    +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
+ openBkModal('<h3>访客网络</h3><div class="m-sub">与内网隔离，访客密码独立于三个主 WiFi 频段。</div>'
+ +'<div class="limit-row"><div><label>访客 WiFi 名称</label><input id="gSsid" value="'+esc(GUEST.ssid||'Athena-Guest')+'"></div></div>'
+ +'<div class="limit-row"><div><label>访客 WiFi 密码（8-63 位）</label><input id="gPwd" type="password" autocomplete="new-password" placeholder="请单独设置访客密码"></div></div>'
+ +'<div style="font-size:12px;color:var(--text3)">访客网络与主内网隔离；不会自动使用主 WiFi 默认密码。</div>'
+ +'<div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="saveGuest()">保存并开启</button></div>');
 };
 window.saveGuest=function(){
-  var ssid=document.getElementById('gSsid').value.trim()||'Athena-Guest';
-  athenaRPC.exec('athena-wireless.sh',['guest','enable',ssid,'12345678']).then(function(){ GUEST.enabled=true; GUEST.ssid=ssid; window.closeModal(); toast('访客网络已开启（密码 12345678）'); renderWifiCards(); renderOverview(); }).catch(function(e){ toast('操作失败：'+(e.message||'')); });
+ var ssid=document.getElementById('gSsid').value.trim()||'Athena-Guest',pwd=document.getElementById('gPwd').value;
+ if(pwd.length<8||pwd.length>63){toast('访客 WiFi 密码必须为 8-63 位');return;}
+ athenaRPC.exec('athena-wireless.sh',['guest','enable',ssid,pwd]).then(function(){GUEST.enabled=true;GUEST.ssid=ssid;window.closeModal();toast('访客网络已开启');renderWifiCards();renderOverview();}).catch(function(e){toast('操作失败：'+(e.message||''));});
 };
 window.toggleGuest=function(){
   if(!GUEST.loaded){ if(athenaRPC.live){ loadGuest(); toast('正在读取访客配置…'); } else { toast('登录后可用'); } return; }
@@ -3297,7 +3272,11 @@ window.resetWifi=function(){
   openBkModal('<h3>恢复默认 WiFi？</h3><div class="m-sub">三个频段将恢复为出厂默认：<br>· 名称：Athena-2.4G / Athena-5G / Athena-5G-Game<br>· 密码：<b>12345678</b><br>· 加密：WPA2-PSK · 信道自动<br><br>当前所有 WiFi 设备会断开，需要重新连接。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="doResetWireless()">确认恢复</button></div>');
 };
 window.doResetWireless=function(){
-  athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(){ toast('已恢复默认，WiFi 重新广播中'); window.closeModal(); setTimeout(loadWireless,2500); }).catch(function(e){ toast('恢复失败：'+(e.message||'')); });
+ athenaRPC.exec('athena-wireless.sh',['reset-defaults']).then(function(d){
+  var pwd=(d&&d.password)||'12345678';window._athenaResetWifiPassword=pwd;
+  openBkModal('<h3>默认 WiFi 已恢复</h3><div class="m-sub">三个主频段已使用相同密码。</div><div class="info-row"><span>默认密码</span><b style="font-family:monospace">'+esc(pwd)+'</b></div><div style="font-size:12px;color:var(--warn);padding:8px 0">12345678 是公开的弱默认密码，请尽快修改。访客网络密码不受本次操作影响。</div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="navigator.clipboard&&navigator.clipboard.writeText(window._athenaResetWifiPassword).then(function(){toast(\'已复制默认密码\')})">复制密码</button></div>');
+  setTimeout(loadWireless,2500);
+ }).catch(function(e){toast('恢复失败：'+(e.message||''));});
 };
 
 /* ---- 设备 ---- */
@@ -3549,12 +3528,17 @@ window.mountUsb=function(){
   athenaRPC.exec('athena-disk.sh',['mount',dev.name,'/mnt/usb']).then(function(){ toast('已挂载'); loadDisks(); }).catch(function(e){ toast('挂载失败：'+(e.message||'')); });
 };
 window.openFbModal=function(){
-  openBkModal('<h3>文件共享</h3><div class="m-sub">通过网页访问 U 盘文件（上传 / 下载 / 播放）</div>'
-    +'<div style="font-size:13px;color:var(--text2);padding:10px 0">filebrowser 网页地址：<br><b style="color:var(--primary)">http://'+location.hostname+':8081</b></div>'
-    +'<div style="font-size:11px;color:var(--text3)">首次登录：账号 root / 密码 admin（登录后请立即修改密码）</div>'
-    +'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="closeModal();window.open(\'http://\'+location.hostname+\':8081\',\'_blank\')">打开文件管理</button></div>');
-  var st=document.getElementById('fbStatus'); if(st) st.textContent='filebrowser · 端口 8081';
+ window._fbCredential='';
+ openBkModal('<h3>网页文件管理</h3><div class="m-sub">FileBrowser 仅在真实 USB 分区挂载到 /mnt/usb 且服务运行时提供访问。</div><div id="fbCredentialBox" class="empty">正在读取实际服务凭据…</div>');
+ athenaRPC.exec('athena-services.sh',['filebrowser-password']).then(function(d){
+  var el=document.getElementById('fbCredentialBox');if(!el)return;
+  if(!d||d.ok!==true||!d.password){el.innerHTML='<div class="empty">'+esc((d&&d.msg)||'FileBrowser 当前不可用，请检查 USB 挂载和服务状态。')+'</div>';return;}
+  window._fbCredential=d.password;var url='http://'+location.hostname+':8081';
+  el.innerHTML='<div class="info-row"><span>访问地址</span><b>'+esc(url)+'</b></div><div class="info-row"><span>账号</span><b>'+esc(d.username||'admin')+'</b></div><div class="info-row"><span>实际随机密码</span><b id="fbActualPwd">••••••••••••••••</b></div><div class="m-foot"><button class="btn" onclick="document.getElementById(\'fbActualPwd\').textContent=\'••••••••••••••••\'">隐藏密码</button><button class="btn" onclick="document.getElementById(\'fbActualPwd\').textContent=window._fbCredential">显示密码</button><button class="btn" onclick="copyFbCredential()">复制密码</button><button class="btn primary" onclick="window.open('+JSON.stringify(url)+',\'_blank\')">打开文件管理</button></div>';
+  var st=document.getElementById('fbStatus');if(st)st.textContent='FileBrowser 正在运行 · LAN 端口 8081';
+ }).catch(function(e){var el=document.getElementById('fbCredentialBox');if(el)el.innerHTML='<div class="empty">读取失败：'+esc(e.message||'')+'</div>';});
 };
+window.copyFbCredential=function(){if(!window._fbCredential){toast('尚未读取有效凭据');return;}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(window._fbCredential).then(function(){toast('已复制 FileBrowser 密码');}).catch(function(){toast('复制失败，请手动显示并复制');});else toast('当前浏览器不支持自动复制，请显示后手动复制');};
 
 /* ---- 灯光 ---- */
 window.toggleMatrix=function(){ setMatrix('enabled',MATRIX.enabled?'0':'1'); };
@@ -4011,7 +3995,7 @@ window.removePkg=function(n){
   openBkModal('<h3>卸载 '+esc(n)+'？</h3><div class="m-sub">将移除该软件包及其配置，相关服务会停止。可稍后重新安装。</div><div class="m-foot"><button class="btn" onclick="closeModal()">取消</button><button class="btn danger" onclick="closeModal();doRemovePkg(\''+n+'\')">确认卸载</button></div>');
 };
 window.doRemovePkg=function(n){ if(window.athenaPkgProtected(n)){ toast('关键系统组件受保护，Athena 页面禁止卸载'); return; } toast('卸载 '+n+' …'); athenaRPC.exec('athena-packages.sh',['remove',n]).then(function(d){ if(!d||d.ok===false) throw new Error((d&&d.msg)||'后端拒绝卸载'); toast((d&&d.msg)||(n+' 已卸载')); loadPkgSummary(); pkgRender(); }).catch(function(e){ toast('卸载失败：'+(e.message||'')); }); };
-window.checkUpdate=function(){ toast('检查软件源更新中（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源已更新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
+window.checkUpdate=function(){ toast('正在刷新软件源索引（可能需要 1-2 分钟）…'); athenaRPC.exec('athena-packages.sh',['update'],180000).then(function(){ toast('软件源索引已刷新'); loadPkgSummary(); }).catch(function(e){ toast('更新失败：'+(e.message||'')); }); };
 window.openSyslog=function(){
   openBkModal('<h3>系统日志</h3><div class="m-sub">内核与系统服务实时日志</div><div class="log-toolbar"><input class="log-search" id="logSearch" placeholder="搜索日志…" oninput="logRender()"><div class="log-chips"><button class="log-chip on" data-lv="" onclick="logLv(\'\')">全部</button><button class="log-chip" data-lv="err" onclick="logLv(\'err\')">错误</button><button class="log-chip" data-lv="warn" onclick="logLv(\'warn\')">警告</button></div></div><div id="logList" class="log-list"><div class="log-empty">加载中…</div></div><div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button></div>');
   loadLog();
@@ -4053,6 +4037,11 @@ window.savePassword=function(){
   if(n1!==n2){ toast('两次输入的新密码不一致'); return; }
   athenaRPC.exec('athena-passwd.sh',[cur,n1,'1']).then(function(){ toast('密码已修改'); window.closeModal(); }).catch(function(e){ toast('修改失败（当前密码错误？）：'+(e.message||'')); });
 };
+window.openUiPrefs=function(){var mode=UI_MODE.mode||'last',unit=SPD_UNIT||'Mbps';openBkModal('<h3>界面设置</h3><div class="m-sub">界面偏好，不属于高级系统管理。</div>'
++'<div class="field"><label>默认进入界面</label><select onchange="setDefaultUi(this.value)"><option value="athena"'+(mode==='athena'?' selected':'')+'>Athena 管理台</option><option value="native"'+(mode==='native'?' selected':'')+'>原生 LuCI</option><option value="last"'+(mode==='last'?' selected':'')+'>跟随上次访问</option></select></div>'
++'<div class="field"><label>网速显示单位</label><button class="btn" onclick="setUnit(\'Mbps\')">Mbps</button> <button class="btn" onclick="setUnit(\'MB/s\')">MB/s</button></div>'
++'<div class="field"><label>界面缩放</label><button class="btn" onclick="stepUiZoom(-5)">−</button> <input type="range" min="80" max="120" step="5" value="100" oninput="setUiZoom(this.value)"> <button class="btn" onclick="stepUiZoom(5)">＋</button></div>'
++'<div class="m-foot"><button class="btn" onclick="closeModal()">关闭</button><button class="btn" onclick="closeModal();openSortModal()">首页指标卡排序</button></div>');loadUiMode();loadUnit();};
 window.setUnit=function(u){
   if(u!=='Mbps'&&u!=='MB/s') return;
   SPD_UNIT=u;
@@ -4066,27 +4055,7 @@ window.setUnit=function(u){
 window.setDefaultUi=function(m){
   athenaRPC.exec('athena-ui.sh',['set',m]).then(function(){ UI_MODE.mode=m; toast('默认界面已设为：'+({athena:'管理台',native:'原生界面',last:'跟随上次'}[m])); renderAdvAccount(); }).catch(function(e){ toast('设置失败：'+(e.message||'')); });
 };
-window.toggleSsh=function(){ toast('SSH 服务由系统安全策略管理，始终启用'); };
-/* v1.2.54：此处原有的 openSortModal 覆盖定义已删除——
-   它把上面真正的排序弹窗顶掉成"固定顺序、保留入口"的说明框，导致「自定义排序」是假的。 */
-
-/* ---- 主题持久化（覆盖预览稿 localStorage 版） ---- */
-window.setThemeMode=function(mode){
-  if(!/^(auto|light|dark)$/.test(mode||'')) mode='auto';
-  window.ATHENA_THEME_MODE=mode;
-  var r=document.documentElement;
-  var active=(mode==='auto')?((matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'):mode;
-  r.dataset.theme=active;
-  sSet('athena_theme_mode',mode);
-  sSet('athena_dark',active==='dark'?'1':'0');
-  /* 按钮高亮由 _pv.setThemeMode（预览稿版）按 .theme-modes 更新 */
-  if(athenaRPC.live){
-    var g=(window._pv&&window._pv.GLASS_THEME)||{palette:'aurora',blob:100,glass:58,blur:20,iri:55,hi:70};
-    athenaRPC.exec('athena-theme.sh',['set',g.palette,String(g.blob),String(g.glass),String(g.blur),String(g.iri),String(g.hi),mode]).catch(function(){});
-  }
-  if(athenaRPC.live&&window._pv&&window._pv.setThemeMode){ try{ window._pv.setThemeMode(mode,true); }catch(e){} }
-  window.showToast('主题已切换为 '+(mode==='dark'?'深色':mode==='light'?'浅色':'跟随系统'));
-};
+window.toggleSsh=function(){toast('SSH 服务由系统安全策略管理，请前往原生 LuCI 查看和配置');};
 window.saveGlassTheme=function(){
   if(!window._pv){ toast('主题组件未就绪'); return; }
   var g=window._pv.GLASS_THEME;
@@ -4187,10 +4156,10 @@ function renderForPage(id){
   else if(id==='wifi'){ renderWifiCards(); }
   else if(id==='dev'){ loadClients(); }
   else if(id==='net'){ if(!_STATUS) _NET_PENDING=true; renderNetPage(); }
-  else if(id==='st'){ loadDisks(); }
+  else if(id==='st'){ loadDisks(); loadNas(); loadFileBrowserStatus(); }
   else if(id==='light'){ loadMatrixAll(); loadLed(); }
   else if(id==='keep'){ loadBackupList(); renderFirmware(); renderRebootSched(); renderAutoBackup(); }
-  else if(id==='adv'){ loadResources(); loadServices(); loadPkgSummary(); }
+  else if(id==='adv'){ loadResources(); loadServices(); loadPkgSummary(); window.loadAccel(); }
 }
 window.navGo=function(id,el){
   try{ if(_origNavGo) _origNavGo(id,el); }catch(e){}

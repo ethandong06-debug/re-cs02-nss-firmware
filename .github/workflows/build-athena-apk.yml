@@ -93,6 +93,23 @@ jobs:
           if not internal <= installed or not orphan <= installed or orphan & calls:
               raise SystemExit('Internal helper/orphan inventory does not match Makefile installation list')
           print(f'Call-chain audit passed: {len(calls)} direct RPC scripts, {len(internal)} internal helpers, {len(orphan)} unreferenced helper.')
+          if 'PKG_RELEASE:=5' not in makefile:
+              raise SystemExit('Expected luci-app-athena package release 5')
+          for required in ('athena-nas.sh', 'athena-accel.sh'):
+              if required not in installed or required not in allowed:
+                  raise SystemExit(f'Missing backend install or ACL entry: {required}')
+          nas = (root / 'root/usr/libexec/athena-nas.sh').read_text()
+          if not all(x in nas for x in ('ksmbd-server', 'samba4-server', 'apk add --simulate', 'apk del --simulate')):
+              raise SystemExit('NAS must support both mutually exclusive providers and transaction simulation')
+          if "fmtDisk('emmc')" in html:
+              raise SystemExit('eMMC format control must not be exposed')
+          if "guest','enable',ssid,'12345678'" in html:
+              raise SystemExit('Guest WiFi must use an independent password')
+          if '账号 root / 密码 admin' in html:
+              raise SystemExit('FileBrowser demo credentials must not be exposed')
+          if 'onclick="openUiPrefs()"' not in html:
+              raise SystemExit('Global interface settings entry missing')
+          print('r5 menu/NAS/security source checks passed.')
           print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
           PY
           node --check /tmp/athena-inline.js

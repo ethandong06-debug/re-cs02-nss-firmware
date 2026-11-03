@@ -7,14 +7,16 @@ case "$DEVNAME" in sd[a-z][0-9]*) ;; *) exit 0 ;; esac
 case "$ACTION" in
 	remove)
 		# Stop if the removed partition was the shared mount, or if /mnt/usb is no longer mounted.
-		if awk -v dev="/dev/$DEVNAME" '$1 == dev && $2 == "/mnt/usb" { found=1 } END { exit !found }' /proc/mounts 2>/dev/null; then
+		if awk -v dev="/dev/$DEVNAME" '$1 == dev && $2 == "/mnt/usb" { found=1 } END { exit !found }' /proc/mounts 2>/dev/null || ! awk '$2 == "/mnt/usb" { found=1 } END { exit !found }' /proc/mounts 2>/dev/null; then
 			/etc/init.d/filebrowser stop >/dev/null 2>&1
-		elif ! awk '$2 == "/mnt/usb" { found=1 } END { exit !found }' /proc/mounts 2>/dev/null; then
-			/etc/init.d/filebrowser stop >/dev/null 2>&1
+			/usr/libexec/athena-nas.sh service-stop >/dev/null 2>&1
 		fi
 		;;
 	add)
-		( sleep 3; /etc/init.d/filebrowser restart >/dev/null 2>&1 ) &
+		( sleep 3
+		  /etc/init.d/filebrowser restart >/dev/null 2>&1
+		  if [ -e /etc/rc.d/S99athena-nas ]; then /etc/init.d/athena-nas restart >/dev/null 2>&1; fi
+		) &
 		;;
 esac
 exit 0

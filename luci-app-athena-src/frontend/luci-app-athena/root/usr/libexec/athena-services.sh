@@ -8,6 +8,14 @@
 #   ucode 不可用或输出异常时自动回退 athena-services-legacy.sh，页面不会空。
 
 case "$1" in
+filebrowser-status)
+	if awk '$2 == "/mnt/usb" && $1 ~ /^\/dev\/sd[a-z][0-9]+$/ { found=1 } END { exit !found }' /proc/mounts 2>/dev/null && pidof filebrowser >/dev/null 2>&1; then
+		printf '{"ok":true,"running":true,"username":"admin","port":8081}\\n'
+	else
+		printf '{"ok":true,"running":false,"msg":"FileBrowser 未运行；请检查真实 USB 分区是否挂载到 /mnt/usb"}\\n'
+	fi
+	exit 0
+	;;
 filebrowser-password)
 	awk '$2 == "/mnt/usb" && $1 ~ /^\/dev\/sd[a-z][0-9]+$/ { found=1 } END { exit !found }' /proc/mounts 2>/dev/null || { echo '{"ok":false,"msg":"USB 分区未挂载到 /mnt/usb"}'; exit 1; }
 	pidof filebrowser >/dev/null 2>&1 || { echo '{"ok":false,"msg":"文件共享服务尚未运行，请确认 LAN 地址和 USB 挂载状态"}'; exit 1; }

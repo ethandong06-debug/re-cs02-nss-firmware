@@ -7,7 +7,7 @@
 
 - 仓库：`ethandong06-debug/re-cs02-nss-firmware`
 - 分支：`athenawrt/apk-fixed-signing`
-- 本轮完整源码提交：`8877431224a971790deaa6822c0697a4b3aeccbe`
+- r4 完整源码提交：`8877431224a971790deaa6822c0697a4b3aeccbe`；当前 r5 开发批次已更新本分支源码。
 - 交付：独立 LuCI APK；不编译或刷写整机固件。
 - 设备：JDCloud Athena RE-CS-02 / IPQ6018，ImmortalWrt SNAPSHOT r1-20261017。
 - 设备当前安装：`luci-app-athena-1.2.60-r2`（Run #188）；本轮 r4 尚未安装。
@@ -21,9 +21,9 @@
 
 ## 3. 最新构建与验收状态
 
-- 包版本：`1.2.60-r4`（Makefile `PKG_RELEASE:=4`）。
-- 完整源码提交：`8877431224a971790deaa6822c0697a4b3aeccbe`。
-- 最终构建：Run #198，ID `41567139400`；已通过静态语法/元数据检查、FileBrowser ARM64 CLI smoke test、ImmortalWrt/LuCI feeds 拉取及 package-only 配置准备；当时正在构建 host tools。尚未产生最终 APK Artifact/SHA256。
+- r4 包版本：`1.2.60-r4`（Makefile `PKG_RELEASE:=4`）；源码提交 `8877431224a971790deaa6822c0697a4b3aeccbe`。
+- r4 最终构建：Run #198，ID `41567139400`，completed / success；Artifact `luci-app-athena-apk`，ID `13201835206`，约 24.6 MB。该产物是 r4，不包含本次 r5 菜单/NAS 源码。
+- 本次开发包版本：`1.2.60-r5`（Makefile `PKG_RELEASE:=5`）；代码提交后由专用 Actions 工作流执行静态检查与 package-only 构建，结果需按新 Run 核对。
 - 旧 Run #197（ID `41565253767`，r3 源码）已取消，没有生成可供安装的 APK。
 - Run #198：https://github.com/ethandong06-debug/re-cs02-nss-firmware/actions/runs/41567139400
 - 设备验收仍以 Run #188 的 r2 为基线。r4 未安装，不能视为真机验收通过。
@@ -72,7 +72,7 @@ Run #198 必须全部通过后才能提供 APK：
 1. `docs/ATHENAWRT-CURRENT-SOURCE-REVALIDATION.md`
 2. `docs/ATHENAWRT-FRONTEND-BACKEND-CALLCHAIN-AUDIT.md`
 
-**当前阶段：Athena 后端安全整改和全站页面优化已在 r4 源码批次提交；Run #198 构建中；设备仍运行 r2，未安装新 APK。**
+**当前阶段：r4 Run #198 已成功并产生 r4 Artifact；本轮 r5 菜单架构与 NAS 双实现开发源码已准备提交/构建。设备仍以 r2 为安装验收基线；未执行设备端变更。**
 
 
 ## 8. 网络原生回滚与存储/NAS 后续决策
@@ -100,7 +100,7 @@ Run #198 必须全部通过后才能提供 APK：
 - 卷身份后续逐步从易变化的 `/dev/sda1` 改为 UUID/LABEL；当前主数据卷继续兼容挂载到 `/mnt/usb`，其他卷使用独立稳定挂载点。所有共享路径必须 realpath 校验并限制在已登记且真实挂载的数据卷内，禁止路径穿越。
 - NAS 是后续独立源码批次，不纳入当前 r4。安装按钮、APK 依赖清单、RPC ACL、后端脚本、页面动态渲染和卸载保护必须一起交付并统一 CI 验证；不得只做一个没有后端的前端按钮。未经用户明确同意，不在设备上自动安装或卸载 NAS 软件包。
 
-## 9. 下一轮综合优化清单（r5 规划，尚未实施）
+## 9. 历史 r5 综合优化清单（部分内容已由本批次落实；当前状态以第 10 节为准）
 
 > 本节记录用户确认的后续优化方向。除明确标为已存在的当前行为外，以下均为待实施/待验证事项，不表示已进入 r4 或已通过设备验收。执行前应以当前分支源码和目标设备实际包版本重新核对，不沿用过期审计结论。
 
@@ -155,3 +155,35 @@ Run #198 必须全部通过后才能提供 APK：
 3. r6：按第 8 节实施 KSMBD 按需 NAS，包括安装/停止/启用/卸载和动态页面。
 4. 每个批次统一完成源码修改、Makefile/ACL/RPC allowlist 核对、Shell/ucode/JS/JSON 静态检查、mock/事务测试、package-only 构建、签名与哈希验证；用户授权前不在设备执行软件包安装/卸载、格式化、网络切换或恢复测试。
 5. 继续保护 PPPoE、VLAN 2044、IPv6 PD/SLAAC、防火墙/NAT、OpenClash、NSS/ECM 和硬件加速现网状态；不编译/刷写整机固件。
+
+
+## 10. 2026-11-03：AthenaWrt r5 菜单架构与 NAS 双方案开发批次
+
+### 用户确认的最终信息架构
+- 顶部固定 8 个主菜单：概览、WiFi、设备、网络、存储、灯光、维护、高级。
+- 设备：数量统计只保留在线、离线、新设备；不单列有线设备数、无线设备数。设备详情仍可显示接入方式。
+- 网络：网络模式包含 router/single/bypass/AP；单臂模式下以自然语言说明内网回传 VLAN、宽带拨号 VLAN、可选 IPTV VLAN，并说明带标签/不带标签。当前后端的 IPTV 透传只支持 LAN4，前端限制为 LAN4，不呈现不受支持的端口选项。
+- 存储：磁盘与卷管理、FileBrowser 网页文件管理、NAS 网络共享。
+- NAS 提供互斥选择：KSMBD 轻量方案（默认推荐）或 Samba4 兼容方案；同一时刻只允许一套 SMB 服务由 Athena 管理。
+- 高级精简为资源监控、服务管理、硬件加速组件状态（只读）、软件包管理。
+- 日志与诊断、账号安全迁至维护；主题/默认界面/网速单位/缩放/首页指标排序移至顶部全局界面设置；SSH 不再显示假开关，实际 SSH 配置交由原生 LuCI。
+- 首页实时网速主卡保持；设备数量统计未重复增加有线/无线分类卡。
+
+### 本批次已修改的 Athena 源码
+- Makefile 升级至 PKG_RELEASE:=5（包版本 1.2.60-r5）。
+- 前端 SPA：整理 VLAN 解释、IPTV 端口选项；增加 NAS 方案选择与生命周期页面；高级页面压缩为四类；维护页面增加日志与账号安全；界面偏好移至全局入口；FileBrowser 登录信息改为调用现有真实凭据 RPC；删除 eMMC 格式化入口；访客 WiFi 密码改为独立输入；主 WiFi 默认恢复界面显示后端返回密码并警告公开弱密码；软件源更新按钮准确命名。
+- athena-wireless.sh：三个主频段恢复默认密码按用户确认统一设置为 12345678，仍返回实际密码；访客密码不继承该值。
+- athena-services.sh：新增不返回密码的 FileBrowser 运行状态查询；密码仍须经用户主动打开弹窗后由既有受限 RPC 读取。
+- 新增 athena-nas.sh：支持 KSMBD/Samba4 二选一、软件包所有权记录、APK 安装/卸载事务模拟、保护组件检查、LAN interface 绑定、专用用户及随机凭据、USB 挂载校验、停止/启动/卸载生命周期。停止保留软件/账户/配置/凭据/数据；卸载仅在事务检查通过时移除 Athena 拥有的服务包，不清理共享文件。
+- 新增 athena-accel.sh：只读检查 NSS/ECM/PPE 等模块是否出现在 /sys/module；明确说明模块加载不等于实际硬件卸载流量命中，不提供启停开关。
+- USB 热插拔：卸载数据卷时停止 FileBrowser/NAS；重新挂载时仅在 Athena NAS 自启动已启用时恢复。
+- Makefile、Athena RPC ACL、Actions 静态检查同步加入两个新后端和 NAS init 服务。
+
+### 当前不能宣称已验收的部分
+- r5 尚需新 Actions Run 验证 Shell/JSON/内嵌 JavaScript、RPC 调用链、Makefile/ACL 一致性以及 package-only APK 构建；Run #198 只验证 r4。
+- KSMBD 的 kmod-fs-ksmbd 必须由目标设备已配置签名软件源按当前内核 ABI 自动求解；Samba4 的配置 schema、服务名称及依赖也必须由目标源验证。未在设备安装测试。
+- NAS 共享目录需要文件系统支持 Linux 所有权/权限设置；当前后端在 chown 无法成功时拒绝继续配置，不会通过 root/guest 访问绕过权限。
+- APK-tools 3.0.5 的 --simulate 输出格式与依赖删除列表，尚未在目标设备上实测；解析不清楚时按保守原则拒绝卸载/安装。
+- NAS 实际绑定、445 端口冲突、SMB 登录、热拔出/热插入行为均尚未设备验证；CI 通过不等于设备 NAS 已可用。
+- athena-mode.sh 仍使用已有命令行 UCI commit 路径；本批次未完成原生 LuCI UCI session/apply_rollback 接入。不能把现有自检称为原生管理端失联自动回滚。
+- 本次没有在路由器上安装 r5、变更网络、重启服务、安装/卸载 NAS、格式化磁盘或刷写固件；PPPoE、VLAN 2044、IPv6、防火墙/NAT、OpenClash、NSS/ECM 现网保持未触碰。
