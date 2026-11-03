@@ -73,3 +73,22 @@ Run #198 必须全部通过后才能提供 APK：
 2. `docs/ATHENAWRT-FRONTEND-BACKEND-CALLCHAIN-AUDIT.md`
 
 **当前阶段：Athena 后端安全整改和全站页面优化已在 r4 源码批次提交；Run #198 构建中；设备仍运行 r2，未安装新 APK。**
+
+
+## 8. 失联回退与存储/NAS 后续架构
+
+### 网络修改后的失联回退（当前能力边界）
+- 已有 athena-mode.sh single-bg：切换前备份 network/wireless/dhcp/firewall/athena；重载后最多 15 秒检查 br-lan 管理 IP、内网/拨号 VLAN 及启用时的 IPTV VLAN；检查失败时导入备份并重载网络、无线和防火墙。
+- 已有 athena-netcheck 冷启动自检：仅当模式标记为 single 时，在开机后等待 45 秒检查 LAN 管理地址；异常时尝试回退主路由。
+- **以上不等于全模式、真实管理端失联回退。** 现有检查主要在路由器本机确认接口/IP/VLAN 存在，不会确认用户电脑/手机是否重新访问到 Athena 管理界面；router/AP/bypass 等模式也没有统一的待确认事务。
+- 下一步设计：所有会改变管理链路的网络配置采用统一事务：先备份被修改的 UCI 配置并建立带随机 token 和截止时间的 pending 状态；应用后由独立于 LuCI 页面/RPC 会话的 watchdog 计时；客户端重新连上后须在期限内主动确认，后端验证 token 后才结束事务；超时或健康检查失败则恢复备份并重载相关服务。推荐先从 90 秒确认窗口开始，客户端断线时不能靠浏览器 JS 定时器承担回滚。
+- 本机制只负责回滚 Athena 本次提交的配置，不应擅自改变 PPPoE 账号、VLAN 2044、IPv6、防火墙既有策略、OpenClash 或 NSS/ECM 其他未涉及配置；真机测试需有有线/串口等带外救援路径，不能在线设备盲测。
+
+### 存储中心与未来 NAS
+- 当前 Athena 存储页实际是磁盘管理 + FileBrowser 网页文件管理；当前包没有 Athena 自有 SMB/ksmbd/NFS NAS 服务管理后端。FileBrowser 是 HTTP 网页文件访问，不等同 SMB/NFS 网络盘。
+- 现有兼容边界：FileBrowser 根目录为 /mnt/usb、监听 LAN 管理地址的 8081 端口；磁盘后端仅允许真实 USB 分区挂载至 /mnt/usb，格式化亦仅允许经校验的 USB 分区。后续不得破坏这一兼容路径。
+- 页面长期定位为“存储中心”，分成独立能力区：①磁盘与卷（设备发现、分区/文件系统、容量、挂载/卸载/格式化）；②网页文件管理（保留 FileBrowser）；③网络共享/NAS（未来新增 SMB/ksmbd，必要时再评估 NFS）。
+- 后端边界：保留 athena-disk.sh 负责块设备/卷操作；未来新增 athena-nas.sh 管理共享服务、共享目录、账户和权限；NAS 状态不能塞入 disk RPC，也不能用前端按钮冒充服务已安装。
+- 卷身份应逐步从易变化的 /dev/sda1 改为 UUID/LABEL；当前主数据卷继续兼容挂载到 /mnt/usb，额外卷再采用独立稳定挂载目录。共享路径必须 realpath 校验并限制在已登记的数据卷之内，禁止路径穿越和共享系统根目录。
+- NAS 共享必须以“数据卷已真实挂载”为启动前提；卸载前先停止 FileBrowser/SMB/NFS 等消费者并检查占用；热拔出时停止依赖服务并标记离线；防火墙只允许 LAN 访问，默认不开放 WAN；访客访问默认关闭，用户/目录权限由后端强制执行。
+- 当前 r4 不安装/启用 Samba、ksmbd 或 NFS，也不改变分区、文件系统和挂载行为。NAS 属后续独立功能批次，先做协议与权限设计，再确认包依赖和设备资源后实施。
