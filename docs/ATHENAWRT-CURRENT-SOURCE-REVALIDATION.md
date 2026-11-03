@@ -13,7 +13,7 @@
 |---|---|
 | 仓库 | `ethandong06-debug/re-cs02-nss-firmware` |
 | 分支 | `athenawrt/apk-fixed-signing` |
-| 最新 HEAD | `bdb639b270a80701501f8c3b4e9afb869e655581` |
+| 审计开始时 HEAD | `bdb639b270a80701501f8c3b4e9afb869e655581` |
 | HEAD 提交说明 | `docs: remove reverted C3-A implementation checkpoint` |
 | 最近源码提交 | `e355f81fd508575ba2e07c4b9939aab60ebddd9c` |
 | 源码提交说明 | `revert: restore Athena UI before C3-A trial` |
