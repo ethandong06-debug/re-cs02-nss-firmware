@@ -110,6 +110,10 @@ jobs:
           if 'onclick="openUiPrefs()"' not in html:
               raise SystemExit('Global interface settings entry missing')
           print('r5 menu/NAS/security source checks passed.')
+          workflow = pathlib.Path('.github/workflows/build-athena-apk.yml').read_text()
+          if 'secrets.ATHENAWRT_APK_SIGNING_KEY' not in workflow or 'CONFIG_SIGN_EACH_PACKAGE=y' not in workflow:
+              raise SystemExit('Persistent APK signing secret/configuration is missing')
+          print('Persistent APK signing configuration check passed.')
           print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
           PY
           node --check /tmp/athena-inline.js
@@ -182,18 +186,38 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Import persistent APK signing key
+        shell: bash
+        env:
+          ATHENAWRT_APK_SIGNING_KEY: ${{ secrets.ATHENAWRT_APK_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ATHENAWRT_APK_SIGNING_KEY:-}" ]; then
+            echo "::error::Missing repository secret ATHENAWRT_APK_SIGNING_KEY"
+            exit 1
+          fi
+          printf '%s\\n' "$ATHENAWRT_APK_SIGNING_KEY" > immortalwrt/private-key.pem
+          chmod 600 immortalwrt/private-key.pem
+          openssl pkey -in immortalwrt/private-key.pem -check -noout
+          openssl pkey -in immortalwrt/private-key.pem -pubout -out immortalwrt/public-key.pem
+          chmod 644 immortalwrt/public-key.pem
+
       - name: Prepare package-only build
         shell: bash
         run: |
           set -euo pipefail
           cp -a luci-app-athena-src/frontend/luci-app-athena immortalwrt/package/luci-app-athena
           cp luci-app-athena-src/configs/jdcloud_re-cs-02.seed immortalwrt/.config
-          printf '\nCONFIG_PACKAGE_luci-app-athena=m\n' >> immortalwrt/.config
+          printf '\nCONFIG_USE_APK=y\nCONFIG_SIGN_EACH_PACKAGE=y\nCONFIG_PACKAGE_luci-app-athena=m\n' >> immortalwrt/.config
           cd immortalwrt
           make defconfig
           grep -q '^CONFIG_TARGET_qualcommax=y' .config
           grep -q '^CONFIG_TARGET_qualcommax_ipq60xx=y' .config
+          grep -q '^CONFIG_USE_APK=y' .config
+          grep -q '^CONFIG_SIGN_EACH_PACKAGE=y' .config
           grep -q '^CONFIG_PACKAGE_luci-app-athena=m' .config
+          test -s private-key.pem
+          test -s public-key.pem
 
       - name: Build required host tools
         shell: bash
@@ -230,13 +254,13 @@ jobs:
             exit 1
           fi
           cp "${main_apks[0]}" "${i18n_apks[0]}" output/
-          # Preserve only the public half of the exact ephemeral key used by this build.
-          # The private key remains inside the disposable GitHub Actions runner.
+          # Publish the public half of the persistent repository signing key.
+          # The private key remains only in the GitHub Actions secret and runner.
           test -s immortalwrt/public-key.pem
           cp immortalwrt/public-key.pem output/athenawrt-build-signing.pub
           openssl pkey -pubin -in output/athenawrt-build-signing.pub -noout
 
-          # Verify package signatures with the exact public key from this build.
+          # Verify package signatures against the persistent repository key.
           # The temporary key directory is isolated from any host/system trust store.
           keys_dir="$(mktemp -d)"
           trap 'rm -rf "$keys_dir"' EXIT
