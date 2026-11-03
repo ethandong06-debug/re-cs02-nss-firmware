@@ -156,6 +156,7 @@ install_method() {
   is_usb_mounted || fail "请先将真实 USB 分区挂载到 /mnt/usb"
   port_445_busy && fail "TCP 445 端口已被占用，无法安全安装 NAS"
   simulate_add "$package"
+  mkdir -p /etc/athena || fail "无法创建 /etc/athena 配置目录，已停止安装"
   apk add "$package" >/dev/null 2>&1 || fail "NAS 安装失败；请检查软件源签名、内核 ABI 和依赖"
   umask 077
   printf 'method=%s\n' "$method" > "$CONF"
