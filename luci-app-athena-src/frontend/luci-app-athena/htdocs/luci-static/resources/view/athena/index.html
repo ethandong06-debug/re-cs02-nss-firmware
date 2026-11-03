@@ -663,7 +663,7 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div class="speed-head">
         <div class="ttl">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>
-          实时网速 <span style="font-weight:400;color:var(--text3)">· 大数字为近 10 秒平均</span>
+          实时网速 <span style="font-weight:400;color:var(--text3)">· 近 10 秒平滑值 · 每 2 秒采样</span>
         </div>
         <div class="legend">
           <span><i style="background:var(--down)"></i>下载</span>
@@ -675,12 +675,12 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="speed-cols">
           <div class="speed-col down">
             <div class="lab"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5"/></svg>下载</div>
-            <div><span class="val" id="dnV">0.0</span><span class="unit" id="dnU">Mbps</span></div>
+            <div><span class="val" id="dnV">—</span><span class="unit" id="dnU">Mbps</span></div>
             <div class="pk">峰值 —</div>
           </div>
           <div class="speed-col up">
             <div class="lab"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 15V3M7 8l5-5 5 5"/></svg>上传</div>
-            <div><span class="val" id="upV">0.0</span><span class="unit" id="upU">Mbps</span></div>
+            <div><span class="val" id="upV">—</span><span class="unit" id="upU">Mbps</span></div>
             <div class="pk">峰值 —</div>
           </div>
         </div>
@@ -715,11 +715,11 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
             <circle class="track" cx="32" cy="32" r="29"/>
             <circle class="bar" id="cpuRing" cx="32" cy="32" r="29" stroke="var(--ok)"/>
           </svg>
-          <span class="num" id="cpuTxt">23%</span>
+          <span class="num" id="cpuTxt">—</span>
         </div>
         <div class="info">
           <div class="t">CPU 使用率 · 4 核</div>
-          <div class="v" id="cpuV">23.4%</div>
+          <div class="v" id="cpuV">—</div>
           <div class="bar-mini" id="cpuBars"></div>
         </div>
       </div>
@@ -729,12 +729,12 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
             <circle class="track" cx="32" cy="32" r="29"/>
             <circle class="bar" id="memRing" cx="32" cy="32" r="29" stroke="var(--warn)"/>
           </svg>
-          <span class="num" id="memTxt">47%</span>
+          <span class="num" id="memTxt">—</span>
         </div>
         <div class="info">
           <div class="t">内存占用</div>
-          <div class="v" id="memV">187 / 398 MB</div>
-          <div class="d" id="memD">剩余 211 MB · 运行 2 天 14 小时</div>
+          <div class="v" id="memV">—</div>
+          <div class="d" id="memD">正在读取内存状态…</div>
         </div>
       </div>
       <div class="card kpi" id="kpi-up">
@@ -743,8 +743,8 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div class="info">
           <div class="t">运行时长</div>
-          <div class="v" id="kpiUpV">2d 14h</div>
-          <div class="d" id="kpiUpD">上次启动：10-24 09:12</div>
+          <div class="v" id="kpiUpV">—</div>
+          <div class="d" id="kpiUpD">正在读取启动信息…</div>
         </div>
       </div>
       <div class="card kpi" id="kpi-dev" style="cursor:pointer" onclick="goto('dev')">
@@ -753,21 +753,21 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div class="info">
           <div class="t">在线设备</div>
-          <div class="v" id="kpiDevV">9 <span style="font-size:13px;color:var(--text3);font-weight:500">/ 11 台</span></div>
-          <div class="d" id="kpiDevD">有线 4 · 无线 5 · 新设备 0</div>
+          <div class="v" id="kpiDevV">—</div>
+          <div class="d" id="kpiDevD">正在读取接入设备…</div>
         </div>
       </div>
     </div>
 
     <!-- 网络信息带 -->
     <div class="card netband" style="cursor:pointer" onclick="goto('net')" title="进入网络设置">
-      <span class="chip"><span class="k">网络模式</span><b id="netMode">主路由</b><span class="st st-on"></span></span>
-      <span class="chip"><span class="k">WAN</span><b id="netWan">PPPoE</b></span>
+      <span class="chip"><span class="k">网络模式</span><b id="netMode">读取中</b><span class="st st-on"></span></span>
+      <span class="chip"><span class="k">WAN</span><b id="netWan">读取中</b></span>
       <span class="chip"><span class="k">外网 IP</span><b id="netIp">—</b></span>
-      <span class="chip" data-bandchip="b24"><span class="k">2.4G</span><span class="st st-on"></span><b>在线</b></span>
-      <span class="chip" data-bandchip="b52"><span class="k">5.2G</span><span class="st st-on"></span><b>在线</b></span>
-      <span class="chip" data-bandchip="b58"><span class="k">5.8G</span><span class="st st-on"></span><b>在线</b></span>
-      <span class="chip"><span class="k">固件</span><b id="netFw">v1.2.39</b></span>
+      <span class="chip" data-bandchip="b24"><span class="k">2.4G</span><span class="st st-off"></span><b>读取中</b></span>
+      <span class="chip" data-bandchip="b52"><span class="k">5.2G</span><span class="st st-off"></span><b>读取中</b></span>
+      <span class="chip" data-bandchip="b58"><span class="k">5.8G</span><span class="st st-off"></span><b>读取中</b></span>
+      <span class="chip"><span class="k">固件</span><b id="netFw">读取中</b></span>
     </div>
 
     <!-- 活跃应用（OAF 分类 + DNS 指纹识别） -->
@@ -787,19 +787,8 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div class="card">
         <h3>家庭网络拓扑 <span class="sub">示意</span></h3>
         <div class="topo" id="topoBox">
-          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">互联网</span><span class="m">已连接</span></div>
-          <div class="topo-line">光猫 · 桥接模式</div>
-          <div class="topo-node"><span class="st st-on" style="width:8px;height:8px"></span><span class="n">雅典娜 AX6600</span><span class="m">pppoe-wan · VLAN 2044</span></div>
-          <div class="topo-line">内网 br-lan · 192.168.10.0/24</div>
-          <div class="topo-branch">
-            <div class="leaf"><b>LAN1–LAN3</b>有线设备 4 台</div>
-            <div class="leaf"><b>WiFi</b>2.4G / 5.2G / 5.8G · 5 台</div>
-          </div>
-          <div class="topo-line">IPTV br-iptv · VLAN 3066</div>
-          <div class="topo-branch">
-            <div class="leaf"><b>LAN4</b>IPTV 机顶盒</div>
-            <div class="leaf" style="opacity:.45"><b>—</b>未接入</div>
-          </div>
+          <div class="topo-node"><span class="st st-off" style="width:8px;height:8px"></span><span class="n">网络状态</span><span class="m">正在读取…</span></div>
+          <div class="topo-line">正在采集 WAN、VLAN 与局域网设备信息</div>
         </div>
       </div>
       <div class="card">
@@ -830,34 +819,34 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
       <div class="band">
         <div class="band-card" data-band="b24" onclick="editBand('b24')">
           <div class="top"><div class="nm"><span class="st st-on"></span>2.4G<span class="chip2" style="margin-left:8px">日常上网</span></div><div class="switch on" data-k="band" onclick="event.stopPropagation();toggleBand('b24')" data-b="b24"></div></div>
-          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">Athena-2.4G</span></div>
+          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中…</span></div>
           <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
-          <div class="info-row"><span>加密方式</span><span><span class="tag">WPA3/WPA2</span></span></div>
-          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">6 · 40MHz</span></div>
+          <div class="info-row"><span>加密方式</span><span><span class="tag gray">读取中</span></span></div>
+          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b24')">编辑 WiFi 名称 / 密码</button>
         </div>
         <div class="band-card" data-band="b52" onclick="editBand('b52')">
           <div class="top"><div class="nm"><span class="st st-on"></span>5.2G<span class="chip2" style="margin-left:8px">游戏加速</span></div><div class="switch on" data-k="band" onclick="event.stopPropagation();toggleBand('b52')" data-b="b52"></div></div>
-          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">Athena-5G</span></div>
+          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中…</span></div>
           <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
-          <div class="info-row"><span>加密方式</span><span><span class="tag">WPA3/WPA2</span></span></div>
-          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">44 · 80MHz</span></div>
+          <div class="info-row"><span>加密方式</span><span><span class="tag gray">读取中</span></span></div>
+          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b52')">编辑 WiFi 名称 / 密码</button>
         </div>
         <div class="band-card" data-band="b58" onclick="editBand('b58')">
           <div class="top"><div class="nm"><span class="st st-on"></span>5.8G<span class="chip2" style="margin-left:8px">影视投屏</span></div><div class="switch on" data-k="band" onclick="event.stopPropagation();toggleBand('b58')" data-b="b58"></div></div>
-          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">Athena-5G-Game</span></div>
+          <div class="info-row"><span>WiFi 名称</span><span class="bn" style="font-weight:600">读取中…</span></div>
           <div class="info-row"><span>密码</span><span style="font-weight:600">••••••••</span></div>
-          <div class="info-row"><span>加密方式</span><span><span class="tag">WPA3/WPA2</span></span></div>
-          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">153 · 80MHz</span></div>
+          <div class="info-row"><span>加密方式</span><span><span class="tag gray">读取中</span></span></div>
+          <div class="info-row"><span>信道 / 频宽</span><span class="bn" style="font-weight:600">读取中</span></div>
           <button class="btn sm" style="width:100%;margin-top:12px" onclick="event.stopPropagation();editBand('b58')">编辑 WiFi 名称 / 密码</button>
         </div>
       </div>
       <div class="card">
         <h3>访客网络 <span class="sub">与内网隔离，适合客人使用</span></h3>
         <div class="check-row"><span>开启访客网络（Athena-Guest）</span><span class="flex"></span><div class="switch on" data-k="guest" onclick="toggleGuest()"></div></div>
-        <div class="info-row"><span>访客 WiFi 名称</span><span style="font-weight:600">Athena-Guest</span></div>
-        <div class="info-row"><span>访问内网</span><span><span class="tag gray">已隔离</span></span></div>
+        <div class="info-row"><span>访客 WiFi 名称</span><span id="guestSsid" style="font-weight:600">读取中…</span></div>
+        <div class="info-row"><span>访问内网</span><span><span class="tag gray" id="guestIsolation">读取中</span></span></div>
         <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" onclick="openGuestModal()">访客网络设置</button></div>
       </div>
       <div class="card">
@@ -985,17 +974,17 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><h3 style="margin:0">磁盘管理</h3><button class="btn sm" data-refreshDisk onclick="refreshDisks()">刷新</button></div>
         <div class="disk-row" data-disk="emmc">
           <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></div>
-          <div class="db"><div class="dn">内置存储 eMMC</div><div class="dm">mmcblk0 · ext4 · 已挂载</div>
+          <div class="db"><div class="dn">内置存储 eMMC</div><div class="dm">正在读取设备信息…</div>
             <div class="disk-bar"><i style="width:58%"></i></div>
-            <div class="dv">已用 18.6 GB / 32 GB（58%）</div>
+            <div class="dv">正在读取容量…</div>
           </div>
           <button class="btn sm danger" onclick="fmtDisk('emmc')">格式化</button>
         </div>
         <div class="disk-row" data-disk="usb">
           <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 21h16"/></svg></div>
-          <div class="db"><div class="dn">USB 3.0 移动硬盘</div><div class="dm">sda1 · exfat · 已挂载 /mnt/usb</div>
+          <div class="db"><div class="dn">USB 3.0 移动硬盘</div><div class="dm">正在读取设备信息…</div>
             <div class="disk-bar"><i style="width:36%;background:linear-gradient(90deg,var(--warn),var(--warn))"></i></div>
-            <div class="dv">已用 365 GB / 1 TB（36%）</div>
+            <div class="dv">正在读取容量…</div>
           </div>
           <span class="disk-ops"><button class="btn sm" onclick="umountUsb()">卸载</button>
           <button class="btn sm danger" onclick="fmtDisk('usb')">格式化</button></span>
@@ -1023,21 +1012,21 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <div class="grid">
       <div class="card">
         <h3>点阵屏设置</h3>
-        <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch on" data-k="matrix" onclick="toggleMatrix()"></div></div>
+        <div class="check-row"><span>点阵屏总开关</span><span class="flex"></span><div class="switch" data-k="matrix" onclick="toggleMatrix()"></div></div>
         <div class="check-row"><span>亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="matrixLight" min="0" max="7" value="5" onchange="setMatrixLight(this.value)"></div>
         <div class="check-row"><span>显示模式</span><span class="flex"></span><select class="mini-sel" id="matrixProfile" onchange="setMatrixProfile()"><option>多频道轮播</option><option>单频道轮播</option></select></div>
         <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary sm" onclick="openMatrixFull()">打开完整管理</button><button class="btn sm" onclick="loadMatrixAll(true)">刷新状态</button></div>
       </div>
       <div class="card">
         <h3>显示内容区域</h3>
-        <div class="check-row"><span>时间显示</span><span class="flex"></span><div class="switch on" data-mx="clock" onclick="toggleMatrixItem('clock')"></div></div>
-        <div class="check-row"><span>勋章显示</span><span class="flex"></span><div class="switch on" data-mx="medal" onclick="toggleMatrixItem('medal')"></div></div>
+        <div class="check-row"><span>时间显示</span><span class="flex"></span><div class="switch" data-mx="clock" onclick="toggleMatrixItem('clock')"></div></div>
+        <div class="check-row"><span>勋章显示</span><span class="flex"></span><div class="switch" data-mx="medal" onclick="toggleMatrixItem('medal')"></div></div>
         <div class="check-row"><span>上行信息</span><span class="flex"></span><div class="switch" data-mx="up" onclick="toggleMatrixItem('up')"></div></div>
-        <div class="check-row"><span>下行信息</span><span class="flex"></span><div class="switch on" data-mx="down" onclick="toggleMatrixItem('down')"></div></div>
+        <div class="check-row"><span>下行信息</span><span class="flex"></span><div class="switch" data-mx="down" onclick="toggleMatrixItem('down')"></div></div>
       </div>
       <div class="card">
         <h3>夜间模式 <span class="sub">降亮度不熄屏</span></h3>
-        <div class="check-row"><span>启用夜间模式</span><span class="flex"></span><div class="switch on" data-k="night" onclick="toggleMatrixNight()"></div></div>
+        <div class="check-row"><span>启用夜间模式</span><span class="flex"></span><div class="switch" data-k="night" onclick="toggleMatrixNight()"></div></div>
         <div class="check-row"><span>开始时间</span><span class="flex"></span><input type="time" id="nightStart" value="22:30" onchange="setNightTime()"></div>
         <div class="check-row"><span>结束时间</span><span class="flex"></span><input type="time" id="nightEnd" value="07:00" onchange="setNightTime()"></div>
         <div class="check-row"><span>夜间亮度（0-7）</span><span class="flex"></span><input type="range" class="range" id="nightLevel" min="0" max="7" value="2" onchange="setNightLevel(this.value)"></div>
@@ -1050,10 +1039,10 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         </div>
         <div class="card">
           <h3>三色状态灯 <span class="sub">内核 GPIO 实时状态</span></h3>
-          <div class="info-row"><span><span class="led-dot" style="background:#dc2626"></span>红色（故障 / 启动）</span><span id="ledRed"><span class="tag gray">已熄灭</span></span></div>
-          <div class="info-row"><span><span class="led-dot" style="background:#16a34a"></span>绿色（运行中）</span><span id="ledGreen"><span class="tag green">已点亮</span></span></div>
-          <div class="info-row"><span><span class="led-dot" style="background:#378ADD"></span>蓝色（启动引导）</span><span id="ledBlue"><span class="tag gray">已熄灭</span></span></div>
-          <div class="check-row"><span>呼吸灯（绿色心跳）</span><span class="flex"></span><div class="switch on" data-k="breath" onclick="toggleBreath()"></div></div>
+          <div class="info-row"><span><span class="led-dot" style="background:#dc2626"></span>红色（故障 / 启动）</span><span id="ledRed"><span class="tag gray">读取中</span></span></div>
+          <div class="info-row"><span><span class="led-dot" style="background:#16a34a"></span>绿色（运行中）</span><span id="ledGreen"><span class="tag gray">读取中</span></span></div>
+          <div class="info-row"><span><span class="led-dot" style="background:#378ADD"></span>蓝色（启动引导）</span><span id="ledBlue"><span class="tag gray">读取中</span></span></div>
+          <div class="check-row"><span>呼吸灯（绿色心跳）</span><span class="flex"></span><div class="switch" data-k="breath" onclick="toggleBreath()"></div></div>
         </div>
       </div>
       <div class="card">
@@ -1074,16 +1063,16 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     <div class="grid">
       <div class="card">
         <h3>固件信息</h3>
-        <div class="info-row"><span>固件版本</span><span style="font-weight:600" id="fwVer">v1.2.39</span></div>
+        <div class="info-row"><span>固件版本</span><span style="font-weight:600" id="fwVer">读取中…</span></div>
         <div class="info-row"><span>硬件</span><span style="font-weight:600">JDCloud RE-CS-02 · IPQ6018</span></div>
-        <div class="info-row"><span>内核</span><span style="font-weight:600" id="fwKernel">Linux 6.18.55</span></div>
-        <div class="info-row"><span>运行时长</span><span style="font-weight:600" id="fwUptime">2 天 14 小时</span></div>
-        <div class="info-row"><span>CPU 温度</span><span style="font-weight:600" id="fwTemp">42°C <span style="font-size:11px;color:var(--text3)">被动散热 · 正常</span></span></div>
+        <div class="info-row"><span>内核</span><span style="font-weight:600" id="fwKernel">读取中…</span></div>
+        <div class="info-row"><span>运行时长</span><span style="font-weight:600" id="fwUptime">读取中…</span></div>
+        <div class="info-row"><span>CPU 温度</span><span style="font-weight:600" id="fwTemp">读取中…</span></div>
       </div>
       <div class="card">
         <h3>重启与升级</h3>
         <div class="info-row"><span>重启路由器</span><button class="btn sm" onclick="openRebootConfirm()">立即重启</button></div>
-        <div class="info-row"><span>定时重启</span><button class="btn sm" data-rebootSched onclick="openRebootSched()">已设置 04:00（每周日）</button></div>
+        <div class="info-row"><span>定时重启</span><button class="btn sm" data-rebootSched onclick="openRebootSched()">正在读取配置…</button></div>
         <div class="info-row"><span>升级固件</span><button class="btn sm primary" onclick="openUpgradeConfirm()">升级</button></div>
         <div class="info-row"><span>恢复出厂设置</span><button class="btn sm danger" onclick="openResetConfirm()">恢复出厂</button></div>
       </div>
@@ -1110,27 +1099,15 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
         <div class="res-head"><div class="tabs"><button class="on" data-restab="cpu" onclick="pickRes('cpu')">CPU 占用</button><button data-restab="mem" onclick="pickRes('mem')">内存占用</button></div><span class="res-kth" onclick="toggleResKth()" title="内核线程（kworker / ksoftirqd / irq / sugov 等）默认不显示，排查时再打开"><span>显示内核线程</span><div class="switch" id="resKthSw"></div></span></div>
         <div class="res-hint" id="resHint"></div>
         <div data-resCpu>
-        <div class="proc-row"><div class="proc-name">odhcpd</div><div class="proc-bar"><i style="width:38%"></i></div><div class="proc-m">38.2% · 12 MB</div><button class="btn sm" onclick="procAct('odhcpd','stop')">停止</button></div>
-        <div class="proc-row"><div class="proc-name">OpenClash</div><div class="proc-bar"><i style="width:21%"></i></div><div class="proc-m">21.4% · 96 MB</div><button class="btn sm" onclick="procAct('OpenClash','restart')">重启</button><button class="btn sm danger" onclick="procAct('OpenClash','stop')">停止</button></div>
-        <div class="proc-row"><div class="proc-name">filebrowser</div><div class="proc-bar"><i style="width:7%"></i></div><div class="proc-m">7.1% · 18 MB</div><button class="btn sm" onclick="procAct('filebrowser','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">dnsmasq</div><div class="proc-bar"><i style="width:4%"></i></div><div class="proc-m">3.8% · 2 MB</div><button class="btn sm" onclick="procAct('dnsmasq','restart')">重启</button></div>
+        <div class="empty">正在读取 CPU 进程数据…</div>
       </div>
       <div data-resMem style="display:none">
-        <div class="proc-row"><div class="proc-name">OpenClash</div><div class="proc-bar"><i style="width:46%;background:var(--warn)"></i></div><div class="proc-m">96 MB</div><button class="btn sm" onclick="procAct('OpenClash','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">filebrowser</div><div class="proc-bar"><i style="width:9%"></i></div><div class="proc-m">18 MB</div><button class="btn sm" onclick="procAct('filebrowser','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">odhcpd</div><div class="proc-bar"><i style="width:6%"></i></div><div class="proc-m">12 MB</div><button class="btn sm" onclick="procAct('odhcpd','restart')">重启</button></div>
-        <div class="proc-row"><div class="proc-name">dnsmasq</div><div class="proc-bar"><i style="width:1%"></i></div><div class="proc-m">2 MB</div><button class="btn sm" onclick="procAct('dnsmasq','restart')">重启</button></div>
+        <div class="empty">正在读取内存进程数据…</div>
       </div>
       </div>
       <div class="card">
         <h3>运行中的服务 <span class="sub">第三方应用服务</span></h3>
-        <div id="svcBox">
-        <div class="svc-row" data-svc="agh"><div class="svc-info" onclick="openSvcWin('agh')"><div class="svc-name">AdGuard Home</div><div class="svc-desc">DNS 广告过滤</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('agh')">打开</button><button class="btn sm danger" onclick="svcAct('agh','toggle')">停止</button><button class="btn sm" onclick="svcAct('agh','restart')">重启</button></div>
-        <div class="svc-row" data-svc="clash"><div class="svc-info" onclick="openSvcWin('clash')"><div class="svc-name">OpenClash</div><div class="svc-desc">代理分流</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('clash')">打开</button><button class="btn sm danger" onclick="svcAct('clash','toggle')">停止</button><button class="btn sm" onclick="svcAct('clash','restart')">重启</button></div>
-        <div class="svc-row" data-svc="fb"><div class="svc-info" onclick="openSvcWin('fb')"><div class="svc-name">filebrowser</div><div class="svc-desc">网页文件管理 · 端口 8081</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('fb')">打开</button><button class="btn sm danger" onclick="svcAct('fb','toggle')">停止</button></div>
-        <div class="svc-row" data-svc="ddns"><div class="svc-info" onclick="openSvcWin('ddns')"><div class="svc-name">DDNS</div><div class="svc-desc">动态域名解析</div></div><span class="svc-status off">已停止</span><button class="btn sm primary" onclick="svcAct('ddns','toggle')">启动</button></div>
-        <div class="svc-row" data-svc="webdav"><div class="svc-info" onclick="openSvcWin('webdav')"><div class="svc-name">阿里云盘 WebDAV</div><div class="svc-desc">网盘挂载</div></div><span class="svc-status on">运行中</span><button class="btn sm" onclick="openSvcPage('webdav')">打开</button><button class="btn sm danger" onclick="svcAct('webdav','toggle')">停止</button><button class="btn sm" onclick="svcAct('webdav','restart')">重启</button></div>
-        </div>
+        <div id="svcBox"><div class="empty">正在读取服务状态…</div></div>
       </div>
       <div class="row2">
         <div class="card">
@@ -1244,12 +1221,12 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     el.style.strokeDasharray=C;
     el.style.strokeDashoffset=C*(1-pct);
     el.style.stroke=color;
-    document.getElementById(txt).textContent=Math.round(pct*100)+"%";
+    document.getElementById(txt).textContent=pct==null?'—':Math.round(pct*100)+"%";
   }
-  ring("cpuRing","cpuTxt",0.234,"var(--ok)");
-  ring("memRing","memTxt",0.47,"var(--warn)");
+  ring("cpuRing","cpuTxt",null,"var(--ok)");
+  ring("memRing","memTxt",null,"var(--warn)");
   var cpuB=document.getElementById("cpuBars");
-  var hist=[18,26,22,31,25,21,24,19,27,23];
+  var hist=[];
   cpuB.innerHTML=hist.map(function(v){ return "<i style='height:"+(8+v*0.6)+"px'></i>"; }).join("");
 
   /* 主题系统：明暗 + 液态玻璃 */
@@ -1279,24 +1256,38 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     r.style.setProperty('--glass-alpha2',(Math.max(GLASS_THEME.glass-10,5)/100).toFixed(2));
   }
   function loadStoredTheme(){
-    var t;
-    try{ t=JSON.parse(localStorage.getItem('athena_preview_theme')||'null'); }catch(e){ t=null; }
-    if(t&&t.glass){ GLASS_THEME.palette=t.glass.palette||'aurora'; GLASS_THEME.blob=parseInt(t.glass.blob||100,10); GLASS_THEME.glass=parseInt(t.glass.glass||58,10); GLASS_THEME.blur=parseInt(t.glass.blur||20,10); GLASS_THEME.iri=parseInt(t.glass.iri||55,10); GLASS_THEME.hi=parseInt(t.glass.hi||70,10); }
-    if(t&&t.mode){ setThemeMode(t.mode,true); }
+    var t=null, mode='auto';
+    try{ t=JSON.parse(localStorage.getItem('athena_preview_theme')||'null'); }catch(e){}
+    if(t&&t.glass){
+      GLASS_THEME.palette=t.glass.palette||'aurora';
+      GLASS_THEME.blob=parseInt(t.glass.blob||100,10);
+      GLASS_THEME.glass=parseInt(t.glass.glass||58,10);
+      GLASS_THEME.blur=parseInt(t.glass.blur||20,10);
+      GLASS_THEME.iri=parseInt(t.glass.iri||55,10);
+      GLASS_THEME.hi=parseInt(t.glass.hi||70,10);
+    }
+    if(t&&/^(auto|light|dark)$/.test(t.mode||'')) mode=t.mode;
+    else {
+      try{
+        var saved=localStorage.getItem('athena_theme_mode'), legacy=localStorage.getItem('athena_dark');
+        if(/^(auto|light|dark)$/.test(saved||'')) mode=saved;
+        else if(legacy==='1') mode='dark';
+        else if(legacy==='0') mode='light';
+      }catch(e){}
+    }
+    window.ATHENA_THEME_MODE=mode;
+    setThemeMode(mode,true);
     applyGlassTheme();
   }
   window.setThemeMode=function(mode,silent){
-    var el=document.documentElement;
-    if(mode==='auto'){ el.setAttribute('data-theme', (window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'); }
-    else{ el.setAttribute('data-theme', mode); }
+    if(!/^(auto|light|dark)$/.test(mode||'')) mode='auto';
+    window.ATHENA_THEME_MODE=mode;
     var active=(mode==='auto')?((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'):mode;
+    document.documentElement.setAttribute('data-theme',active);
     applyGlassTheme();
-    var bs=document.querySelectorAll('.theme-modes button');
-    for(var i=0;i<bs.length;i++){
-      var t=bs[i].textContent;
-      bs[i].classList.toggle('on', (t==='浅色'&&active==='light')||(t==='深色'&&active==='dark'));
-    }
-    if(!silent){ showToast('预览稿 · 主题已切换为'+(mode==='light'?'浅色':mode==='dark'?'深色':'跟随系统')); }
+    var bs=document.querySelectorAll('.theme-modes [data-theme-mode]');
+    for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on',bs[i].dataset.themeMode===mode);
+    if(!silent) showToast('主题已切换为'+(mode==='auto'?'跟随系统':mode==='light'?'浅色':'深色'));
   };
   window.toggleTheme=function(){
     var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
@@ -1328,15 +1319,15 @@ button:focus:not(:focus-visible),a:focus:not(:focus-visible),.btn:focus:not(:foc
     }
   };
   window.saveGlassTheme=function(){
-    var mode=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
+    var mode=window.ATHENA_THEME_MODE||'auto';
     localStorage.setItem('athena_preview_theme', JSON.stringify({mode:mode,glass:GLASS_THEME}));
     closeThemeModal();
     showToast('预览稿 · 主题已保存（仅浏览器生效）');
   };
   window.openThemeModal=function(){
-    var mode=document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';
+    var mode=window.ATHENA_THEME_MODE||'auto';
     var html='<div class="theme-sec">明暗模式</div>'
-      +'<div class="theme-modes"><button class="'+(mode==='light'?'on':'')+'" onclick="setThemeMode(\'light\')">浅色</button><button class="'+(mode==='dark'?'on':'')+'" onclick="setThemeMode(\'dark\')">深色</button><button onclick="setThemeMode(\'auto\')">跟随系统</button></div>'
+      +'<div class="theme-modes"><button data-theme-mode="light" class="'+(mode==='light'?'on':'')+'" onclick="setThemeMode(\'light\')">浅色</button><button data-theme-mode="dark" class="'+(mode==='dark'?'on':'')+'" onclick="setThemeMode(\'dark\')">深色</button><button data-theme-mode="auto" class="'+(mode==='auto'?'on':'')+'" onclick="setThemeMode(\'auto\')">跟随系统</button></div>'
       +'<div class="theme-sec">液态玻璃色板</div>'
       +'<div class="theme-presets">'+GLASS_PRESETS.map(function(pr){return '<button class="theme-preset '+(GLASS_THEME.palette===pr.id?'on':'')+'" data-p="'+pr.id+'" onclick="pickPalette(\''+pr.id+'\')"><span class="tp-ic"><i class="tp-dot" style="background:'+pr.dot+'"></i></span><span class="tp-name">'+pr.name+'</span><span class="tp-desc">'+pr.desc+'</span></button>';}).join('')+'</div>'
       +'<div class="theme-sec">参数调节</div>'
@@ -2002,6 +1993,15 @@ var KPI_ITEMS=[
   enhanceSelects(document);
   /* 暴露内部对象供后端注入层读写（主题/状态/矩阵预览） */
   window._pv={S:S,GLASS_THEME:GLASS_THEME,applyGlassTheme:applyGlassTheme,refreshMatrixPreview:refreshMatrixPreview,setThemeMode:window.setThemeMode};
+  if(window.matchMedia&&!window._athenaThemeMediaBound){
+    var _athenaScheme=window.matchMedia('(prefers-color-scheme: dark)');
+    var _athenaSchemeChange=function(){
+      if(window.ATHENA_THEME_MODE==='auto'&&window._pv&&window._pv.setThemeMode) window._pv.setThemeMode('auto',true);
+    };
+    if(_athenaScheme.addEventListener) _athenaScheme.addEventListener('change',_athenaSchemeChange);
+    else if(_athenaScheme.addListener) _athenaScheme.addListener(_athenaSchemeChange);
+    window._athenaThemeMediaBound=true;
+  }
 })();
 </script>
 <style id="bk-login-css">
@@ -2019,6 +2019,113 @@ var KPI_ITEMS=[
   .login-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,rgb(var(--blob-c1)),rgb(var(--blob-c2)));color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px}
   .login-btn:disabled{opacity:.6;cursor:wait}
   .login-foot{text-align:center;font-size:11px;color:var(--text3);margin-top:18px}
+
+/* ===== AthenaWrt 全站界面统一层（标准 Liquid Glass / balanced density）===== */
+:root{--nav-h:58px;--gap:14px;--radius:18px;--radius-sm:12px;--glass-blur:16px}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+body{font-size:14px;line-height:1.5;overflow-x:hidden}
+.topbar{min-height:var(--nav-h);padding-left:clamp(14px,2vw,24px);padding-right:clamp(14px,2vw,24px);gap:14px}
+.brand{gap:9px;letter-spacing:0}
+.brand .logo{box-shadow:0 5px 14px color-mix(in srgb,var(--primary) 28%,transparent)}
+.nav{gap:3px}
+.nav button{min-height:40px;padding:7px 10px;border-radius:11px}
+.top-right{gap:8px}
+.theme-toggle{width:40px;height:40px;border-radius:11px}
+.pill{min-height:32px;padding:6px 10px}
+.wrap{max-width:1480px;padding:20px clamp(14px,2vw,24px) 44px}
+.grid{gap:14px}
+.card{
+  padding:18px;border-radius:18px;
+  background:linear-gradient(145deg,
+    color-mix(in srgb,var(--card-solid) 82%,transparent),
+    color-mix(in srgb,var(--card-solid) 68%,var(--bg)));
+  box-shadow:0 6px 24px rgba(20,35,58,.055);
+  backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));
+}
+html[data-theme="dark"] .card{box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.card::before{opacity:.72}
+.card h3{margin-bottom:12px;font-size:13px}
+.phead{margin:2px 2px 16px;gap:11px}
+.phead .ico{width:40px;height:40px;border-radius:12px}
+.phead .t{font-size:16px;letter-spacing:0}
+.phead .d{font-size:12px;line-height:1.45}
+.btn{min-height:40px;border-radius:11px}
+.btn.sm{min-height:32px;border-radius:9px}
+.field{gap:6px;margin-bottom:12px}
+.field input[type=text],.field input[type=password],.field input[type=number],.field select,.field input[type=time],
+input:not([type=range]):not([type=file]):not([type=checkbox]):not([type=radio]),select,textarea{min-width:0}
+.info-row{gap:10px;padding:10px 2px;min-height:42px}
+.check-row{padding:11px 0;min-height:42px}
+.table th{padding:9px 10px}
+.table td{padding:11px 10px}
+.kpi{padding:16px 17px;gap:13px}
+.kpi .ring,.kpi .ring svg{width:58px;height:58px}
+.kpi .info .v{font-size:21px}
+.speed-col .val{font-size:clamp(30px,3vw,42px)}
+.speed-head{gap:8px 14px}
+.speed-main{gap:16px}
+.chart{height:90px}
+.netband{gap:8px;padding:13px 15px}
+.netband .chip{min-height:36px;padding:7px 11px}
+.quick{gap:8px}
+.quick-btn{min-height:82px;padding:13px 8px;border-radius:12px}
+.band-card{padding:17px}
+.disk-row{padding:14px;gap:12px}
+.metric2{padding:14px 16px}
+.modal{border-radius:18px}
+.toast{max-width:min(92vw,520px);text-align:center;line-height:1.45}
+@media (min-width:880px) and (max-width:1079px){
+  .topbar{height:auto;min-height:var(--nav-h);padding-top:9px;padding-bottom:9px;flex-wrap:wrap;gap:8px 14px}
+  .nav{order:3;flex:1 0 100%;width:100%;margin:2px 0 0;justify-content:space-between;flex-wrap:wrap}
+  .nav button{padding:7px 9px}
+}
+@media (min-width:960px){
+  #pg-wifi>.grid,#pg-net>.grid,#pg-st>.grid,#pg-light>.grid,#pg-keep>.grid,#pg-adv>.grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  #pg-wifi>.grid>.card:first-child,#pg-wifi>.grid>.band,
+  #pg-net>.grid>.card:first-child,#pg-net>.grid>.netband,#pg-net>.grid>.row2,
+  #pg-dev>.grid>.metric-row,#pg-dev>.grid>.card,#pg-dev>.grid>.row2,
+  #pg-light>.grid>.row2,#pg-adv>.grid>.row2{grid-column:1/-1}
+  #pg-keep>.grid>.card:last-child{grid-column:1/-1}
+  #pg-st>.grid>.card,#pg-light>.grid>.card,#pg-keep>.grid>.card,#pg-adv>.grid>.card{min-width:0}
+}
+@media (max-width:959px){
+  #pg-wifi>.grid,#pg-net>.grid,#pg-st>.grid,#pg-light>.grid,#pg-keep>.grid,#pg-adv>.grid{grid-template-columns:minmax(0,1fr)}
+  #pg-wifi>.grid>.card:first-child,#pg-wifi>.grid>.band,
+  #pg-net>.grid>.card:first-child,#pg-net>.grid>.netband,#pg-net>.grid>.row2,
+  #pg-dev>.grid>.metric-row,#pg-dev>.grid>.card,#pg-dev>.grid>.row2,
+  #pg-light>.grid>.row2,#pg-adv>.grid>.row2,#pg-keep>.grid>.card:last-child{grid-column:auto}
+}
+@media (max-width:559px){
+  .wrap{padding:14px 12px 30px}
+  .card{padding:15px;border-radius:16px}
+  .phead{margin:0 2px 12px}
+  .phead .ico{width:36px;height:36px}
+  .phead .t{font-size:15px}
+  .phead .d{font-size:11.5px}
+  .speed-col .val{font-size:30px}
+  .speed-cols{gap:20px}
+  .chart{height:78px}
+  .kpi{padding:13px 12px;gap:10px}
+  .kpi .ring,.kpi .ring svg{width:52px;height:52px}
+  .kpi .info .v{font-size:18px}
+  .netband{padding:11px 12px}
+  .netband .chip{font-size:11px;padding:6px 9px}
+  .info-row{align-items:flex-start}
+  .info-row>span:last-child{max-width:68%;word-break:break-word}
+  .modal{max-height:90dvh;padding:16px}
+  .theme-modes{gap:6px}
+  .theme-modes button{min-height:40px}
+}
+@media (hover:hover) and (pointer:fine){
+  .card:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .band-card:hover,.metric2:hover{transform:translateY(-1px)}
+}
+@media (hover:none){.card:hover,.band-card:hover,.metric2:hover,.quick-btn:hover{transform:none}}
+:where(button,[role="button"],a,input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+button:disabled,.btn:disabled{opacity:.48;cursor:not-allowed;transform:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
 </style>
 <script>
 /* =========================================================================
@@ -2526,7 +2633,7 @@ function updateNumbers(){
   var netMode=document.getElementById('netMode'); if(netMode) netMode.textContent=modeName;
   var netWan=document.getElementById('netWan'); if(netWan) netWan.textContent=protoName;
   var netIp=document.getElementById('netIp'); if(netIp) netIp.textContent=WAN_IP||'—';
-  var netFw=document.getElementById('netFw'); if(netFw) netFw.textContent=FIRMWARE_VER||'v1.2.39';
+  var netFw=document.getElementById('netFw'); if(netFw) netFw.textContent=FIRMWARE_VER||'—';
   [['b24',0],['b52',1],['b58',2]].forEach(function(pr){
     var chip=document.querySelector('[data-bandchip="'+pr[0]+'"]'); var b=WIFI_BANDS[pr[1]];
     if(chip){ var st=chip.querySelector('.st'); var bEl=chip.querySelector('b');
@@ -2574,6 +2681,8 @@ function renderWifiCards(){
   if(g) g.classList.toggle('on',GUEST.enabled);
   var gv=document.querySelector('[data-guestBtn]');
   if(gv) gv.classList.toggle('on',GUEST.enabled);
+  var gs=document.getElementById('guestSsid'); if(gs&&GUEST.loaded) gs.textContent=GUEST.ssid||'未配置';
+  var gi=document.getElementById('guestIsolation'); if(gi&&GUEST.loaded) gi.textContent=GUEST.enabled?'已启用':'已关闭';
 }
 function renderDevTable(){
   var onCnt=DEVS.filter(function(d){return d.online;}).length;
@@ -2695,7 +2804,9 @@ function renderDisksRows(){
       dv.textContent=d.mounted?('已用 '+fmtDiskSize(d.used_mb)+' / '+fmtDiskSize(d.size_mb)+'（'+Math.round((d.used_mb/(d.size_mb||1))*100)+'%）')
         :('容量 '+fmtDiskSize(d.size_mb)+' · 分区未挂载（overlay 运行在内存）');
     }
-    if(bar&&d) bar.style.width=d.mounted?Math.min(100,(d.used_mb/(d.size_mb||1))*100)+'%':'0%';
+    if(dm&&!d) dm.textContent='未读取到内置存储信息';
+    if(dv&&!d) dv.textContent='容量未知';
+    if(bar) bar.style.width=d?(d.mounted?Math.min(100,(d.used_mb/(d.size_mb||1))*100)+'%':'0%'):'0%';
   }
   var us=document.querySelector('[data-disk="usb"]');
   if(us){
@@ -2729,7 +2840,7 @@ function renderLedPanel(){
   var br=document.querySelector('[data-k="breath"]'); if(br) br.classList.toggle('on',LED.breathing);
 }
 function renderFirmware(){
-  var f1=document.getElementById('fwVer'); if(f1) f1.textContent=FIRMWARE_VER||'v1.2.39';
+  var f1=document.getElementById('fwVer'); if(f1) f1.textContent=FIRMWARE_VER||'—';
   var f2=document.getElementById('fwKernel'); if(f2) f2.textContent=KERNEL_VER||'—';
   var f3=document.getElementById('fwUptime'); if(f3) f3.textContent=fmtDur(UPTIME_S);
   var f4=document.getElementById('fwTemp'); if(f4) f4.innerHTML=(temp>0?temp+'°C':'—')+' <span style="font-size:11px;color:var(--text3)">被动散热 · 正常</span>';
@@ -3004,8 +3115,9 @@ async function loadLed(){
   }catch(e){}
 }
 async function loadTheme(){
+  var d=null;
   try{
-    var d=await athenaRPC.exec('athena-theme.sh',['get']);
+    d=await athenaRPC.exec('athena-theme.sh',['get']);
     if(d&&window._pv){
       window._pv.GLASS_THEME.palette=d.palette||'aurora';
       window._pv.GLASS_THEME.blob=parseInt(d.blob||100,10);
@@ -3017,14 +3129,17 @@ async function loadTheme(){
       window._pv.applyGlassTheme();
     }
   }catch(e){}
-  /* 明暗模式持久化：路由器级优先（athena.theme.dark），localStorage 仅兜底 */
   var dm=(d&&(d.dark==='light'||d.dark==='dark'||d.dark==='auto'))?d.dark:null;
   if(dm==null){
-    var ls=sGet('athena_dark');
-    dm=(ls==null)?'auto':(ls==='1'?'dark':'light');
+    var saved=sGet('athena_theme_mode'), legacy=sGet('athena_dark');
+    if(/^(auto|light|dark)$/.test(saved||'')) dm=saved;
+    else if(legacy==='1') dm='dark';
+    else if(legacy==='0') dm='light';
+    else dm='auto';
   }
-  if(dm==='auto'){ document.documentElement.dataset.theme=(matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'; }
-  else{ document.documentElement.dataset.theme=dm; }
+  window.ATHENA_THEME_MODE=dm;
+  if(window._pv&&window._pv.setThemeMode) window._pv.setThemeMode(dm,true);
+  else document.documentElement.dataset.theme=(dm==='auto'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):dm);
 }
 async function loadUiMode(){
   try{
@@ -3957,9 +4072,12 @@ window.toggleSsh=function(){ toast('SSH 服务由系统安全策略管理，始�
 
 /* ---- 主题持久化（覆盖预览稿 localStorage 版） ---- */
 window.setThemeMode=function(mode){
+  if(!/^(auto|light|dark)$/.test(mode||'')) mode='auto';
+  window.ATHENA_THEME_MODE=mode;
   var r=document.documentElement;
   var active=(mode==='auto')?((matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'):mode;
   r.dataset.theme=active;
+  sSet('athena_theme_mode',mode);
   sSet('athena_dark',active==='dark'?'1':'0');
   /* 按钮高亮由 _pv.setThemeMode（预览稿版）按 .theme-modes 更新 */
   if(athenaRPC.live){
