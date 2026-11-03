@@ -28,7 +28,7 @@ HEAD `bdb639b` 是文档提交，当前 SPA 源码仍来自 `e355f81`。Run #191
 Run #191 构建日志记录：
 - 主 APK：`luci-app-athena-1.2.60-r2.apk`，24,545,434 bytes。
 - 主 APK SHA-256：`2ad9c9972db775d71b767bd9c7e2d068f3b2019572ee7c7150b60becf48287be`。
-- 中文包：`luci-i18n-athena-zh-cn-0.apk，952 bytes。
+- 中文包：`luci-i18n-athena-zh-cn-0.apk`，952 bytes。
 - 中文包 SHA-256：`e1ab1827afcb6f93017ac278fa7b6ba645b18c7bd00f3383de29968abe057727`。
 - 两个 APK 的构建端签名验证均为 `OK\)，临时 APK 数据库依赖模拟通过，Artifact 上传成功。
 - 构建期间出现 Makefile recipe override 警告和 Node.js 20 弃用警告；未导致本次构建失败，仍应作为构建维护项跟踪。
