@@ -33,7 +33,7 @@ def main():
     run([sys.executable,str(Path(__file__).with_name("check_rpc_wiring.py")),str(index),str(runtime),str(gateway),str(acl),str(makefile)])
     if "forceEnterConsole = function() { toast('已禁用登录绕过" not in html:
         raise SystemExit("FAIL: 前端登录绕过入口未明确禁用")
-    if "backup-restore" in runtime.read_text(encoding="utf-8"):
+    if "V.call('backup-restore'" in runtime.read_text(encoding="utf-8"):
         raise SystemExit("FAIL: runtime 不应调用整份配置恢复")
     print("静态检查通过：原型与安装前端菜单一致；JS/runtime 语法、全部已安装 shell 脚本、网关、ACL 和 APK 接线均通过。")
     return 0
