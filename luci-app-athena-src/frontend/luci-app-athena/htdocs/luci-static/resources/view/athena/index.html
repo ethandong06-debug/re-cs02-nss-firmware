@@ -4058,8 +4058,16 @@ class UbusProvider {
     if(name==='setWifi'){
       const id=({'2.4GHz':'b24','5.2GHz':'b52','5.8GHz':'b58'})[args.band];if(!id)throw new Error('未知无线频段');
       const cur=await this.execScript('athena-wireless.sh',['get']),b=(cur.bands||[]).find(x=>x.id===id);if(!b)throw new Error('路由器未检测到该无线频段');
-      const r=await this.execScript('athena-wireless.sh',['set',id,args.ssid||b.ssid||'',args.password||'',b.ch||'auto',b.bw||'20MHz',b.enc||'WPA2-PSK']);
-      if(args.disabled!==undefined)await this.execScript('athena-wireless.sh',[args.disabled?'disable':'enable',id]);await this.pollOnce();return{success:true,message:r.msg||'无线配置已由路由器确认'};
+      const channel=String(args.channel||b.ch||'auto').toLowerCase()==='auto'?'auto':String(args.channel||b.ch);
+      const widthRaw=String(args.width||b.bw||'20MHz');
+      const widthMatch=widthRaw.match(/(20|40|80|160)/);
+      const width=widthMatch?widthMatch[1]+'MHz':'20MHz';
+      const secRaw=String(args.security||b.enc||'WPA2-PSK');
+      const security=secRaw.includes('开放')?'开放（无加密）':(secRaw.includes('混合')||secRaw.includes('WPA2/WPA3')?'WPA2/WPA3-PSK':(secRaw.includes('WPA3')?'WPA3-SAE':'WPA2-PSK'));
+      const hidden=args.hidden? '1':'0';
+      const r=await this.execScript('athena-wireless.sh',['set',id,args.ssid||b.ssid||'',args.password||'',channel,width,security,hidden]);
+      if(args.disabled!==undefined)await this.execScript('athena-wireless.sh',[args.disabled?'disable':'enable',id]);
+      await this.pollOnce();return{success:true,message:(r.msg||'无线配置已由路由器确认')+'；发射功率未变更'};
     }
     if(name==='setLed'){
       const jobs=[],map={power:'enabled',bright:'light_level',nightMode:'night'};
