@@ -6898,96 +6898,35 @@ window.handleBackupFileSelect = function(input) {
 };
 
 window.triggerRestoreBackup = function() {
-  if (!selectedBackupFile) {
-    toast('请先选择需要恢复的 .tar.gz 配置备份文件');
-    return;
-  }
-  openModal('校验与恢复配置备份', `
-    <div style="padding:4px;">
-      <div style="padding:10px 12px;background:var(--soft);border:1px solid var(--sim-border);border-radius:10px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="font-size:16px;">📦</span>
-          <b style="font-size:11.5px;color:var(--sim-text);font-family:monospace;">${esc(selectedBackupFile)}</b>
-        </div>
-        <div style="font-size:10px;color:var(--sim-muted);display:flex;gap:12px;flex-wrap:wrap;">
-          <span>文件大小：<b>${selectedBackupSize || '148.2 KB'}</b></span>
-          <span>归档格式：<b style="color:var(--sim-green);">标准 OpenWrt Sysupgrade 归档</b></span>
-        </div>
-        <div style="margin-top:6px;font-size:10px;color:var(--sim-green);display:flex;align-items:center;gap:4px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          已通过 SHA256 完整性与系统安全分区校验
-        </div>
-      </div>
-
-      <p style="font-size:11px;color:#d65d63;font-weight:700;line-height:1.6;">
-        确定要从该归档恢复系统配置吗？
-      </p>
-      <p style="font-size:10px;color:var(--sim-muted);line-height:1.6;margin-top:4px;">
-        恢复将还原 /etc/config/network、wireless 与 dhcp，底层的 PPPoE VLAN 2044 拨号约束与 NSS 硬件加速驱动受底层保护不受影响。
-      </p>
-      <div class="sim-modal-actions" style="margin-top:16px;">
-        <button class="sim-btn secondary" onclick="closeModal()">取消</button>
-        <button class="sim-btn danger" onclick="closeModal();toast('已恢复系统备份：' + selectedBackupFile + '，网络服务已重载')">确认恢复配置</button>
-      </div>
-    </div>
-  `);
+  openModal('备份恢复暂不开放','<div class="sim-notice warning">为了保护当前 PPPoE、VLAN 2044、IPv6、防火墙、OpenClash 和 NSS/ECM 配置，本版本暂不开放通过页面恢复整份系统配置。备份文件可以创建和下载；恢复请使用原生 LuCI 的备份恢复流程，并先核对归档内容。</div><div class="sim-modal-actions"><button class="sim-btn primary" data-close-modal>知道了</button></div>');
 };
 
-window.createNewBackup = function(autoDownload = true) {
-  if (!state.backups) state.backups = [];
-  const maxKeep = state.backupMaxKeep || 3;
-
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-  const displayDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-  const filename = `backup-AthenaWrt-${dateStr}.tar.gz`;
-  const size = (145 + Math.floor(Math.random() * 15)) + ' KB';
-
-  let pruned = false;
-  while (state.backups.length >= maxKeep) {
-    state.backups.pop();
-    pruned = true;
-  }
-
-  state.backups.unshift({
-    name: filename,
-    size: size,
-    date: displayDate,
-    type: '全量系统配置'
-  });
-
-  renderPage('系统维护与备份');
-  
-  if (autoDownload) {
-    downloadBackupFile(0);
-  }
-
-  if (pruned) {
-    toast(`已生成并下载新备份：${filename}（达上限 ${maxKeep} 份，已自动滚存清理）`);
-  } else {
-    toast(`已成功生成并下载备份文件：${filename}`);
-  }
+window.createNewBackup = async function(autoDownload = false) {
+  try{
+    if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('请先登录路由器；离线预览不会生成真实备份');
+    const made=await window.UbusProvider.execScript('athena-backup.sh',['create']);
+    if(!made||made.ok===false)throw new Error(made?.msg||'备份创建失败');
+    const listed=await window.UbusProvider.execScript('athena-backup.sh',['list']);
+    state.backups=(listed.backups||[]).map(x=>({name:x.file,size:(Number(x.size_kb)||0)+' KB',date:'路由器存档',type:'系统配置备份'}));
+    renderPage('系统维护与备份');
+    toast('路由器已创建真实备份：'+(made.file||'备份归档'));
+    if(autoDownload&&state.backups.length)await window.downloadBackupFile(0);
+  }catch(e){toast('备份未创建：'+(e.message||'后端错误'));}
 };
 
-window.downloadBackupFile = function(idx) {
-  if (state.backups && state.backups[idx]) {
-    const item = state.backups[idx];
-    const blob = new Blob([
-      `# AthenaWrt Backup Archive\n# Router: JDCloud Athena AX6600 (RE-CS-02)\n# Timestamp: ${item.date}\n# Name: ${item.name}\n`
-    ], { type: 'application/gzip' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = item.name;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
-    toast('已开始下载备份文件：' + item.name);
-  }
+window.downloadBackupFile = async function(idx) {
+  const item=state.backups&&state.backups[idx];if(!item){toast('未找到备份记录');return;}
+  try{
+    if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('真实备份下载需要登录路由器');
+    const r=await window.UbusProvider.execScript('athena-backup.sh',['download',item.name]);
+    if(!r||r.ok===false||!r.base64)throw new Error(r?.msg||'后端未返回备份数据');
+    const binary=atob(r.base64),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([bytes],{type:'application/gzip'}));
+    const a=document.createElement('a');a.href=url;a.download=r.file||item.name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);
+    toast('真实备份文件下载已开始：'+(r.file||item.name));
+  }catch(e){toast('备份下载失败：'+(e.message||'后端错误'));}
 };
 
 window.deleteBackupFile = function(idx) {
