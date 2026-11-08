@@ -187,7 +187,7 @@ do_switch() {
 }
 
 do_set() {
-	local band="$1" ssid="$2" pwd="$3" ch="$4" bw="$5" enc="$6"
+	local band="$1" ssid="$2" pwd="$3" ch="$4" bw="$5" enc="$6" hidden="${7:-0}"
 	[ -z "$band" ] && { echo '{"ok":false,"msg":"缺少频段"}'; exit 1; }
 	local idx=$(band_radio "$band"); [ -z "$idx" ] && { echo '{"ok":false,"msg":"未知频段"}'; exit 1; }
 	local radio="radio$idx"
@@ -196,6 +196,7 @@ do_set() {
 	[ -z "$iface" ] && { echo '{"ok":false,"msg":"无线接口不存在"}'; exit 1; }
 	local band_type=$(uci -q get "wireless.$radio.band" 2>/dev/null)
 	local enc_u=$(enc2uci "$enc")
+	case "$hidden" in 0|1) ;; *) echo '{"ok":false,"msg":"隐藏 SSID 参数无效"}'; exit 1 ;; esac
 	[ -n "$enc_u" ] || { echo '{"ok":false,"msg":"不支持的无线加密方式，请重新选择"}'; exit 1; }
 	case "$ch" in ""|0|auto) ch=auto ;; esac
 	valid_ssid "$ssid" || { echo '{"ok":false,"msg":"WiFi 名称必须为 1-32 字节且不能包含控制字符"}'; exit 1; }
@@ -215,6 +216,7 @@ do_set() {
 	uci set "wireless.$radio.channel=$ch"
 	uci set "wireless.$radio.htmode=$(bw2htmode "$band_type" "$bw")"
 	uci set "wireless.$iface.ssid=$ssid"
+	if [ "$hidden" = "1" ]; then uci set "wireless.$iface.hidden=1"; else uci -q delete "wireless.$iface.hidden" 2>/dev/null; fi
 	uci set "wireless.$iface.encryption=$enc_u"
 	if [ "$enc_u" = "none" ]; then
 		uci -q delete "wireless.$iface.key" 2>/dev/null
@@ -346,7 +348,7 @@ case "$CMD" in
 	get) do_get ;;
 	enable) do_switch enable "${2:-all}" ;;
 	disable) do_switch disable "${2:-all}" ;;
-	set) do_set "$2" "$3" "$4" "$5" "$6" "$7" ;;
+	set) do_set "$2" "$3" "$4" "$5" "$6" "$7" "${8:-0}" ;;
 	reset-defaults) do_reset_defaults ;;
 	guest)
 		case "${2:-get}" in
