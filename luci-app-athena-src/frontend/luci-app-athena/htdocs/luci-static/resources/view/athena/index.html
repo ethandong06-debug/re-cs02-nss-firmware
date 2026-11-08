@@ -4036,7 +4036,7 @@ class UbusProvider {
     this.state.device.name=sys.hostname||'Athena';this.state.device.model=sys.model||'JDCloud RE-CS-02';this.state.device.firmware=sys.firmware||'ImmortalWRT';this.state.device.kernel=sys.kernel||'—';this.state.device.uptime=this.formatUptime(sys.uptime||0);
     this.state.resources.cpu=Number(cpu.total)||0;this.state.resources.temp=Number(cpu.temp)||0;this.state.resources.mem=Number(mem.used_mb)||0;this.state.resources.freq=0;this.state.device.ramTotal=Number(mem.total_mb)||0;this.state.resources.load=(sys.load||[0,0,0]).map(Number);
     this.state.traffic.down=Number(net.rx_rate_mbps)||0;this.state.traffic.up=Number(net.tx_rate_mbps)||0;
-    this.state.clients=(d.clients||[]).map(c=>({name:c.hostname||c.ip,ip:c.ip||'',mac:c.mac||'',type:'未知设备',link:c.band||'有线',rssi:null,down:0,up:0,status:c.online?'在线':'离线',vendor:c.vendor||'未知'}));
+    this.state.clients=(d.clients||[]).map(c=>({name:c.hostname||c.ip,ip:c.ip||'',mac:c.mac||'',type:'未知设备',link:c.band||'有线',rssi:null,down:null,up:null,uptime_s:Number(c.uptime_s)||0,status:c.online?'在线':'离线',vendor:c.vendor||'未知'}));
     try{
       const p=await this.execScript('athena-parent.sh',['list']);
       this.state.parentalRules=(p.rules||[]).map(rule=>{
@@ -4060,7 +4060,7 @@ class UbusProvider {
     if(disk)this.state.storage={device:disk.name||'—',filesystem:disk.fs||'—',mount:disk.mount||'未挂载',total:(Number(disk.size_mb)||0)/1024,used:(Number(disk.used_mb)||0)/1024,free:Math.max(0,(Number(disk.size_mb)||0)/1024-(Number(disk.used_mb)||0)/1024),percent:Number(disk.size_mb)?Math.round((Number(disk.used_mb)||0)/Number(disk.size_mb)*100):0};
     else this.state.storage={device:'未检测到存储',filesystem:'—',mount:'—',total:0,used:0,free:0,percent:0};
     if(typeof history!=='undefined'){history.push({t:Date.now(),down:this.state.traffic.down,up:this.state.traffic.up});if(history.length>60)history.shift();}
-    try{const w=await this.execScript('athena-wireless.sh',['get']);this.state.wifi=(w.bands||[]).map(b=>({band:({b24:'2.4GHz',b52:'5.2GHz',b58:'5.8GHz'})[b.id]||b.id,ssid:b.ssid||'—',channel:b.ch||'auto',width:b.bw||'—',clients:0,noise:null,tx:0,security:b.enc||'未知',password:'',on:!!b.on,disabled:!b.on}));}catch(e){this.state.wifi=[];}
+    try{const w=await this.execScript('athena-wireless.sh',['get']);this.state.wifi=(w.bands||[]).map(b=>({band:({b24:'2.4GHz',b52:'5.2GHz',b58:'5.8GHz'})[b.id]||b.id,ssid:b.ssid||'—',channel:b.ch||'auto',width:b.bw||'—',clients:null,noise:null,tx:null,security:b.enc||'未知',password:'',on:!!b.on,disabled:!b.on}));}catch(e){this.state.wifi=[];}
     try{this.state.accel=await this.execScript('athena-accel.sh',[]);}catch(e){}
     try{const m=await this.execScript('athena-matrix.sh',['get']);if(typeof matrixState!=='undefined'){matrixState.power=!!m.enabled;matrixState.bright=Number(m.light_level)||0;matrixState.nightModeEnabled=!!m.night;matrixState.nightStart=m.night_start||'22:00';matrixState.nightEnd=m.night_end||'07:00';matrixState.nightDimLevel=Number(m.night_level)||1;}}catch(e){}
     try{this.state.nas=await this.execScript('athena-nas.sh',['status']);}catch(e){}
@@ -4830,7 +4830,7 @@ function dashboard(){
     ${kpi('CPU 使用率', fmt(r.cpu,1), '%', `频率 ${r.freq} MHz`, '▥', "promptFeatureUnavailable('CPU 详细监控')")}
     ${kpi('内存使用', Math.round(r.mem), 'MB', `总计 ${state.device.ramTotal} MB`, '▤', "promptFeatureUnavailable('内存详细统计')")}
     ${kpi('SoC 温度', fmt(r.temp,1), '°C', '温度正常 · 实时监测', '♨', "promptFeatureUnavailable('SoC 温度监控')")}
-    ${kpi('在线终端', c.filter(x=>x.status==='在线').length, '台', `${(state.wifi||[]).reduce((n,b)=>n+(Number(b.clients)||0),0)} 台无线`, '▦', "renderPage('终端列表')")}
+    ${kpi('在线终端', c.filter(x=>x.status==='在线').length, '台', `${${state.clients.filter(c=>c.status==='在线'&&c.link!=='有线').length} 台无线 · ${state.clients.filter(c=>c.status==='在线'&&c.link==='有线').length} 台有线`, '▦', "renderPage('终端列表')")}
   </div>
 
   <!-- Row 1: 终端流量排行 (全宽展示) -->
@@ -4903,7 +4903,7 @@ function dashboard(){
           <small>信道 ${w.channel} / ${w.width} / ${w.security}</small>
         </div>
         <div class="sim-wifi-meta">
-          <b>${w.clients} 台</b>
+          <b>${w.clients==null?'未采集':w.clients+' 台'}</b>
           <small style="color:var(--sim-accent);font-weight:600;">配置频段 ›</small>
         </div>
       </div>
@@ -4991,8 +4991,8 @@ function clientsTable(clients){
         <td data-label="IP 地址"><code>${c.ip}</code></td>
         <td data-label="接入方式">${c.link}</td>
         <td data-label="信号">${c.status === '已拉黑' ? '<span style="color:var(--red);font-weight:600;">已阻断</span>' : c.status === '离线' ? '<span style="color:var(--sim-muted);">离线</span>' : c.rssi === null ? '有线直连' : c.rssi + ' dBm'}</td>
-        <td data-label="下载">${c.status === '在线' ? `<b style="color:var(--sim-accent);">${fmtRate(c.down)}</b>` : '—'}</td>
-        <td data-label="上传">${c.status === '在线' ? `<b style="color:var(--sim-green);">${fmtRate(c.up)}</b>` : '—'}</td>
+        <td data-label="下载">${c.status === '在线' ? `<b style="color:var(--sim-accent);">${c.down==null?'未采集':fmtRate(c.down)}</b>` : '—'}</td>
+        <td data-label="上传">${c.status === '在线' ? `<b style="color:var(--sim-green);">${c.up==null?'未采集':fmtRate(c.up)}</b>` : '—'}</td>
         <td data-label="状态">${badge(c.status, c.status === '在线' ? 'good' : c.status === '已拉黑' ? 'danger' : 'muted')}</td>
         <td data-label="操作">
           <div style="display:flex;gap:6px;justify-content:flex-end;">
@@ -5307,7 +5307,7 @@ window.openClientDetailModal = function(ip) {
       </div>
       <div style="padding:6px 8px;border:1px solid var(--sim-border);border-radius:8px;background:var(--sim-card);text-align:center;">
         <span style="font-size:8.5px;color:var(--sim-muted);display:block;">在线会话</span>
-        <b style="font-size:12px;color:var(--sim-text);display:block;margin-top:2px;">06:42:18</b>
+        <b style="font-size:12px;color:var(--sim-text);display:block;margin-top:2px;">${c.uptime_s?window.UbusProvider?.formatUptime(c.uptime_s)||'未采集':'未采集'}</b>
       </div>
     </div>
 
@@ -5377,7 +5377,7 @@ function renderClients(kind){let clients=state.clients;let rows=kind==='clientsA
     <button class="sim-btn primary" onclick="openClientLimitModal('${c.ip}')">配置限速</button>
     <button class="sim-btn danger" onclick="kickClientDevice('${c.ip}')">阻断终端</button>
   </div>`;
-  return `${topNav}<div class="sim-detail-head">${miniDevice(c.type,c.name,c.vendor+' · '+c.mac,c.status)}<select id="clientPicker">${clients.map(x=>`<option value="${x.ip}" ${x.ip===c.ip?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="sim-kpi-grid">${kpi('下载速率',fmtRate(c.down),'','实时模拟')}${kpi('上传速率',fmtRate(c.up),'','实时模拟')}${kpi('连接信号',c.rssi===null?'有线':c.rssi,'dBm','接入质量')}${kpi('在线时长','06:42:18','','本次会话')}</div><div class="sim-content-grid two">${panel('设备身份与快捷操作',row('设备名称',c.name)+row('IP 地址',c.ip)+row('MAC 地址',c.mac)+row('厂商识别',c.vendor)+row('设备类型',c.type)+actionRow)}${panel('连接信息',row('接入接口',c.link)+row('信号强度',c.rssi===null?'有线':c.rssi+' dBm')+row('连接状态',badge(c.status,'good'))+row('网关地址',state.lan.address))}</div>${panel('流量趋势监控','当前会话实时下行流量采样',chartSvg(history.map(x=>x.down)))}`;
+  return `${topNav}<div class="sim-detail-head">${miniDevice(c.type,c.name,c.vendor+' · '+c.mac,c.status)}<select id="clientPicker">${clients.map(x=>`<option value="${x.ip}" ${x.ip===c.ip?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="sim-kpi-grid">${kpi('下载速率',c.down==null?'未采集':fmtRate(c.down),'','暂无终端独立流量采样')}${kpi('上传速率',c.up==null?'未采集':fmtRate(c.up),'','暂无终端独立流量采样')}${kpi('连接信号',c.link==='有线'?'有线直连':'未采集','',c.link||'接入类型未采集')}${kpi('在线时长',c.uptime_s?window.UbusProvider?.formatUptime(c.uptime_s)||'未采集':'未采集','','设备状态采样')}</div><div class="sim-content-grid two">${panel('设备身份与快捷操作',row('设备名称',c.name)+row('IP 地址',c.ip)+row('MAC 地址',c.mac)+row('厂商识别',c.vendor)+row('设备类型',c.type)+actionRow)}${panel('连接信息',row('接入接口',c.link)+row('信号强度',c.rssi===null?'有线':c.rssi+' dBm')+row('连接状态',badge(c.status,'good'))+row('网关地址',state.lan.address))}</div>${panel('流量趋势监控','当前会话实时下行流量采样',chartSvg(history.map(x=>x.down)))}`;
 }
 if(kind==='access')return `${panel('访问控制策略','模拟 ACL 规则',table(['设备','MAC 地址','策略','状态'],[[clients[0]?.name||'暂无设备',clients[0]?.mac||'—','—',badge('未采集','warn')],[clients[7]?.name||'暂无设备',clients[7]?.mac||'—','—',badge('未采集','warn')],['访客设备','动态 MAC','默认限制',badge('待配置','warn')]]))}${configEditor('访问控制',[['MAC 地址','text',''],['控制策略','select','允许'],['生效时间','select','始终'],['备注','text','']])}`;
 if(kind==='deviceLabels')return `${panel('设备识别与备注','模拟设备档案',table(['设备','厂商','设备类型','自定义备注'],clients.slice(0,8).map(c=>[c.name,c.vendor,c.type,c.name.includes('NAS')?'家庭存储':c.type==='IoT'?'智能家居':'个人设备']),{action:'编辑备注'}))}${configEditor('设备识别与备注',[['设备名称','text',''],['设备类型','select','手机'],['自定义备注','text','']])}`;
@@ -5448,7 +5448,7 @@ if(kind==='uiSettings')return `${panel('主题模式','自动跟随系统或手�
 return panel('系统信息','模拟系统状态',row('主机名',state.device.name)+row('固件版本',state.device.firmware)+row('设备型号',state.device.model));}
 function renderOther(kind,page){if(kind==='resources')return `<div class="sim-kpi-grid">${kpi('CPU 使用率',fmt(state.resources.cpu,1),'%','四核平均值')}${kpi('内存使用',state.resources.mem,'MB',`/ ${state.device.ramTotal} MB`)}${kpi('SoC 温度',fmt(state.resources.temp,1),'°C','温度传感器')}${kpi('系统负载',state.resources.load[0].toFixed(2),'','1 分钟')}</div><div class="sim-content-grid two">${panel('CPU 使用率趋势','最近 32 个采样点',chartSvg(history.map(x=>x.down/8)))}${panel('内存分布',progress('已用',state.resources.mem/state.device.ramTotal*100)+progress('缓存与缓冲',19)+progress('可用',100-state.resources.mem/state.device.ramTotal*100))}</div>${panel('处理器信息',row('平台',state.device.platform)+row('架构',state.device.architecture)+row('核心数量','4')+row('当前频率',state.resources.freq+' MHz'))}`;
 if(kind==='topology')return panel('物理网络拓扑','模拟设备与链路关系',topology())+panel('接入终端','模拟接入设备',clientsTable(state.clients.slice(0,8)));
-if(kind==='traffic')return `<div class="sim-kpi-grid">${kpi('累计下载',fmtBytes(state.traffic.downTotal),'','WAN 接口')}${kpi('累计上传',fmtBytes(state.traffic.upTotal),'','WAN 接口')}${kpi('当前下载',fmtRate(state.traffic.down),'','实时模拟')}${kpi('当前上传',fmtRate(state.traffic.up),'','实时模拟')}</div><div class="sim-content-grid two">${panel('下载趋势','Mbps · 模拟采样',chartSvg(history.map(x=>x.down)))}${panel('上传趋势','Mbps · 模拟采样',chartSvg(history.map(x=>x.up),'var(--green)'))}</div>${panel('终端流量排行','当前下行速率',table(['设备','IP 地址','下载','上传','总流量'],[...state.clients].sort((a,b)=>b.down-a.down).map(c=>[c.name,c.ip,fmtRate(c.down),fmtRate(c.up),fmtBytes((c.down+c.up)*.18)])))}`;
+if(kind==='traffic')return `<div class="sim-kpi-grid">${kpi('累计下载','未采集','','WAN 累计计数器未接入')}${kpi('累计上传','未采集','','WAN 累计计数器未接入')}${kpi('当前下载',fmtRate(state.traffic.down),'','WAN 实时采样')}${kpi('当前上传',fmtRate(state.traffic.up),'','WAN 实时采样')}</div><div class="sim-content-grid two">${panel('下载趋势','Mbps · WAN 实时采样',chartSvg(history.map(x=>x.down)))}${panel('上传趋势','Mbps · WAN 实时采样',chartSvg(history.map(x=>x.up),'var(--green)'))}</div>${panel('终端流量排行','当前下行速率',table(['设备','IP 地址','下载','上传','总流量'],[...state.clients].sort((a,b)=>b.down-a.down).map(c=>[c.name,c.ip,fmtRate(c.down),fmtRate(c.up),fmtBytes((c.down+c.up)*.18)])))}`;
 return `<div class="sim-notice">${esc(page)} 模拟页面</div>${panel(page,'模拟状态',row('当前状态',badge('运行中','good'))+row('数据源','MockProvider')+row('最后更新',stamp()))}`}
 function configEditor(title,fields){return panel('参数设置 · '+title,'表单数据为本地模拟草稿，点击保存仅保存在浏览器',`<form class="sim-config-form" data-config-form="${esc(title)}">${fields.map((f,i)=>`<label><span>${f[0]}</span>${f[1]==='select'?`<select name="f${i}">${(f[0]==='频宽'?['20 MHz','40 MHz','80 MHz','160 MHz','自动']:f[0]==='加密方式'?['WPA2-PSK','WPA2/WPA3','WPA3-SAE']:f[0]==='控制策略'?['允许','拒绝','按时间计划']:f[0]==='设备类型'?['手机','电脑','平板','电视','IoT','其他']:f[0]==='启用状态'?['启用','停用']:['自动','启用','关闭','手动']).map(x=>`<option ${x===f[2]?'selected':''}>${x}</option>`).join('')}</select>`:`<input name="f${i}" type="${f[1]}" value="${esc(f[2]||'')}" placeholder="请输入${f[0]}">`}</label>`).join('')}<div class="sim-form-actions"><button type="submit" class="sim-btn primary">保存模拟配置</button><button type="reset" class="sim-btn">重置</button></div></form><div class="sim-form-note">模拟配置保存至当前浏览器，不会写入路由器。后续接入时将替换提交适配器。</div>`)}
 function logRows(){return state.logs.map(l=>`<div class="sim-log ${l.level.toLowerCase()}"><time>${l.time}</time><b>${l.level}</b><span>${esc(l.source)}</span><p>${esc(l.message)}</p></div>`).join('')}
