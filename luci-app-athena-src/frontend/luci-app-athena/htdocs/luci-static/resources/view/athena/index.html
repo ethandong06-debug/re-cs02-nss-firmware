@@ -7118,91 +7118,37 @@ window.clearOpkgFilter = function() {
   renderPage('软件包管理');
 };
 
-window.opkgUpdateLists = function() {
-  openModal('执行更新列表 (opkg update)', `
-    <div style="padding:4px;">
-      <div style="font-size:11px;color:var(--sim-text);margin-bottom:8px;font-weight:600;">正在连接官方软件源并抓取索引列表...</div>
-      <pre class="sim-terminal" id="opkgTermLog" style="height:190px;font-size:10px;line-height:1.5;overflow-y:auto;background:#0d111a;color:#e2e8f0;padding:10px;border-radius:8px;font-family:monospace;">root@Athena:~# opkg update
-Downloading https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/base/Packages.gz
-Updated list of available packages in /var/opkg-lists/base (1,842 pkgs).
-Downloading https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/kmods/6.12.80-1/Packages.gz
-Updated list of available packages in /var/opkg-lists/kmods (148 pkgs).
-Downloading https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/luci/Packages.gz
-Updated list of available packages in /var/opkg-lists/luci (648 pkgs).
-Downloading https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/packages/Packages.gz
-Updated list of available packages in /var/opkg-lists/packages (6,930 pkgs).
-Downloading https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/routing/Packages.gz
-Updated list of available packages in /var/opkg-lists/routing (210 pkgs).
-Collected 9,420 package headers from official repositories.
-opkg update completed successfully (Exit code: 0).</pre>
-      <div class="sim-modal-actions" style="margin-top:12px;">
-        <button class="sim-btn primary" onclick="closeModal();toast('软件源列表更新成功！共同步 9,420 个可用软件包')">完成 (Dismiss)</button>
-      </div>
-    </div>
-  `);
+function isProtectedAthenaPackage(name) {
+  return /^(luci-app-openclash|luci-i18n-openclash|openclash|mihomo|clash|sing-box|singbox|qca-nss|kmod-qca-nss|qca-ssdk|kmod-qca-ssdk|ecm|kmod-ecm|nss-|kmod-nss-|kernel|kmod-|base-files|busybox|apk-tools|rpcd|ubus|netifd|firewall4|nftables|ppp|ppp-mod-pppoe|odhcpd|dnsmasq|libc|musl|libgcc|libubox|libubus|libopenssl|ath11k-firmware)/i.test(String(name||''));
+}
+
+window.refreshPackagesFromRouter = async function() {
+  if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('请先登录路由器');
+  const installed=await window.UbusProvider.execScript('athena-packages.sh',['list','installed']);
+  opkgState.installed=(installed.packages||[]).map(p=>({name:p.name,version:p.version||'—',size:p.size||'—',desc:p.desc||p.description||'',protected:isProtectedAthenaPackage(p.name)}));
+  const available=await window.UbusProvider.execScript('athena-packages.sh',['list','available']);
+  opkgState.available=(available.packages||[]).map(p=>({name:p.name,version:p.version||'—',size:p.size||'—',desc:p.desc||p.description||'',protected:isProtectedAthenaPackage(p.name)}));
+  opkgState.updates=[];
+};
+
+window.opkgUpdateLists = async function() {
+  try{
+    const r=await window.UbusProvider.execScript('athena-packages.sh',['update']);
+    if(!r||r.ok===false)throw new Error(r?.msg||'软件源索引更新失败');
+    await window.refreshPackagesFromRouter();closeModal();renderPage('软件包管理');toast(r.msg||'APK 软件源索引已更新');
+  }catch(e){toast('软件源更新失败：'+(e.message||'后端错误'));}
 };
 
 window.openOpkgUploadModal = function() {
-  openModal('上传并安装本地软件包 (Upload Package)', `
-    <div style="padding:4px;">
-      <p style="font-size:11px;color:var(--sim-text);line-height:1.6;margin-bottom:10px;">
-        选择本地生成的 <code>.ipk</code> 或 <code>.apk</code> 离线安装包上传至路由器 <code>/tmp</code> 目录并执行安装：
-      </p>
-      <label class="sim-file-uploader" style="max-width:100%;display:flex;margin-bottom:12px;">
-        <input type="file" id="localIpkFileInput" style="display:none;" onchange="document.getElementById('localIpkName').textContent=this.files[0]?.name||'未选择文件'">
-        <span class="sim-file-btn">📁 选择本地 .ipk 安装包</span>
-        <span class="sim-file-name" id="localIpkName">未选择文件</span>
-      </label>
-      <div style="font-size:10px;color:var(--sim-muted);line-height:1.6;">
-        ● 支持架构：aarch64_cortex-a53 (高通 IPQ6018)<br>
-        ● 系统将自动校验软件包 MD5 与 control 依赖项
-      </div>
-      <div class="sim-modal-actions" style="margin-top:14px;">
-        <button class="sim-btn secondary" onclick="closeModal()">取消</button>
-        <button class="sim-btn primary" onclick="handleMockIpkUpload()">开始安装</button>
-      </div>
-    </div>
-  `);
+  openModal('本地安装包暂不开放','<div class="sim-notice warning">当前版本尚未实现本地 APK 上传、签名校验和依赖事务预检。为避免安装来源不明的软件包，暂不执行本地文件安装。请使用已验证的软件源列表安装单个软件包。</div><div class="sim-modal-actions"><button class="sim-btn primary" data-close-modal>知道了</button></div>');
 };
 
 window.handleMockIpkUpload = function() {
-  const nameEl = document.getElementById('localIpkName');
-  const filename = nameEl?.textContent || '';
-  if (!filename || filename === '未选择文件') {
-    toast('请先选择需要安装的 .ipk 离线软件包文件');
-    return;
-  }
-  closeModal();
-  const pkgBase = filename.replace(/\.ipk$/i, '').split('_')[0] || 'custom-plugin';
-  opkgState.installed.unshift({
-    name: pkgBase,
-    version: '1.0.0-1',
-    size: '124.0 KB',
-    desc: '本地离线上传安装的 OpenWrt 插件包 (' + filename + ')',
-    protected: false
-  });
-  renderPage('软件包管理');
-  toast('已成功安装本地离线软件包：' + pkgBase);
+  toast('本地安装包安装未接入真实上传与验签流程，未执行任何操作');
 };
 
 window.openOpkgConfigModal = function() {
-  openModal('配置 OPKG 软件源 (/etc/opkg/distfeeds.conf)', `
-    <div style="padding:4px;">
-      <p style="font-size:10.5px;color:var(--sim-muted);margin-bottom:8px;">
-        编辑 <code>/etc/opkg/distfeeds.conf</code> 软件源镜像配置，保存后立即生效：
-      </p>
-      <textarea class="sim-terminal" id="opkgDistfeedsText" style="width:100%;height:150px;font-size:10px;line-height:1.5;background:#0d111a;color:#e2e8f0;padding:8px;border-radius:8px;font-family:monospace;border:1px solid var(--sim-border);resize:none;">src/gz immortalwrt_core https://downloads.immortalwrt.org/releases/24.10/targets/qualcommax/ipq60xx/packages
-src/gz immortalwrt_base https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/base
-src/gz immortalwrt_kmods https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/kmods/6.12.80-1
-src/gz immortalwrt_luci https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/luci
-src/gz immortalwrt_packages https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/packages
-src/gz immortalwrt_routing https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/routing</textarea>
-      <div class="sim-modal-actions" style="margin-top:12px;">
-        <button class="sim-btn secondary" onclick="closeModal()">取消</button>
-        <button class="sim-btn primary" onclick="closeModal();toast('软件源配置已保存并同步至 /etc/opkg/distfeeds.conf')">保存配置</button>
-      </div>
-    </div>
-  `);
+  openModal('软件源配置为只读','<div class="sim-notice warning">此设备使用 APK 软件包管理器，不使用 opkg。软件源地址与签名配置由系统维护，本页面不提供写入入口。</div><div class="sim-modal-actions"><button class="sim-btn primary" data-close-modal>返回</button></div>');
 };
 
 window.triggerManualOpkgInstall = function() {
@@ -7216,127 +7162,49 @@ window.triggerManualOpkgInstall = function() {
 };
 
 window.installOpkgPackage = function(name) {
-  let pkg = opkgState.available.find(p => p.name === name);
-  if (!pkg) {
-    pkg = {
-      name: name,
-      version: '1.0.0-1',
-      size: '64.0 KB',
-      desc: '从软件源动态拉取安装的 OpenWrt 扩展组件 (' + name + ')'
-    };
-  }
-  openModal('正在安装：' + pkg.name, `
-    <div style="padding:4px;">
-      <pre class="sim-terminal" style="height:150px;font-size:10px;line-height:1.5;overflow-y:auto;background:#0d111a;color:#e2e8f0;padding:10px;border-radius:8px;font-family:monospace;">root@Athena:~# opkg install ${pkg.name}
-Installing ${pkg.name} (${pkg.version}) to root...
-Downloading https://downloads.immortalwrt.org/releases/24.10/packages/aarch64_cortex-a53/packages/${pkg.name}_${pkg.version}_all.ipk
-Configuring ${pkg.name}.
-Updating LuCI index and permissions cache...
-Successfully installed ${pkg.name}.</pre>
-      <div class="sim-modal-actions" style="margin-top:12px;">
-        <button class="sim-btn primary" onclick="confirmFinishInstall('${pkg.name}')">安装完成 (Dismiss)</button>
-      </div>
-    </div>
-  `);
+  if(isProtectedAthenaPackage(name)){toast('该软件包属于关键系统组件，禁止通过 Athena 页面安装或替换');return;}
+  openModal('确认安装软件包','<p>将通过 APK 安装 <b>'+esc(name)+'</b>。后端会先模拟依赖事务；如果计划涉及升级、删除或替换其他软件包，将拒绝执行。</p><div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn primary" onclick="confirmFinishInstall(\''+esc(name)+'\')">确认安装</button></div>');
 };
 
-window.confirmFinishInstall = function(name) {
-  let availIdx = opkgState.available.findIndex(p => p.name === name);
-  let pkgData;
-  if (availIdx !== -1) {
-    pkgData = opkgState.available.splice(availIdx, 1)[0];
-  } else {
-    pkgData = {
-      name: name,
-      version: '1.0.0-1',
-      size: '64.0 KB',
-      desc: '用户自定义安装的 OpenWrt 插件组件 (' + name + ')',
-      protected: false
-    };
-  }
-  opkgState.installed.unshift({
-    name: pkgData.name,
-    version: pkgData.version,
-    size: pkgData.size,
-    desc: pkgData.desc,
-    protected: false
-  });
-  closeModal();
-  renderPage('软件包管理');
-  toast('已成功安装软件包：' + name);
+window.confirmFinishInstall = async function(name) {
+  try{
+    if(isProtectedAthenaPackage(name))throw new Error('关键系统组件禁止安装或替换');
+    const r=await window.UbusProvider.execScript('athena-packages.sh',['install',name]);
+    if(!r||r.ok===false)throw new Error(r?.msg||'APK 未确认安装');
+    await window.refreshPackagesFromRouter();closeModal();renderPage('软件包管理');toast(r.msg||('已安装 '+name));
+  }catch(e){toast('安装未执行：'+(e.message||'后端错误'));}
 };
 
 window.removeOpkgPackage = function(name) {
-  const pkg = opkgState.installed.find(p => p.name === name);
-  if (!pkg) return;
-  if (pkg.protected) {
-    openModal('系统核心保护', `
-      <div style="padding:4px;">
-        <p style="color:#d65d63;font-weight:700;font-size:11.5px;line-height:1.6;">
-          🔒 禁止卸载系统核心组件：${esc(pkg.name)}
-        </p>
-        <p style="font-size:10.5px;color:var(--sim-muted);line-height:1.6;margin-top:6px;">
-          该组件为高通 IPQ6018 硬件加速驱动（NSS / ECM / PPE）或网络拨号基础架构。强制卸载将导致路由器断网或内核崩溃。
-        </p>
-        <div class="sim-modal-actions" style="margin-top:14px;">
-          <button class="sim-btn primary" onclick="closeModal()">了解并返回</button>
-        </div>
-      </div>
-    `);
-    return;
-  }
-  openModal('确认卸载软件包', `
-    <div style="padding:4px;">
-      <p style="font-size:11.5px;color:var(--sim-text);line-height:1.6;">
-        确定要从路由器卸载软件包 <b>${esc(pkg.name)}</b> 吗？
-      </p>
-      <p style="font-size:10px;color:var(--sim-muted);line-height:1.6;margin-top:6px;">
-        卸载将移除对应的二进制程序、配置文件与 LuCI 控制台界面。
-      </p>
-      <div class="sim-modal-actions" style="margin-top:14px;">
-        <button class="sim-btn secondary" onclick="closeModal()">取消</button>
-        <button class="sim-btn danger" onclick="confirmRemoveOpkg('${pkg.name}')">确认卸载</button>
-      </div>
-    </div>
-  `);
+  if(isProtectedAthenaPackage(name)){openModal('关键组件保护','<div class="sim-notice warning">禁止卸载或升级 OpenClash、NSS/ECM、内核、网络拨号、防火墙和系统基础组件。</div><div class="sim-modal-actions"><button class="sim-btn primary" data-close-modal>返回</button></div>');return;}
+  openModal('确认卸载软件包','<p>确定卸载 <b>'+esc(name)+'</b> 吗？后端会先模拟 APK 依赖事务；若可能连带删除其他组件则拒绝执行。</p><div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn danger" onclick="confirmRemoveOpkg(\''+esc(name)+'\')">确认卸载</button></div>');
 };
 
-window.confirmRemoveOpkg = function(name) {
-  const idx = opkgState.installed.findIndex(p => p.name === name);
-  if (idx !== -1) {
-    const pkg = opkgState.installed.splice(idx, 1)[0];
-    opkgState.available.unshift({
-      name: pkg.name,
-      version: pkg.version,
-      size: pkg.size,
-      desc: pkg.desc
-    });
-    closeModal();
-    renderPage('软件包管理');
-    toast('已成功卸载软件包：' + name);
-  }
+window.confirmRemoveOpkg = async function(name) {
+  try{
+    if(isProtectedAthenaPackage(name))throw new Error('关键系统组件禁止卸载');
+    const r=await window.UbusProvider.execScript('athena-packages.sh',['remove',name]);
+    if(!r||r.ok===false)throw new Error(r?.msg||'APK 未确认卸载');
+    await window.refreshPackagesFromRouter();closeModal();renderPage('软件包管理');toast(r.msg||('已卸载 '+name));
+  }catch(e){toast('卸载未执行：'+(e.message||'后端错误'));}
 };
 
 window.upgradeOpkgPackage = function(name) {
-  const idx = opkgState.updates.findIndex(p => p.name === name);
-  if (idx !== -1) {
-    const upd = opkgState.updates.splice(idx, 1)[0];
-    const inst = opkgState.installed.find(p => p.name === name);
-    if (inst) inst.version = upd.newVer;
-    renderPage('软件包管理');
-    toast('已成功将 ' + name + ' 升级至最新版本 ' + upd.newVer);
-  }
+  if(isProtectedAthenaPackage(name)){toast('关键系统组件禁止升级');return;}
+  openModal('确认升级软件包','<p>将单独升级 <b>'+esc(name)+'</b>。后端会拒绝涉及关键系统组件的事务。</p><div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn primary" onclick="confirmUpgradeOpkg(\''+esc(name)+'\')">确认升级</button></div>');
+};
+
+window.confirmUpgradeOpkg = async function(name) {
+  try{
+    if(isProtectedAthenaPackage(name))throw new Error('关键系统组件禁止升级');
+    const r=await window.UbusProvider.execScript('athena-packages.sh',['upgrade',name]);
+    if(!r||r.ok===false)throw new Error(r?.msg||'APK 未确认升级');
+    await window.refreshPackagesFromRouter();closeModal();renderPage('软件包管理');toast(r.msg||('已升级 '+name));
+  }catch(e){toast('升级未执行：'+(e.message||'后端错误'));}
 };
 
 window.upgradeAllOpkgPackages = function() {
-  const count = opkgState.updates.length;
-  opkgState.updates.forEach(upd => {
-    const inst = opkgState.installed.find(p => p.name === upd.name);
-    if (inst) inst.version = upd.newVer;
-  });
-  opkgState.updates = [];
-  renderPage('软件包管理');
-  toast('已一键完成全部 ' + count + ' 个软件包的在线升级！');
+  toast('为保护当前网络和硬件加速环境，不提供全量升级；请逐个选择非关键软件包。');
 };
 
 window.closeModal = function() {
