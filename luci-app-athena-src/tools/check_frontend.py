@@ -14,7 +14,7 @@ def main():
     prototype,index,runtime,gateway,acl,makefile,wifi=map(Path,sys.argv[1:])
     run([sys.executable,str(Path(__file__).with_name("check_v1_menu.py")),str(prototype)])
     html=index.read_text(encoding="utf-8")
-    scripts=re.findall(r"<script\\b[^>]*>([\\s\\S]*?)</script>",html,re.I)
+    scripts=re.findall(r"<script\b[^>]*>([\s\S]*?)</script>",html,re.I)
     if not scripts: raise SystemExit("FAIL: no inline scripts")
     with tempfile.TemporaryDirectory() as td:
         for i,script in enumerate(scripts):
