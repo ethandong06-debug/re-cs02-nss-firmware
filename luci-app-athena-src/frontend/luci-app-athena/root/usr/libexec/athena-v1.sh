@@ -16,8 +16,6 @@ case "$cmd" in
   wifi-enable|wifi-disable) need 1 "$#"; case "$1" in all|b24|b52|b58) ;; *) fail "无线频段参数无效";; esac; exec "$BASE/athena-wireless.sh" "${cmd#wifi-}" "$1" ;;
   wifi-set) need 7 "$#"; case "$1" in b24|b52|b58) ;; *) fail "无线频段参数无效";; esac; exec "$BASE/athena-wireless.sh" set "$@" ;;
   wifi-guest-get) exec "$BASE/athena-wireless.sh" guest get ;;
-  wifi-guest-enable) need 2 "$#"; exec "$BASE/athena-wireless.sh" guest enable "$1" "$2" ;;
-  wifi-guest-disable) exec "$BASE/athena-wireless.sh" guest disable ;;
   wifi-schedule-status) exec "$BASE/athena-wifi-schedule.sh" status ;;
   wifi-schedule-set) need 5 "$#"; exec "$BASE/athena-wifi-schedule.sh" set "$@" ;;
   wifi-schedule-disable) exec "$BASE/athena-wifi-schedule.sh" disable ;;
