@@ -4051,6 +4051,9 @@ class UbusProvider {
       const ws=await this.execScript('athena-wifi-schedule.sh',['status']);
       this.state.wifiSched={enabled:!!ws.enabled,offTime:ws.off||'01:00',onTime:ws.on||'06:30',b24:!!ws.b24,b52:!!ws.b52,b58:!!ws.b58};
     }catch(e){}
+    if(typeof current!=='undefined'&&current==='软件包管理'&&typeof window.refreshPackagesFromRouter==='function'){
+      try{await window.refreshPackagesFromRouter();}catch(e){console.warn('[AthenaWrt] 软件包清单读取失败：',e);}
+    }
 
     this.state.interfaces=(d.ports||[]).map(p=>({name:p.name,type:'物理端口',state:p.state||'未知',ip:'—',rx:'—',tx:'—',speed:p.speed||0}));
     this.state.wan={...this.state.wan,type:String(wan.proto||'未知').toUpperCase(),status:wan.up?'已连接':'未连接',interface:wan.device||'—',vlan:wan.wan_vlan||'—',ipv4:wan.ip||'—',gateway:wan.peer||'—'};
