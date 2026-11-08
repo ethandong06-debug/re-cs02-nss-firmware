@@ -4060,7 +4060,7 @@ class UbusProvider {
     if(disk)this.state.storage={device:disk.name||'—',filesystem:disk.fs||'—',mount:disk.mount||'未挂载',total:(Number(disk.size_mb)||0)/1024,used:(Number(disk.used_mb)||0)/1024,free:Math.max(0,(Number(disk.size_mb)||0)/1024-(Number(disk.used_mb)||0)/1024),percent:Number(disk.size_mb)?Math.round((Number(disk.used_mb)||0)/Number(disk.size_mb)*100):0};
     else this.state.storage={device:'未检测到存储',filesystem:'—',mount:'—',total:0,used:0,free:0,percent:0};
     if(typeof history!=='undefined'){history.push({t:Date.now(),down:this.state.traffic.down,up:this.state.traffic.up});if(history.length>60)history.shift();}
-    try{const w=await this.execScript('athena-wireless.sh',['get']);this.state.wifi=(w.bands||[]).map(b=>({band:({b24:'2.4GHz',b52:'5.2GHz',b58:'5.8GHz'})[b.id]||b.id,ssid:b.ssid||'—',channel:b.ch||'auto',width:b.bw||'—',clients:null,noise:null,tx:null,security:b.enc||'未知',password:'',on:!!b.on,disabled:!b.on}));}catch(e){this.state.wifi=[];}
+    try{const w=await this.execScript('athena-wireless.sh',['get']);this.state.wifi=(w.bands||[]).map(b=>({band:({b24:'2.4GHz',b52:'5.2GHz',b58:'5.8GHz'})[b.id]||b.id,ssid:b.ssid||'—',channel:b.ch||'auto',width:b.bw||'—',clients:null,noise:null,tx:null,hidden:!!b.hidden,security:b.enc||'未知',password:'',on:!!b.on,disabled:!b.on}));}catch(e){this.state.wifi=[];}
     try{this.state.accel=await this.execScript('athena-accel.sh',[]);}catch(e){}
     try{const m=await this.execScript('athena-matrix.sh',['get']);if(typeof matrixState!=='undefined'){matrixState.power=!!m.enabled;matrixState.bright=Number(m.light_level)||0;matrixState.nightModeEnabled=!!m.night;matrixState.nightStart=m.night_start||'22:00';matrixState.nightEnd=m.night_end||'07:00';matrixState.nightDimLevel=Number(m.night_level)||1;}}catch(e){}
     try{this.state.nas=await this.execScript('athena-nas.sh',['status']);}catch(e){}
@@ -7302,15 +7302,16 @@ window.saveWifiModalConfig = async function(band) {
 };
 
 window.editBandConfig = function(band) {
-  const item = state.wifi.find(w => w.band === band) || state.wifi[0];
+  const item = state.wifi.find(w => w.band === band);
+  if(!item){toast('路由器未返回该频段的配置，已取消编辑');return;}
   const is2G = band.includes('2.4');
   const is52G = band.includes('5.2');
   const is58G = band.includes('5.8');
 
-  const chipName = is52G ? 'Qualcomm QCN9024 (满血独立天线 160M)' :
+  const chipName = is52G ? 'Qualcomm QCN9074 (独立 5.2G 射频)' :
                    is2G ? 'Qualcomm IPQ6018 (2.4G 射频)' :
                    'Qualcomm IPQ6018 (5.8G 影视频段)';
-  const ifaceName = is52G ? 'ath1' : is2G ? 'ath0' : 'ath2';
+  const ifaceName = is52G ? 'radio2' : is2G ? 'radio1' : 'radio0';
 
   // Channels per band
   const channels = is2G ? [
@@ -7349,11 +7350,11 @@ window.editBandConfig = function(band) {
         <div style="font-size:12.5px;font-weight:750;color:var(--sim-text);">${esc(band)} 无线射频</div>
         <div style="font-size:10px;color:var(--sim-muted);margin-top:3px;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;">
           芯片：${chipName}<br>
-          接口：<code>${ifaceName}</code> · BSSID：<code>${item.bssid || '00:E0:4C:68:02:11'}</code>
+          无线配置段：<code>${ifaceName}</code> · BSSID：由驱动动态分配
         </div>
       </div>
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0;">
-        <input type="checkbox" checked id="wf-enable"> 开启射频
+        <input type="checkbox" \${item.on ? 'checked' : ''} id="wf-enable"> 开启射频
       </label>
     </div>
 
@@ -7413,7 +7414,7 @@ window.editBandConfig = function(band) {
         </div>
         <div>
           <label style="display:block;font-size:10px;color:var(--sim-muted);margin-bottom:4px;">发射功率 (Transmit Power)</label>
-          <select class="sim-field" id="wf-power" style="width:100%;" onchange="this.title=this.options[this.selectedIndex].text">
+          <select class="sim-field" id="wf-power" style="width:100%;" disabled title="本版本不修改发射功率">
             <option value="23" title="100% (23 dBm · 200 mW 满功率穿墙)" ${item.power === 23 ? 'selected' : ''}>100% (23 dBm · 满功率穿墙)</option>
             <option value="20" title="75% (20 dBm · 均衡覆盖)" ${item.power === 20 ? 'selected' : ''}>75% (20 dBm · 均衡覆盖)</option>
             <option value="17" title="50% (17 dBm · 绿色低辐射)" ${item.power === 17 ? 'selected' : ''}>50% (17 dBm · 绿色低辐射)</option>
@@ -7421,6 +7422,7 @@ window.editBandConfig = function(band) {
           </select>
         </div>
       </div>
+      <div class="sim-hint">发射功率保持路由器当前值；本版本不下发未经射频能力校验的功率设置。</div>
     </div>
 
     <!-- 底部操作按钮 -->
