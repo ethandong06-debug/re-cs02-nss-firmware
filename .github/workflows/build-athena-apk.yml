@@ -7,6 +7,7 @@ on:
       - main
       - athenawrt/phase1-p0-fixes
       - athenawrt/apk-fixed-signing
+      - athenawrt/v1-html-integration
     paths:
       - "luci-app-athena-src/frontend/luci-app-athena/**"
       - "luci-app-athena-src/configs/jdcloud_re-cs-02.seed"
@@ -40,84 +41,31 @@ jobs:
         run: |
           set -euo pipefail
           pkg='luci-app-athena-src/frontend/luci-app-athena'
-          {
-            find "$pkg/root/usr/libexec" -type f -name '*.sh' -print0
-            find "$pkg/root/etc/init.d" "$pkg/root/etc/uci-defaults" "$pkg/root/etc/hotplug.d/block" -type f -print0
-          } | while IFS= read -r -d '' f; do
-            sh -n "$f"
-          done
+          python3 luci-app-athena-src/tools/check_frontend.py \
+            luci-app-athena-src/design/AthenaWrt-V1.0-prototype-reference.html \
+            "$pkg/htdocs/luci-static/resources/view/athena/index.html" \
+            "$pkg/htdocs/luci-static/resources/view/athena/athena-v1-runtime.js" \
+            "$pkg/root/usr/libexec/athena-v1.sh" \
+            "$pkg/root/usr/share/rpcd/acl.d/luci-app-athena.json" \
+            "$pkg/Makefile" \
+            "$pkg/root/usr/libexec/athena-wifi-schedule.sh"
           python3 - <<'PY'
-          import json, pathlib, re
-          root = pathlib.Path('luci-app-athena-src/frontend/luci-app-athena')
-          for rel in ('root/usr/share/luci/menu.d/luci-app-athena.json',
-                      'root/usr/share/rpcd/acl.d/luci-app-athena.json',
-                      'root/etc/config/athena'):
-              p = root / rel
-              if rel.endswith('.json'):
-                  json.loads(p.read_text())
-          html = (root / 'htdocs/luci-static/resources/view/athena/index.html').read_text()
-          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, re.S | re.I)
-          if not scripts:
-              raise SystemExit('No inline JavaScript blocks found')
-          out = pathlib.Path('/tmp/athena-inline.js')
-          out.write_text('\n;\n'.join(scripts))
-
-          # Verify every statically referenced backend script is installed and ACL-authorized.
-          args = [x.strip().replace("\\'", "'").replace('\\"', '"')
-                  for x in re.findall(r"""athenaRPC\.exec\(\s*([^,\)\n]+)""", html)]
-          calls, dynamic = set(), []
-          for arg in args:
-              match = re.fullmatch(r"""['\"](athena-[^'\"]+\.sh)['\"]""", arg)
-              if match:
-                  calls.add(match.group(1))
-              elif arg == 'cfg.f':
-                  dynamic.append(arg)
-              else:
-                  dynamic.append(arg)
-          confirm_targets = set(re.findall(r"""confirmApply\(\s*['\"](athena-[^'\"]+\.sh)['\"]""", html))
-          if dynamic != ['cfg.f'] or confirm_targets != {'athena-mode.sh'}:
-              raise SystemExit(f'Unexpected dynamic RPC targets: {dynamic}; confirmApply targets: {confirm_targets}')
-          calls |= confirm_targets
-          makefile = (root / 'Makefile').read_text()
-          installed = set(re.findall(r"""\$\(INSTALL_BIN\)\s+\./root/usr/libexec/(athena-[^\s]+\.sh)""", makefile))
-          acl = json.loads((root / 'root/usr/share/rpcd/acl.d/luci-app-athena.json').read_text())
-          acl_file = acl['luci-app-athena']['write']['file']
-          allowed = {p.rsplit('/', 1)[-1] for p, perms in acl_file.items()
-                     if p.startswith('/usr/libexec/') and 'exec' in perms}
-          internal = {'athena-status-legacy.sh', 'athena-services-legacy.sh',
-                      'athena-resources-legacy.sh', 'athena-packages-legacy.sh',
-                      'athena-wanip.sh', 'athena-logcap.sh'}
-          orphan = {'athena-single.sh'}
-          if not calls or calls - installed or calls - allowed or allowed - installed:
-              raise SystemExit(f'RPC call-chain mismatch: calls={sorted(calls)}, not-installed={sorted(calls-installed)}, not-ACL={sorted(calls-allowed)}, ACL-not-installed={sorted(allowed-installed)}')
-          if not internal <= installed or not orphan <= installed or orphan & calls:
-              raise SystemExit('Internal helper/orphan inventory does not match Makefile installation list')
-          print(f'Call-chain audit passed: {len(calls)} direct RPC scripts, {len(internal)} internal helpers, {len(orphan)} unreferenced helper.')
-          if 'PKG_RELEASE:=5' not in makefile:
-              raise SystemExit('Expected luci-app-athena package release 5')
-          for required in ('athena-nas.sh', 'athena-accel.sh'):
-              if required not in installed or required not in allowed:
-                  raise SystemExit(f'Missing backend install or ACL entry: {required}')
-          nas = (root / 'root/usr/libexec/athena-nas.sh').read_text()
-          if not all(x in nas for x in ('ksmbd-server', 'samba4-server', 'apk add --simulate', 'apk del --simulate')):
-              raise SystemExit('NAS must support both mutually exclusive providers and transaction simulation')
-          if "fmtDisk('emmc')" in html:
-              raise SystemExit('eMMC format control must not be exposed')
-          if "guest','enable',ssid,'12345678'" in html:
-              raise SystemExit('Guest WiFi must use an independent password')
-          if '账号 root / 密码 admin' in html:
-              raise SystemExit('FileBrowser demo credentials must not be exposed')
-          if 'onclick="openUiPrefs()"' not in html:
-              raise SystemExit('Global interface settings entry missing')
-          print('r5 menu/NAS/security source checks passed.')
-          workflow = pathlib.Path('.github/workflows/build-athena-apk.yml').read_text()
-          if 'secrets.ATHENAWRT_APK_SIGNING_KEY' not in workflow or 'CONFIG_SIGN_EACH_PACKAGE=y' not in workflow:
-              raise SystemExit('Persistent APK signing secret/configuration is missing')
-          print('Persistent APK signing configuration check passed.')
-          print(f'Validated {len(scripts)} inline script blocks; Node syntax check follows.')
+          import json, pathlib
+          root=pathlib.Path('luci-app-athena-src/frontend/luci-app-athena')
+          json.loads((root/'root/usr/share/luci/menu.d/luci-app-athena.json').read_text())
+          json.loads((root/'root/usr/share/rpcd/acl.d/luci-app-athena.json').read_text())
+          mk=(root/'Makefile').read_text()
+          if 'PKG_RELEASE:=8' not in mk:
+              raise SystemExit('Expected Athena V1 package release 8')
+          for name in ('athena-v1.sh','athena-wifi-schedule.sh','athena-status.sh','athena-wireless.sh','athena-disk.sh','athena-nas.sh','athena-backup.sh','athena-packages.sh'):
+              if name not in mk:
+                  raise SystemExit('Missing packaged backend/helper: '+name)
+          acl=json.loads((root/'root/usr/share/rpcd/acl.d/luci-app-athena.json').read_text())
+          paths=acl['luci-app-athena']['write']['file']
+          if list(paths) != ['/usr/libexec/athena-v1.sh']:
+              raise SystemExit('Only athena-v1.sh may be directly executable via rpcd ACL')
+          print('V1.0 menu, APK metadata and least-privilege ACL checks passed.')
           PY
-          node --check /tmp/athena-inline.js
-
       - name: Fetch pinned FileBrowser Quantum binary
         shell: bash
         run: |
