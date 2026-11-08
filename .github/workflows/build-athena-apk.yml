@@ -55,8 +55,8 @@ jobs:
           json.loads((root/'root/usr/share/luci/menu.d/luci-app-athena.json').read_text())
           json.loads((root/'root/usr/share/rpcd/acl.d/luci-app-athena.json').read_text())
           mk=(root/'Makefile').read_text()
-          if 'PKG_RELEASE:=8' not in mk:
-              raise SystemExit('Expected Athena V1 package release 8')
+          if 'PKG_RELEASE:=9' not in mk:
+              raise SystemExit('Expected Athena V1 package release 9')
           for name in ('athena-v1.sh','athena-wifi-schedule.sh','athena-status.sh','athena-wireless.sh','athena-disk.sh','athena-nas.sh','athena-backup.sh','athena-packages.sh'):
               if name not in mk:
                   raise SystemExit('Missing packaged backend/helper: '+name)
