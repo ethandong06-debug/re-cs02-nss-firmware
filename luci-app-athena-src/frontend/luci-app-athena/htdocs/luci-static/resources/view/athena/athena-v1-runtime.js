@@ -66,7 +66,7 @@ const V=window.AthenaV1={
  async stopNas(){try{const r=await V.call('nas-stop');await V.loadExtra();renderPage('NAS 文件共享');toast(r.msg||'NAS 已停止');}catch(e){toast('NAS 停止失败：'+e.message);}},
  async restartNas(){try{await V.call('nas-stop');const r=await V.call('nas-start');await V.loadExtra();renderPage('NAS 文件共享');toast(r.msg||'NAS 已重启');}catch(e){toast('NAS 重启失败：'+e.message);}},
  async removeNas(){try{const r=await V.call('nas-remove',['CONFIRM_REMOVE']);closeModal();await V.loadExtra();renderPage('NAS 文件共享');toast(r.msg||'NAS 已卸载');}catch(e){toast('NAS 卸载失败：'+e.message);}},
- async removePackage(name){try{const r=await V.call('packages-remove',[name]);closeModal();await V.loadExtra();renderPage('软件包管理');toast(r.msg||'软件包已卸载');}catch(e){toast('卸载失败：'+e.message);}}
+ async removePackage(name){try{const r=await V.call('packages-remove',[name]);closeModal();await V.loadExtra();window.__athenaPackagesLoaded=false;renderPage('软件包管理');toast(r.msg||'软件包已卸载');}catch(e){toast('卸载失败：'+e.message);}}
 };
 let trafficTimer=null,trafficBusy=false;
 const trafficHistory=[];
@@ -155,7 +155,7 @@ window.confirmFactoryReset=function(){openModal('恢复出厂设置已禁用','<
 window.triggerFirmwareUpgrade=function(){openModal('固件刷写已禁用','<div class="sim-notice warning">本项目仅构建独立 LuCI APK，不在页面内刷写整套固件。</div>');};
 window.installOpkgPackage=async function(n){try{const r=await V.call('packages-install',[n]);await V.loadExtra();renderPage('软件包管理');toast(r.msg||'软件包已安装');}catch(e){toast('安装失败：'+e.message);}};
 window.removeOpkgPackage=function(n){const p=typeof opkgState!=='undefined'?(opkgState.installed||[]).find(x=>x.name===n):null;if(p&&p.protected){openModal('关键软件包保护','<div class="sim-notice warning">OpenClash、NSS/ECM 和关键系统组件禁止卸载。</div>');return;}openModal('确认卸载软件包','<p>确认卸载 '+esc(n)+'？后端会再次检查依赖和关键包保护。</p><div class="sim-modal-actions"><button class="sim-btn" onclick="closeModal()">取消</button><button class="sim-btn danger" data-pkg="'+esc(n)+'" onclick="window.AthenaV1.removePackage(this.dataset.pkg)">确认卸载</button></div>');};
-window.upgradeOpkgPackage=async function(n){try{const r=await V.call('packages-upgrade',[n]);await V.loadExtra();renderPage('软件包管理');toast(r.msg||'软件包已升级');}catch(e){toast('升级失败：'+e.message);}};
+window.upgradeOpkgPackage=async function(n){try{const r=await V.call('packages-upgrade',[n]);await V.loadExtra();window.__athenaPackagesLoaded=false;renderPage('软件包管理');toast(r.msg||'软件包已升级');}catch(e){toast('升级失败：'+e.message);}};
 window.opkgUpdateLists=async function(){try{const r=await V.call('packages-update',[],120000);await V.loadExtra();renderPage('软件包管理');toast(r.msg||'软件包索引已更新');}catch(e){toast('更新列表失败：'+e.message);}};
 window.upgradeAllOpkgPackages=function(){openModal('禁止全量升级','<div class="sim-notice warning">禁止全量升级，以免影响内核、NSS/ECM、OpenClash、PPPoE 和网络组件。</div>');};
 window.openOpkgUploadModal=function(){toast('未开放任意软件包文件上传安装');};window.handleMockIpkUpload=window.openOpkgUploadModal;window.triggerManualOpkgInstall=window.openOpkgUploadModal;
