@@ -6148,84 +6148,37 @@ window.toggleLedPower = async function() {
 };
 
 function renderStorageNas() {
-  if (!nasState.installed) {
-    const wizardHtml = `
-    <p style="font-size:11px;color:var(--sim-muted);margin-bottom:12px;">当前路由器尚未安装 NAS 共享服务。请选择以下任意一种方案执行一键安装，安装完成后将解锁共享目录与权限管理：</p>
-    <div class="sim-content-grid two">
-      <div style="border:2px solid var(--sim-accent);border-radius:12px;padding:14px;background:var(--soft);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          ${badge('推荐方案 · 内核高速', 'good')}
-          <small style="color:var(--sim-muted);font-size:10px;">占用 ~6 MB</small>
-        </div>
-        <h4 style="margin:8px 0 4px;font-size:12px;font-weight:700;">方案一：KSMBD 高速文件共享</h4>
-        <p style="font-size:10px;color:var(--sim-muted);line-height:1.5;">基于 Linux 6.12 内核态 SMB3 协议栈，CPU 软中断极低，在雅典娜 2.5G 网口下读写可达 260 MB/s。</p>
-        <button class="sim-btn primary" style="width:100%;margin-top:10px;" onclick="installNas('KSMBD')">⚡ 一键安装 KSMBD 方案</button>
-      </div>
-      <div style="border:1px solid var(--sim-border);border-radius:12px;padding:14px;background:var(--soft);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          ${badge('完整兼容', 'sim')}
-          <small style="color:var(--sim-muted);font-size:10px;">占用 ~28 MB</small>
-        </div>
-        <h4 style="margin:8px 0 4px;font-size:12px;font-weight:700;">方案二：Samba 4 完整版共享</h4>
-        <p style="font-size:10px;color:var(--sim-muted);line-height:1.5;">经典完整版 SMB 服务，支持老旧设备、老打印机与 macOS TimeMachine 高级扩展属性。</p>
-        <button class="sim-btn" style="width:100%;margin-top:10px;" onclick="installNas('Samba 4')">📦 一键安装 Samba 4 方案</button>
-      </div>
-    </div>
-    <div id="nasInstallProgBox" style="display:none;margin-top:12px;padding:10px;background:var(--soft);border-radius:8px;">
-      <div style="font-size:11px;font-weight:600;color:var(--sim-accent);">正在检查依赖并下载组件...</div>
-    </div>`;
-
-    return `
-    <div class="sim-kpi-grid">
-      ${kpi('NAS 服务状态', '未安装', '', '请选择方案一键安装')}
-      ${kpi('外接磁盘', '/dev/sda1 (512GB)', '', '已挂载到 /mnt/usb')}
-      ${kpi('内置存储空间', '109.2 GB', '', 'eMMC /mnt/mmcblk0p27')}
-      ${kpi('数据安全保护', '100% 隔离', '', '卸载不影响磁盘用户文件')}
-    </div>
-    ${panel('NAS 文件共享安装向导', '双方案一键部署 · 100% 保留 /mnt/usb 磁盘用户数据', wizardHtml)}`;
-  } else {
-    const managerHtml = `
-    ${row('共享目录 1', '<b>/mnt/usb/media</b> (影视库 · 读写权限)')}
-    ${row('共享目录 2', '<b>/mnt/usb/backup</b> (TimeMachine · 读写权限)')}
-    ${row('局域网访问控制', badge('仅允许 LAN 内网设备访问', 'good'))}
-    <div class="sim-form-inline" style="margin-top:12px;">
-      <input class="sim-field" placeholder="新建子文件夹 (如: Documents)" style="flex:1;">
-      <button class="sim-btn primary" onclick="toast('已添加共享文件夹')">+ 添加共享文件夹</button>
-    </div>
-    <div class="sim-action-row">
-      <button class="sim-btn" onclick="toast('${nasState.scheme} 服务已重启')">重启服务</button>
-      <button class="sim-btn danger" onclick="uninstallNas()">一键卸载当前方案 (保留数据)</button>
-    </div>`;
-
-    return `
-    <div class="sim-kpi-grid">
-      ${kpi('NAS 服务状态', nasState.scheme + ' 运行中', '', '服务正常')}
-      ${kpi('共享根目录', '/mnt/usb', '', '固定挂载点')}
-      ${kpi('活动共享', '2 个共享目录', '', '局域网只读/读写')}
-      ${kpi('数据安全', '卸载保留文件', '', '100% 保护')}
-    </div>
-    ${panel(nasState.scheme + ' 文件共享管理中心', '服务运行中 · 卸载服务组件 100% 保留磁盘中的用户文件', managerHtml)}`;
+  const ns=state.nas||{};
+  const installed=!!ns.installed,running=!!ns.running,unmanaged=!!ns.unmanaged;
+  const method=ns.method==='samba4'?'Samba 4':'KSMBD';
+  const share=ns.share||'/mnt/usb/AthenaShare';
+  const disks=Array.isArray(state.disks)?state.disks:[];
+  const usbPart=disks.flatMap(d=>(d.parts||[]).map(p=>({...p,dev:'/dev/'+p.name}))).find(p=>p.mount==='/mnt/usb');
+  const usbText=usbPart?usbPart.dev+' · '+(Number(usbPart.size_mb)||0).toLocaleString()+' MB':'未挂载到 /mnt/usb';
+  if(unmanaged){
+    return '<div class="sim-notice warning">检测到系统中存在非 Athena 管理的 SMB 服务。为避免接管或覆盖现有共享配置，AthenaWrt 不会自动修改它。</div>'+
+      panel('NAS 服务检测','未由 AthenaWrt 管理',row('USB 挂载',usbText)+row('处理方式','请在原服务管理界面维护'));
   }
+  if(!installed){
+    const wizard='<div class="sim-notice">'+(usbPart?'检测到 USB 分区已挂载到 /mnt/usb，可以选择安装方案。':'请先将真实 USB 分区挂载到 /mnt/usb；未挂载时后端会拒绝安装。')+'</div>'+
+      '<div class="sim-content-grid two"><div class="sim-card"><b>KSMBD</b><p>内核态 SMB 服务。安装脚本会创建随机密码、固定共享目录，并将服务限制在 LAN 接口。</p><button class="sim-btn primary" '+(usbPart?'':'disabled')+' onclick="installNas(\'KSMBD\')">安装 KSMBD</button></div>'+
+      '<div class="sim-card"><b>Samba 4</b><p>用户态 SMB 服务。安装前会检查端口占用、已有服务和 APK 依赖事务。</p><button class="sim-btn" '+(usbPart?'':'disabled')+' onclick="installNas(\'Samba 4\')">安装 Samba 4</button></div></div>';
+    return '<div class="sim-kpi-grid">'+kpi('NAS 状态','未安装','','来自路由器状态接口')+kpi('USB 数据分区',usbText,'','必须挂载到 /mnt/usb')+kpi('共享目录',share,'','固定路径')+kpi('外部 SMB 服务',unmanaged?'检测到':'未检测到','','不会自动接管')+'</div>'+panel('NAS 文件共享安装向导','仅在真实 USB 分区挂载后允许安装',wizard);
+  }
+  const status=running?'运行中':'已安装 · 未运行';
+  const controls='<div class="sim-action-row">'+
+    (running?'<button class="sim-btn" onclick="window.AthenaV1.stopNas()">停止服务</button>':'<button class="sim-btn primary" onclick="window.AthenaV1.startNas()">启动服务</button>')+
+    '<button class="sim-btn" onclick="window.AthenaV1.restartNas()">重启服务</button>'+
+    '<button class="sim-btn" onclick="window.AthenaV1.nasCredentials()">查看访问凭据</button>'+
+    '<button class="sim-btn danger" onclick="uninstallNas()">卸载服务</button></div>';
+  const body=row('共享根目录','<code>'+esc(share)+'</code>')+
+    row('SMB 访问地址',ns.address?'<code>'+esc(ns.address)+'</code>':'未采集')+
+    row('账号',esc(ns.username||'athena'))+
+    row('服务绑定','安装配置指定 LAN 接口，禁用匿名访客访问')+
+    row('数据目录','固定在 /mnt/usb/AthenaShare；卸载服务不会删除共享文件')+controls;
+  return '<div class="sim-kpi-grid">'+kpi('NAS 服务状态',status,'',running?'真实运行状态':'需手动启动')+kpi('服务方案',method,'','来自 Athena NAS 配置')+kpi('共享根目录','/mnt/usb/AthenaShare','','固定目录')+kpi('USB 挂载',usbText,'',usbPart?'已挂载':'未挂载')+'</div>'+
+    panel(method+' 文件共享管理中心','服务状态与共享路径来自路由器；密码需主动查看',body);
 }
-
-window.installNas = function(sch) {
-  const pBox = document.getElementById('nasInstallProgBox');
-  if (pBox) pBox.style.display = 'block';
-  setTimeout(() => {
-    nasState.installed = true;
-    nasState.running = true;
-    nasState.scheme = sch;
-    renderPage('NAS 文件共享');
-    toast('已成功安装并启动 ' + sch + ' 文件共享服务');
-  }, 650);
-};
-
-window.uninstallNas = function() {
-  nasState.installed = false;
-  nasState.running = false;
-  renderPage('NAS 文件共享');
-  toast('已卸载 ' + nasState.scheme + ' 组件，磁盘用户数据已 100% 保留');
-};
 
 function renderDiagnostics() {
   const consoleHtml = `
