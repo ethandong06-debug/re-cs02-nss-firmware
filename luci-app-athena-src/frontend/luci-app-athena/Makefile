@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=luci-app-athena
 # 版本号与固件发布版本同步（登录页/状态页展示一致）；每次固件迭代递增
 PKG_VERSION:=1.2.60
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 PKG_LICENSE:=Apache-2.0
 
@@ -23,6 +23,7 @@ define Package/luci-app-athena/install
 	$(INSTALL_DIR) $(1)/usr/libexec
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status.sh $(1)/usr/libexec/athena-status.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-v1.sh $(1)/usr/libexec/athena-v1.sh
+	$(INSTALL_BIN) ./root/usr/libexec/athena-wifi-schedule.sh $(1)/usr/libexec/athena-wifi-schedule.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-nas.sh $(1)/usr/libexec/athena-nas.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-accel.sh $(1)/usr/libexec/athena-accel.sh
 	$(INSTALL_BIN) ./root/usr/libexec/athena-status-legacy.sh $(1)/usr/libexec/athena-status-legacy.sh
