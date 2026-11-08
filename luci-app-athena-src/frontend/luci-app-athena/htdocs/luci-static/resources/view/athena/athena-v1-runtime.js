@@ -62,9 +62,39 @@ const V=window.AthenaV1={
  async removeNas(){try{const r=await V.call('nas-remove',['CONFIRM_REMOVE']);closeModal();await V.loadExtra();renderPage('NAS 文件共享');toast(r.msg||'NAS 已卸载');}catch(e){toast('NAS 卸载失败：'+e.message);}},
  async removePackage(name){try{const r=await V.call('packages-remove',[name]);closeModal();await V.loadExtra();renderPage('软件包管理');toast(r.msg||'软件包已卸载');}catch(e){toast('卸载失败：'+e.message);}}
 };
+let trafficTimer=null,trafficBusy=false;
+const trafficHistory=[];
+function fmtLiveMbps(n){n=Number(n)||0;return n>=1000?(n/1000).toFixed(2)+' Gbps':n.toFixed(1)+' Mbps';}
+async function pollLiveTraffic(){
+ if(trafficBusy||!P||P.mode!=='device'||!P.session)return;
+ trafficBusy=true;
+ try{
+  const r=await V.call('status',['rate'],12000);
+  if(!r||r.ok===false)throw new Error(r?.msg||'速率采样失败');
+  const down=Math.max(0,Number(r.rx_mbps)||0),up=Math.max(0,Number(r.tx_mbps)||0);
+  P.state.traffic.down=down;P.state.traffic.up=up;P.state.traffic.interface=r.if||'—';
+  const point={t:Date.now(),down,up};trafficHistory.push(point);if(trafficHistory.length>32)trafficHistory.shift();
+  if(typeof history!=='undefined'&&Array.isArray(history)){history.push(point);if(history.length>32)history=history.slice(-32);}
+  const downEl=document.getElementById('downSpeed'),upEl=document.getElementById('upSpeed');
+  if(downEl)downEl.textContent=fmtLiveMbps(down);if(upEl)upEl.textContent=fmtLiveMbps(up);
+  const chart=document.getElementById('trafficChart');
+  if(chart&&typeof dualChartSvg==='function')chart.innerHTML=dualChartSvg(trafficHistory.map(x=>x.down),trafficHistory.map(x=>x.up));
+  const stampEl=document.getElementById('lastUpdated');if(stampEl)stampEl.textContent=new Date().toLocaleTimeString();
+ }catch(e){console.warn('[AthenaWrt] 实时吞吐采样失败：',e);}
+ finally{trafficBusy=false;}
+}
+function startLiveTraffic(){
+ if(trafficTimer)clearInterval(trafficTimer);
+ pollLiveTraffic();trafficTimer=setInterval(pollLiveTraffic,2000);
+}
+function stopLiveTraffic(){
+ if(trafficTimer)clearInterval(trafficTimer);trafficTimer=null;trafficBusy=false;
+}
+
 const oldUnlock=window.unlockAthenaConsole;
-window.unlockAthenaConsole=function(){oldUnlock();if(P&&P.mode==='device')V.loadExtra().then(()=>{if(typeof renderPage==='function'&&typeof current!=='undefined')renderPage(current);}).catch(console.warn);};
+window.unlockAthenaConsole=function(){oldUnlock();if(P&&P.mode==='device'){V.loadExtra().then(()=>{if(typeof renderPage==='function'&&typeof current!=='undefined')renderPage(current);}).catch(console.warn);startLiveTraffic();}};
 if(P&&typeof P.poll==='function'){const oldPoll=P.poll.bind(P);P.poll=async function(){await oldPoll();if(this.mode==='device')await V.loadExtra();};}
+const oldLogout=window.athenaLogout;window.athenaLogout=function(){stopLiveTraffic();if(typeof oldLogout==='function')oldLogout();};
 
 window.saveWifiModalConfig=async function(band){
  const id=({'2.4GHz':'b24','5.2GHz':'b52','5.8GHz':'b58'})[band],ssid=document.getElementById('wf-ssid')?.value||'',sec=document.getElementById('wf-security')?.value||'WPA2-PSK',chan=document.getElementById('wf-channel')?.value||'auto',width=document.getElementById('wf-width')?.value||'20MHz',pwd=document.getElementById('wf-pwd')?.value||'',hidden=document.getElementById('wf-hidden')?.checked?1:0,enabled=document.getElementById('wf-enable')?.checked!==false;
