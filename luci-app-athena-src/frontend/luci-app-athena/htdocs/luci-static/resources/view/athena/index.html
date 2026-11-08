@@ -7492,82 +7492,51 @@ window.finalFactoryReset = function() {
 
 
 window.saveWifiSchedule = async function() {
-  const offTime = document.getElementById('sched-off-time')?.value || '01:00';
-  const onTime = document.getElementById('sched-on-time')?.value || '06:30';
-  const b24 = document.getElementById('sched-band-24')?.checked !== false;
-  const b52 = document.getElementById('sched-band-52')?.checked !== false;
-  const b58 = document.getElementById('sched-band-58')?.checked === true;
+  const offTime=document.getElementById('sched-off-time')?.value||'01:00';
+  const onTime=document.getElementById('sched-on-time')?.value||'06:30';
+  const b24=document.getElementById('sched-band-24')?.checked!==false;
+  const b52=document.getElementById('sched-band-52')?.checked!==false;
+  const b58=document.getElementById('sched-band-58')?.checked===true;
+  if(!b24&&!b52&&!b58){toast('至少选择一个无线频段');return;}
+  try{
+    if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('请先登录路由器；离线预览不会写入计划任务');
+    const r=await window.UbusProvider.execScript('athena-wifi-schedule.sh',['set',offTime,onTime,b24?'1':'0',b52?'1':'0',b58?'1':'0']);
+    if(!r||r.ok===false)throw new Error(r?.msg||'路由器未确认计划任务');
+    state.wifiSched={offTime,onTime,b24,b52,b58,enabled:true};
+    closeModal();renderPage('WiFi 定时');toast(r.msg||'WiFi 定时计划已保存');
+  }catch(e){toast('WiFi 定时未保存：'+(e.message||'后端调用失败'));}
+};
 
-  const [offH, offM] = offTime.split(':').map(x => parseInt(x, 10));
-  const [onH, onM] = onTime.split(':').map(x => parseInt(x, 10));
-
-  state.wifiSched = { offTime, onTime, b24, b52, b58, enabled: true };
-
-  toast('正在写入系统计划任务 (Crontab)...');
-
-  let downCmds = [];
-  let upCmds = [];
-  if (b24) { downCmds.push('wifi down radio1'); upCmds.push('wifi up radio1'); }
-  if (b52) { downCmds.push('wifi down radio2'); upCmds.push('wifi up radio2'); }
-  if (b58) { downCmds.push('wifi down radio0'); upCmds.push('wifi up radio0'); }
-  if (downCmds.length === 0) { downCmds.push('wifi down'); upCmds.push('wifi up'); }
-
-  const cronText = `# AthenaWrt WiFi Schedule\n${offM} ${offH} * * * ${downCmds.join('; ')}\n${onM} ${onH} * * * ${upCmds.join('; ')}\n`;
-
-  if (window.UbusProvider) {
-    try {
-      await window.UbusProvider.callUbus('file', 'write', {
-        path: '/etc/crontabs/root',
-        data: cronText
-      });
-      await window.UbusProvider.callUbus('rc', 'init', { name: 'cron', action: 'reload' });
-      toast(`WiFi 定时已成功写入 Crontab！每日 ${offTime} 关闭，${onTime} 恢复`);
-    } catch(e) {
-      toast(`WiFi 定时已在本地保存：每日 ${offTime} 关闭，${onTime} 恢复`);
-    }
-  } else {
-    toast(`WiFi 定时已保存：每日 ${offTime} 关闭，${onTime} 恢复`);
-  }
-  renderPage('WiFi 定时');
+window.disableWifiSchedule = async function() {
+  try{
+    if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('请先登录路由器');
+    const r=await window.UbusProvider.execScript('athena-wifi-schedule.sh',['disable']);
+    if(!r||r.ok===false)throw new Error(r?.msg||'路由器未确认关闭');
+    state.wifiSched={...state.wifiSched,enabled:false};
+    renderPage('WiFi 定时');toast(r.msg||'WiFi 定时已关闭');
+  }catch(e){toast('关闭 WiFi 定时失败：'+(e.message||'后端调用失败'));}
 };
 
 window.saveWifiModalConfig = async function(band) {
-  const item = state.wifi.find(w => w.band === band);
-  const ssid = document.getElementById('wf-ssid')?.value;
-  const sec = document.getElementById('wf-security')?.value;
-  const chan = document.getElementById('wf-channel')?.value;
-  const width = document.getElementById('wf-width')?.value;
-  const pwr = document.getElementById('wf-power')?.value;
-  const pwd = document.getElementById('wf-pwd')?.value;
-  const hidden = document.getElementById('wf-hidden')?.checked;
-  const enable = document.getElementById('wf-enable')?.checked;
-
-  if (item) {
-    if (ssid) item.ssid = ssid;
-    if (sec) item.security = sec;
-    if (chan) item.channel = isNaN(Number(chan)) ? chan : Number(chan);
-    if (width) item.width = width;
-    if (pwr) item.power = parseInt(pwr, 10);
-    if (pwd) item.password = pwd;
-    item.hidden = !!hidden;
-    item.enabled = enable !== false;
-  }
-  closeModal();
-  renderPage('三频 WiFi');
-  toast('正在下发 ' + band + ' 配置至路由器无线驱动...');
-
-  if (window.UbusProvider) {
-    try {
-      await window.UbusProvider.command('setWifi', {
-        band: band,
-        ssid: ssid,
-        password: pwd,
-        disabled: enable === false
-      });
-      toast(band + ' 配置已成功写入 /etc/config/wireless 并重载生效！');
-    } catch(e) {
-      toast(band + ' 配置未获路由器确认，未保存：' + (e.message || '接口失败'));
-    }
+  const item=state.wifi.find(w=>w.band===band);
+  if(!item){toast('未读取到该频段的真实配置，已取消保存');return;}
+  const ssid=document.getElementById('wf-ssid')?.value||'';
+  const sec=document.getElementById('wf-security')?.value||item.security;
+  const chan=document.getElementById('wf-channel')?.value||item.channel||'Auto';
+  const width=document.getElementById('wf-width')?.value||item.width||'HE20';
+  const pwd=document.getElementById('wf-pwd')?.value||'';
+  const hidden=document.getElementById('wf-hidden')?.checked===true;
+  const enable=document.getElementById('wf-enable')?.checked!==false;
+  if(!ssid.trim()){toast('SSID 不能为空');return;}
+  try{
+    const result=await window.UbusProvider.command('setWifi',{
+      band,ssid,password:pwd,channel:chan,width,security:sec,hidden,disabled:!enable
+    });
+    item.ssid=ssid;item.security=sec;item.channel=chan;item.width=width;item.hidden=hidden;item.enabled=enable;item.on=enable;
+    closeModal();await window.UbusProvider.pollOnce();renderPage('三频 WiFi');
+    toast((result?.message||band+' 配置已由路由器确认')+'；发射功率保持现有值');
+  }catch(e){
+    toast(band+' 配置未获路由器确认：'+(e.message||'接口失败'));
   }
 };
 
