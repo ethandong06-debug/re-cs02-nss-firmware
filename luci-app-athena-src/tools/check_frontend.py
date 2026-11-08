@@ -25,7 +25,7 @@ def main():
     run(["sh","-n",str(gateway)]); run(["sh","-n",str(wifi)])
     # Syntax-check every shell script that the APK Makefile installs.
     mk=makefile.read_text(encoding="utf-8")
-    for rel in re.findall(r"INSTALL_BIN\\s+\\./root/usr/libexec/([^ \\t]+\\.sh)",mk):
+    for rel in re.findall(r"INSTALL_BIN\s+\./root/usr/libexec/([^ \t]+\.sh)",mk):
         script=gateway.parent/rel
         if not script.is_file():
             raise SystemExit("FAIL: Makefile 安装清单缺少文件："+str(script))
