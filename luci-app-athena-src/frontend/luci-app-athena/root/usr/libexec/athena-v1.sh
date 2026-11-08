@@ -18,6 +18,9 @@ case "$cmd" in
   wifi-guest-get) exec "$BASE/athena-wireless.sh" guest get ;;
   wifi-guest-enable) need 2 "$#"; exec "$BASE/athena-wireless.sh" guest enable "$1" "$2" ;;
   wifi-guest-disable) exec "$BASE/athena-wireless.sh" guest disable ;;
+  wifi-schedule-status) exec "$BASE/athena-wifi-schedule.sh" status ;;
+  wifi-schedule-set) need 5 "$#"; exec "$BASE/athena-wifi-schedule.sh" set "$@" ;;
+  wifi-schedule-disable) exec "$BASE/athena-wifi-schedule.sh" disable ;;
   clients-list) exec "$BASE/athena-client.sh" list ;;
   clients-block|clients-unblock|clients-know|clients-unlearn) need 1 "$#"; valid_mac "$1" || fail "MAC 地址格式无效"; case "$cmd" in clients-block) exec "$BASE/athena-client.sh" block "$1";; clients-unblock) exec "$BASE/athena-client.sh" unblock "$1";; clients-know) exec "$BASE/athena-client.sh" know "$1";; clients-unlearn) exec "$BASE/athena-client.sh" unlearn "$1";; esac ;;
   clients-known) exec "$BASE/athena-client.sh" known ;;
@@ -46,6 +49,13 @@ case "$cmd" in
   diag-dns) need 1 "$#"; valid_host "$1" || fail "域名格式无效"; exec "$BASE/athena-diag.sh" dns "$1" ;;
   backup-list) exec "$BASE/athena-backup.sh" list ;;
   backup-create) exec "$BASE/athena-backup.sh" create ;;
+  backup-download) need 1 "$#"; exec "$BASE/athena-backup.sh" download "$1" ;;
+  backup-restore) need 2 "$#"; [ "$2" = CONFIRM_RESTORE ] || fail "恢复配置必须经过二次确认"; exec "$BASE/athena-backup.sh" restore "$1" ;;
+  reboot-status) exec "$BASE/athena-reboot.sh" status ;;
+  reboot-enable) need 2 "$#"; exec "$BASE/athena-reboot.sh" enable "$1" "$2" ;;
+  reboot-disable) exec "$BASE/athena-reboot.sh" disable ;;
+  reboot-now) need 1 "$#"; [ "$1" = CONFIRM_REBOOT ] || fail "立即重启必须经过二次确认"; exec "$BASE/athena-reboot.sh" now ;;
+  logs-clear) need 1 "$#"; [ "$1" = CONFIRM_CLEAR_LOGS ] || fail "清空日志必须经过二次确认"; exec "$BASE/athena-log.sh" clear ;;
   logs-read) exec "$BASE/athena-log.sh" ;;
   logs-export) exec "$BASE/athena-log.sh" export ;;
   packages-installed) exec "$BASE/athena-packages.sh" list installed ;;
