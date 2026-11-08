@@ -5072,24 +5072,21 @@ function renderWifi(kind) {
   }
 
   if (kind === 'wifiGuest') {
-    const guestBody = `
-    ${row('访客网络名称 (SSID)', '<input class="sim-field" value="Athena_Guest" style="width:220px;">')}
-    ${row('开放无线频段', '<select class="sim-field" style="width:100%;max-width:320px;"><option>2.4GHz + 5.2GHz (双频开放)</option><option>仅 2.4GHz</option><option>仅 5.2GHz</option></select>')}
-    ${row('访客有效时长', '<select class="sim-field" style="width:100%;max-width:320px;"><option>24 小时 (到期自动关闭)</option><option>4 小时</option><option>8 小时</option><option>长期开放</option></select>')}
-    ${row('内网访问隔离保护', badge('强制隔离已启用 · 严禁探测 LAN', 'good'))}
-    <div class="sim-action-row">
-      <button class="sim-btn" onclick="toast('已提前关闭访客网络')">提前关闭</button>
-      <button class="sim-btn primary" onclick="toast('访客网络设置已保存生效')">保存访客设置</button>
-    </div>`;
-
+    const guest=state.guest||{};
+    const status=guest.enabled===true?'已启用':guest.enabled===false?'未启用':'未读取';
+    const guestBody=`
+      ${row('访客网络名称 (SSID)', '<input class="sim-field" value="'+esc(guest.ssid||'—')+'" style="width:220px;" readonly disabled>')}
+      ${row('运行状态来源', '路由器 UCI 无线配置只读回读')}
+      ${row('内网访问隔离保护', badge('未开放配置写入 · 防止改动现有防火墙', 'warn'))}
+      <div class="sim-notice warning">当前只读取访客网络配置。创建或删除 guest bridge / firewall zone 会改动现有网络与防火墙配置，因此本版本暂不开放写入；不会显示模拟的访客在线数或虚构隔离状态。</div>`;
     return `
-    <div class="sim-kpi-grid">
-      ${kpi('访客网络状态', '运行中', '', '独立接口 br-guest')}
-      ${kpi('访客 IP 网段', '192.168.100.1/24', '', '独立 DHCP 地址池')}
-      ${kpi('在线访客数量', '1 台终端', '', '已隔离保护')}
-      ${kpi('防火墙安全', '禁止访问 LAN', '', '仅允许 WAN 出网')}
-    </div>
-    ${panel('访客网络配置与安全隔离', '独立接口 br-guest (192.168.100.1/24) · 防火墙强制隔离内网，严禁探测路由器后台与 NAS', guestBody)}`;
+      <div class="sim-kpi-grid">
+        ${kpi('访客网络状态',status,'',guest.enabled===true?'来自路由器配置':'只读状态')}
+        ${kpi('访客 IP 网段',guest.enabled===true?'配置已存在':'—','','未采集网络地址')}
+        ${kpi('在线访客数量','未采集','','没有独立访客客户端统计')}
+        ${kpi('防火墙安全','未验证','','不推断隔离策略是否生效')}
+      </div>
+      ${panel('访客网络配置与安全隔离','只读检查；不会创建、删除或重载防火墙配置',guestBody)}`;
   }
 
   if (kind === 'wifiSched') {
