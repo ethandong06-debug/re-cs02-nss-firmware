@@ -3851,7 +3851,7 @@ const MockProvider={
     lan:{interface:'br-lan',address:'192.168.10.1',mask:'255.255.255.0',dhcp:'运行中',pool:'192.168.10.100 - 192.168.10.249',leases:13},
     wifi:[
       {band:'2.4GHz',ssid:'Athena_Daily_2.4G',channel:6,width:'HE40',clients:3,noise:-94,tx:574,security:'WPA2-PSK',power:23,bssid:'00:E0:4C:68:02:11',password:'12345678',hidden:false,isolate:false,kvr:true,mumimo:true,ofdma:true,twt:true,roamThreshold:-78,country:'CN - 中国',protocol:'802.11ax (Wi-Fi 6)'},
-      {band:'5.2GHz',ssid:'Athena_Gaming_5.2G',channel:36,width:'HE160',clients:2,noise:-96,tx:2402,security:'WPA3/WPA2 (QCN9024)',power:23,bssid:'00:E0:4C:68:02:12',password:'12345678',hidden:false,isolate:false,kvr:true,mumimo:true,ofdma:true,twt:true,roamThreshold:-78,country:'CN - 中国',protocol:'802.11ax (Wi-Fi 6 · QCN9024)'},
+      {band:'5.2GHz',ssid:'Athena_Gaming_5.2G',channel:36,width:'HE160',clients:2,noise:-96,tx:2402,security:'WPA3/WPA2 (QCN9074)',power:23,bssid:'00:E0:4C:68:02:12',password:'12345678',hidden:false,isolate:false,kvr:true,mumimo:true,ofdma:true,twt:true,roamThreshold:-78,country:'CN - 中国',protocol:'802.11ax (Wi-Fi 6 · QCN9024)'},
       {band:'5.8GHz',ssid:'Athena_Media_5.8G',channel:149,width:'HE80',clients:1,noise:-98,tx:1201,security:'WPA3/WPA2',power:23,bssid:'00:E0:4C:68:02:13',password:'12345678',hidden:false,isolate:false,kvr:true,mumimo:true,ofdma:true,twt:true,roamThreshold:-78,country:'CN - 中国',protocol:'802.11ax (Wi-Fi 6)'}
     ],
     accel:{nss:'运行中',ecm:'运行中',ppe:'运行中',mode:'Fixed',frequency:'748.8 MHz',firmware:'12.5-210-CP.R',flowOffload:'已启用'},
@@ -4879,18 +4879,17 @@ function dashboard(){
       </div>
     `, `<button type="button" class="sim-btn" style="min-height:24px;padding:2px 10px;font-size:10px;" onclick="renderPage('系统维护与备份')">系统维护 →</button>`)}
 
-    ${panel('硬件加速状态 (NSS / ECM / PPE)', '高通 IPQ6018 协处理器直通 · 只读监控', `
+    ${panel('NSS / ECM / PPE 只读诊断', '模块加载状态不等于实时流量已命中硬件卸载', `
       <div class="sim-accel-grid" style="margin-bottom:12px;">
-        ${[['NSS',state.accel.nss],['ECM',state.accel.ecm],['PPE',state.accel.ppe]].map(x=>`
-          <div class="clickable" style="cursor:pointer;" onclick="promptFeatureUnavailable('NSS 硬件直通', '高通 IPQ6018 硬件加速（NSS / ECM / PPE）处于底层固件常驻加速生效状态，不提供独立调整页面以防断网。')" title="点击查看硬件加速状态">
-            <b>${x[0]}</b>${badge(x[1],'good')}
-          </div>
-        `).join('')}
+        ${[['NSS','qca_nss_dp'],['ECM','ecm'],['PPE','qca_ppe']].map(([label,name])=>{const mod=(state.accel.modules||[]).find(m=>m.name===name);return `
+          <div><b>${label}</b>${badge(mod?(mod.loaded?'模块已加载':'未加载'):'未采集',mod&&mod.loaded?'sim':'warn')}</div>`;
+        }).join('')}
       </div>
-      ${row('NSS 驱动模式', state.accel.mode, '固定 748.8 MHz 频率', "promptFeatureUnavailable('NSS 驱动模式', '高通 IPQ6018 NSS 协处理器工作在固定 748.8 MHz 主频，由底层驱动固件托管，暂无独立配置页面。')")}
-      ${row('ECM 模块状态', state.accel.ecm, '4,812 条活动流加速', "promptFeatureUnavailable('ECM 模块状态', 'ECM (Enhanced Connection Manager) 连接跟踪加速处于底层常驻激活状态，暂无独立配置页面。')")}
-      ${row('PPE 交换引擎', state.accel.ppe, 'L2 / L3 硬件直通', "promptFeatureUnavailable('PPE 交换引擎', 'PPE (Packet Processing Engine) 硬件流水线直通包转发正常，暂无独立配置页面。')")}
-    `, `<button type="button" class="sim-btn" style="min-height:24px;padding:2px 10px;font-size:10px;" onclick="renderPage('系统维护与备份')">系统概况与维护 →</button>`)}
+      ${row('NSS 诊断模式',state.accel.mode||'未采集')}
+      ${row('NSS 频率',state.accel.frequency||'未采集')}
+      ${row('NSS 固件',state.accel.firmware||'未采集')}
+      ${row('实时数据面命中','未测量','不根据模块存在推断加速命中')}
+    `, `<button type="button" class="sim-btn" style="min-height:24px;padding:2px 10px;font-size:10px;" onclick="window.UbusProvider.pollOnce().then(()=>renderPage('首页仪表盘'))">刷新只读诊断</button>`)}
   </div>
 
   <!-- Row 3: 三频无线概览 (Left) + 核心应用服务 (Right) -->
