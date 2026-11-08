@@ -7638,6 +7638,10 @@ window.toggleClientBlacklist = function(ip) {
   const modal = document.getElementById('simModal');
   if (modal) modal.remove();
   renderPage('终端列表');
+  if(kind==='packagesAndAccel'&&window.UbusProvider?.mode==='device'&&!window.__athenaPackagesLoaded&&!window.__athenaPackagesLoading&&typeof window.refreshPackagesFromRouter==='function'){
+    window.__athenaPackagesLoading=true;
+    window.refreshPackagesFromRouter().then(()=>{window.__athenaPackagesLoaded=true;window.__athenaPackagesLoading=false;if(current===page)renderPage(page);}).catch(e=>{window.__athenaPackagesLoading=false;toast('读取真实软件包清单失败：'+(e.message||'后端错误'));});
+  }
 };
 
 function filterClients() {
