@@ -65,7 +65,7 @@ case "$cmd" in
   backup-schedule-set) need 3 "$#"; exec "$BASE/athena-backup.sh" schedule set "$@" ;;
   backup-schedule-disable) exec "$BASE/athena-backup.sh" schedule disable ;;
 
-  backup-download) need 1 "$#"; exec "$BASE/athena-backup.sh" download "$1" ;;
+
 
   reboot-status) exec "$BASE/athena-reboot.sh" status ;;
   reboot-enable) need 2 "$#"; exec "$BASE/athena-reboot.sh" enable "$1" "$2" ;;
