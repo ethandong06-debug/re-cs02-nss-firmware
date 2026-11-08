@@ -5125,6 +5125,7 @@ return `${panel('高级射频参数',row('发射功率','23 dBm')+row('国家代
 
 
 window.setClientQos = function(ip) {
+  if(window.UbusProvider?.mode==='device'){toast('该版本尚未接入 tc / nftables QoS 规则，不会显示虚假的限速或优先级状态');return;}
   const c = state.clients.find(x => x.ip === ip) || state.clients[0];
   c.qosPriority = true;
   toast('已为 ' + c.name + ' 开启智能 QoS 最高优先级保障');
@@ -5136,6 +5137,7 @@ window.setClientQos = function(ip) {
 };
 
 window.openClientLimitModal = function(ip) {
+  if(window.UbusProvider?.mode==='device'){toast('终端限速后端尚未接入，未修改任何网络规则');return;}
   const c = state.clients.find(x => x.ip === ip) || state.clients[0];
   const curDown = c.limitDown || '50';
   const curUp = c.limitUp || '10';
@@ -5355,7 +5357,7 @@ window.openClientDetailModal = function(ip) {
           `<button type="button" class="sim-btn danger" style="min-height:30px;padding:4px 12px;font-size:10.5px;" onclick="removeParentalRuleByIp('${c.ip}')">解除家长控制</button>` :
           `<button type="button" class="sim-btn" style="min-height:30px;padding:4px 12px;font-size:10.5px;" onclick="addClientToParental('${c.ip}')">加入家长控制</button>`
         }
-        <button type="button" class="sim-btn danger" style="min-height:30px;padding:4px 12px;font-size:10.5px;" onclick="kickClientDevice('${c.ip}')">踢出终端</button>
+        <button type="button" class="sim-btn danger" style="min-height:30px;padding:4px 12px;font-size:10.5px;" onclick="kickClientDevice('${c.ip}')">阻断终端</button>
       </div>
     </div>
   `;
@@ -5373,8 +5375,8 @@ function renderClients(kind){let clients=state.clients;let rows=kind==='clientsA
   const actionRow = `<div class="sim-action-row">
     <button class="sim-btn" onclick="navigator.clipboard?.writeText('${c.ip}');toast('已复制 IP：${c.ip}')">复制 IP</button>
     <button class="sim-btn" onclick="navigator.clipboard?.writeText('${c.mac}');toast('已复制 MAC：${c.mac}')">复制 MAC</button>
-    <button class="sim-btn primary" onclick="toast('已为 ${esc(c.name)} 设定智能限速')">配置限速</button>
-    <button class="sim-btn danger" onclick="toast('已断开 ${esc(c.name)} 连接')">踢出终端</button>
+    <button class="sim-btn primary" onclick="openClientLimitModal('${c.ip}')">配置限速</button>
+    <button class="sim-btn danger" onclick="kickClientDevice('${c.ip}')">阻断终端</button>
   </div>`;
   return `${topNav}<div class="sim-detail-head">${miniDevice(c.type,c.name,c.vendor+' · '+c.mac,c.status)}<select id="clientPicker">${clients.map(x=>`<option value="${x.ip}" ${x.ip===c.ip?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="sim-kpi-grid">${kpi('下载速率',fmtRate(c.down),'','实时模拟')}${kpi('上传速率',fmtRate(c.up),'','实时模拟')}${kpi('连接信号',c.rssi===null?'有线':c.rssi,'dBm','接入质量')}${kpi('在线时长','06:42:18','','本次会话')}</div><div class="sim-content-grid two">${panel('设备身份与快捷操作',row('设备名称',c.name)+row('IP 地址',c.ip)+row('MAC 地址',c.mac)+row('厂商识别',c.vendor)+row('设备类型',c.type)+actionRow)}${panel('连接信息',row('接入接口',c.link)+row('信号强度',c.rssi===null?'有线':c.rssi+' dBm')+row('连接状态',badge(c.status,'good'))+row('网关地址',state.lan.address))}</div>${panel('流量趋势监控','当前会话实时下行流量采样',chartSvg(history.map(x=>x.down)))}`;
 }
