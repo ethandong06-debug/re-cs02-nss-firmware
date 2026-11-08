@@ -6312,41 +6312,30 @@ function renderBasicNet() {
 }
 
 function renderStorageDisk() {
-  const emmcHtml = `
-  <p style="font-size:11px;color:var(--sim-muted);margin-bottom:10px;">系统关键固件、ART 射频校准与内核分区强制只读，前台屏蔽格式化入口以防设备变砖。</p>
-  ${row('0:ART (射频校准)', '512 KB · raw · 🔒 核心只读保护')}
-  ${row('rootfs 固件', '2.0 GB · squashfs · /rom (系统只读)')}
-  ${row('rootfs_data', '1.8 GB · ext4 · /overlay (插件与配置)')}
-  ${row('用户存储分区', '109.2 GB · ext4 · /mnt/mmcblk0p27 (已就绪)')}`;
-
-  const hasUsb = (state.storage && state.storage.usbMounted) || false;
-  const usbHtml = hasUsb ? `
-  ${row('磁盘设备', '<b>外接 USB 磁盘 (/dev/sda1)</b>')}
-  ${row('挂载路径', '<code>/mnt/usb</code>')}
-  ${row('空间使用', (state.storage.usbUsed || '0 GB') + ' · ext4')}
-  <div class="sim-action-row">
-    <button class="sim-btn" onclick="toast('USB 磁盘状态已刷新')">刷新状态</button>
-    <button class="sim-btn primary" onclick="toast('磁盘已安全卸载')">安全卸载</button>
-  </div>` : `
-  ${row('USB 3.0 接口状态', badge('未检测到外接存储设备', 'warning'))}
-  ${row('接口协议规格', 'USB 3.0 Type-A (支持 FAT32 / NTFS / ext4 / exFAT)')}
-  ${row('自动挂载路径', '<code>/mnt/usb</code> (即插即用)')}
-  <p style="font-size:11px;color:var(--sim-muted);margin-top:10px;line-height:1.5;">插入移动硬盘或 U 盘后，系统将自动识别并挂载至 /mnt/usb，可直接用于 NAS 文件共享或离线下载。</p>
-  <div class="sim-action-row">
-    <button class="sim-btn" onclick="toast('正在重新扫描 USB 3.0 总线...')">重新扫描外接设备</button>
-  </div>`;
-
-  return `
-  <div class="sim-kpi-grid">
-    ${kpi('内置 eMMC', '128 GB (mmcblk0)', '', '核心只读保护')}
-    ${kpi('用户存储空间', '109.2 GB', '', '/mnt/mmcblk0p27')}
-    ${kpi('Overlay 空间', '1.8 GB', '', '可用 85%')}
-    ${kpi('USB 3.0 外接设备', hasUsb ? '已挂载' : '未接入', '', hasUsb ? '/dev/sda1' : '支持即插即用')}
-  </div>
-  <div class="sim-content-grid two">
-    ${panel('内置 eMMC 分区表 (/dev/mmcblk0 · 只读安全保护)', '系统关键分区保护', emmcHtml)}
-    ${panel('USB 3.0 外接移动硬盘 / SSD 管理', hasUsb ? '已挂载到 /mnt/usb' : '等待设备接入', usbHtml)}
-  </div>`;
+  const disks=Array.isArray(state.disks)?state.disks:[];
+  const emmc=disks.filter(d=>/^mmcblk/.test(d.name||''));
+  const usb=disks.filter(d=>/^sd[a-z]+$/.test(d.name||''));
+  const parts=usb.flatMap(d=>(d.parts||[]).map(p=>({...p,dev:'/dev/'+p.name,disk:d.name})));
+  const mounted=parts.filter(p=>p.mount==='/mnt/usb');
+  const emmcHtml=emmc.length?emmc.map(d=>row('/dev/'+d.name,(Number(d.size_mb)||0).toLocaleString()+' MB · 系统设备只读展示')+(d.parts||[]).map(p=>row('/dev/'+p.name,(Number(p.size_mb)||0).toLocaleString()+' MB · '+(p.mount||'未挂载')+' · '+(p.fs||'未知文件系统'))).join('')).join(''):'<div class="sim-notice">未读取到 MMC 设备信息</div>';
+  const usbHtml=usb.length?usb.map(d=>{
+    const rows=(d.parts||[]).map(p=>{
+      const dev='/dev/'+p.name,mt=p.mount||'',size=(Number(p.size_mb)||0).toLocaleString()+' MB';
+      const action=mt==='/mnt/usb'?'<button class="sim-btn" data-dev="'+esc(dev)+'" onclick="window.AthenaV1.unmountUsb(this.dataset.dev)">安全卸载</button>':(mt===''?'<button class="sim-btn primary" data-dev="'+esc(dev)+'" onclick="window.AthenaV1.mountUsb(this.dataset.dev)">挂载到 /mnt/usb</button>':'<span class="sim-muted">已挂载：'+esc(mt)+'</span>');
+      return '<div class="sim-row"><div><b>'+esc(dev)+'</b><small>'+size+' · '+esc(p.fs||'文件系统未知')+' · '+(mt?'已挂载':'未挂载')+'</small></div>'+action+'</div>';
+    }).join('');
+    return panel('/dev/'+esc(d.name), (Number(d.size_mb)||0).toLocaleString()+' MB · USB/SCSI 设备',rows||'<div class="sim-notice">未检测到分区</div>');
+  }).join(''):'<div class="sim-notice">未检测到 USB/SCSI 磁盘。格式化与挂载仅针对后端确认的真实 USB 分区。</div>';
+  const totalUsb=usb.reduce((n,d)=>n+(Number(d.size_mb)||0),0);
+  return '<div class="sim-kpi-grid">'+
+    kpi('MMC 设备',emmc.length+' 个','','只读识别')+
+    kpi('USB/SCSI 磁盘',usb.length+' 个','','由块设备扫描识别')+
+    kpi('USB 已挂载分区',mounted.length+' 个','','/mnt/usb')+
+    kpi('USB 容量',totalUsb?((totalUsb/1024).toFixed(1)+' GB'):'未检测到','','实际设备容量')+
+    '</div>'+
+    panel('内置 MMC / eMMC 设备（只读）','不提供内置存储格式化、分区或卸载入口',emmcHtml)+
+    panel('USB 3.0 外接存储','仅允许真实 USB 分区挂载到固定共享目录 /mnt/usb',usbHtml)+
+    '<div class="sim-action-row"><button class="sim-btn" onclick="window.AthenaV1.loadExtra().then(()=>renderPage(\'存储与磁盘管理\'))">刷新设备列表</button><button class="sim-btn danger" onclick="window.confirmUsbFormat()">格式化 USB 分区</button></div>';
 }
 
 function renderStorageNas() {
