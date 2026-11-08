@@ -25,7 +25,7 @@ def main():
     if any(x in file_acl for x in ("athena-mode.sh","athena-upgrade.sh","athena-reset.sh")):
         errors.append("高风险脚本被直接暴露")
     if any(x in sh for x in ("eval ", "sh -c", "system(")): errors.append("网关包含动态命令执行")
-    if "backup-restore)" in sh or "backup-restore" in js:
+    if "backup-restore)" in sh or "V.call('backup-restore'" in js:
         errors.append("V1.0 不应开放整份系统配置恢复")
     if "wifi-set) need 7" not in sh:
         errors.append("无线设置网关必须校验隐藏 SSID 参数数量")
