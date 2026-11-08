@@ -7347,7 +7347,7 @@ window.confirmUsbFormat = async function() {
   try{
     if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('请先登录路由器；离线预览不会执行磁盘操作');
     const data=await window.UbusProvider.execScript('athena-disk.sh',['list']);
-    const parts=(data.disks||[]).flatMap(d=>(d.parts||[]).map(p=>({dev:'/dev/'+p.name,mount:p.mount||'',size:p.size_mb||0,disk:d.name}))).filter(p=>/^\\/dev\\/sd[a-z][0-9]+$/.test(p.dev));
+    const parts=(data.disks||[]).flatMap(d=>(d.parts||[]).map(p=>({dev:'/dev/'+p.name,mount:p.mount||'',size:p.size_mb||0,disk:d.name}))).filter(p=>/^\/dev\/sd[a-z][0-9]+$/.test(p.dev));
     const usable=parts.filter(p=>!p.mount);
     const opts=parts.map(p=>'<option value="'+esc(p.dev)+'" '+(p.mount?'disabled':'')+'>'+esc(p.dev)+' · '+p.size+' MB '+(p.mount?'（已挂载，禁止格式化）':'（未挂载，仍需后端 USB 校验）')+'</option>').join('');
     const html='<div class="sim-notice warning">仅允许真实 USB 分区。后端还会检查设备节点、USB 总线、挂载状态、swap、系统分区和分区类型；任何一项不符合都会拒绝执行。</div>'+
