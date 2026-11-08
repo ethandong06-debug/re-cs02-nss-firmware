@@ -31,7 +31,7 @@ def main():
         errors.append("无线设置网关必须校验隐藏 SSID 参数数量")
     if "protected_pkg()" not in (gateway.parent / "athena-packages-legacy.sh").read_text(encoding="utf-8"):
         errors.append("软件包后端缺少关键组件保护逻辑")
-    labels=__import__("re").findall(r"^\\s*([A-Za-z0-9_-]+)\\)", sh, __import__("re").M)
+    labels=__import__("re").findall(r"^\s*([A-Za-z0-9_-]+)\)", sh, __import__("re").M)
     dup=sorted({x for x in labels if labels.count(x)>1})
     if dup: errors.append("网关存在重复 case 分支："+", ".join(dup))
     for marker in ("status)","wifi-set)","disk-format)","nas-remove)","backup-create)","wifi-schedule-set)","reboot-now)"):
