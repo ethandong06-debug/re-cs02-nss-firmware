@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=luci-app-athena
 # 版本号与固件发布版本同步（登录页/状态页展示一致）；每次固件迭代递增
 PKG_VERSION:=1.2.60
-PKG_RELEASE:=8
+PKG_RELEASE:=9
 
 PKG_LICENSE:=Apache-2.0
 
