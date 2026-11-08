@@ -22,7 +22,7 @@ def main() -> int:
         errors.append("前端未通过 V1 RPC 网关执行命令")
     if "command:'/usr/libexec/athena-v1.sh'" not in html and 'command:"/usr/libexec/athena-v1.sh"' not in html:
         errors.append("前端 RPC 目标路径与网关不一致")
-    if "athena-v1.sh" not in makefile or "PKG_RELEASE:=6" not in makefile:
+    if "athena-v1.sh" not in makefile or "PKG_RELEASE:=8" not in makefile:
         errors.append("APK Makefile 未安装网关或未递增版本")
     acl_root=acl.get("luci-app-athena",{}).get("write",{})
     file_acl=acl_root.get("file",{})
