@@ -51,15 +51,42 @@ case "$cmd" in
   backup-create) exec "$BASE/athena-backup.sh" create ;;
   backup-download) need 1 "$#"; exec "$BASE/athena-backup.sh" download "$1" ;;
   backup-restore) need 2 "$#"; [ "$2" = CONFIRM_RESTORE ] || fail "恢复配置必须经过二次确认"; exec "$BASE/athena-backup.sh" restore "$1" ;;
+  backup-delete)
+    need 1 "$#"
+    case "$1" in config-*.tar.gz) ;; *) fail "备份文件名无效";; esac
+    case "$1" in *[!A-Za-z0-9._-]*|*..*) fail "备份文件名无效";; esac
+    base=$(readlink -f /etc/athena-backup 2>/dev/null) || fail "备份目录不存在"
+    file=$(readlink -f "/etc/athena-backup/$1" 2>/dev/null) || fail "备份文件不存在"
+    case "$file" in "$base"/config-*.tar.gz) ;; *) fail "拒绝删除备份目录之外的文件";; esac
+    [ -f "$file" ] || fail "备份文件不存在"
+    rm -f "$file" || fail "删除备份失败"
+    printf '{"ok":true,"msg":"备份已删除"}\n'
+    ;;
+  backup-schedule-get) exec "$BASE/athena-backup.sh" schedule get ;;
+  backup-schedule-set) need 3 "$#"; exec "$BASE/athena-backup.sh" schedule set "$@" ;;
+  backup-schedule-disable) exec "$BASE/athena-backup.sh" schedule disable ;;
   reboot-status) exec "$BASE/athena-reboot.sh" status ;;
   reboot-enable) need 2 "$#"; exec "$BASE/athena-reboot.sh" enable "$1" "$2" ;;
   reboot-disable) exec "$BASE/athena-reboot.sh" disable ;;
   reboot-now) need 1 "$#"; [ "$1" = CONFIRM_REBOOT ] || fail "立即重启必须经过二次确认"; exec "$BASE/athena-reboot.sh" now ;;
   logs-clear) need 1 "$#"; [ "$1" = CONFIRM_CLEAR_LOGS ] || fail "清空日志必须经过二次确认"; exec "$BASE/athena-log.sh" clear ;;
-  logs-read) exec "$BASE/athena-log.sh" ;;
+  backup-download) need 1 "$#"; exec "$BASE/athena-backup.sh" download "$1" ;;
+  backup-restore) need 2 "$#"; [ "$2" = CONFIRM_RESTORE ] || fail "恢复配置必须经过二次确认"; exec "$BASE/athena-backup.sh" restore "$1" ;;
+  reboot-status) exec "$BASE/athena-reboot.sh" status ;;
+  reboot-enable) need 2 "$#"; exec "$BASE/athena-reboot.sh" enable "$1" "$2" ;;
+  reboot-disable) exec "$BASE/athena-reboot.sh" disable ;;
+  reboot-now) need 1 "$#"; [ "$1" = CONFIRM_REBOOT ] || fail "立即重启必须经过二次确认"; exec "$BASE/athena-reboot.sh" now ;;
+  logs-clear) need 1 "$#"; [ "$1" = CONFIRM_CLEAR_LOGS ] || fail "清空日志必须经过二次确认"; exec "$BASE/athena-log.sh" clear ;;
+  logs-read) exec "$BASE/athena-log.sh" list "${1:-all}" "${2:-}" ;;
+  logs-export) exec "$BASE/athena-log.sh" export ;;
   logs-export) exec "$BASE/athena-log.sh" export ;;
   packages-installed) exec "$BASE/athena-packages.sh" list installed ;;
   packages-available) exec "$BASE/athena-packages.sh" list available ;;
+  packages-install) need 1 "$#"; exec "$BASE/athena-packages.sh" install "$1" ;;
+  packages-remove) need 1 "$#"; exec "$BASE/athena-packages.sh" remove "$1" ;;
+  packages-upgrade) need 1 "$#"; exec "$BASE/athena-packages.sh" upgrade "$1" ;;
+  packages-update) exec "$BASE/athena-packages.sh" update ;;
+  apps-list) exec "$BASE/athena-apps.sh" list ;;
   services-list) exec "$BASE/athena-services.sh" list ;;
   filebrowser-status) exec "$BASE/athena-services.sh" filebrowser-status ;;
   *) fail "此操作未开放真实后端接口。网络模式切换、PPPoE/VLAN/IPv6 写入、固件刷写、恢复出厂和备份恢复均被 V1.0 网关阻断。" ;;
