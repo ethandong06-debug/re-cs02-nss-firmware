@@ -1,26 +1,34 @@
-import re
+#!/usr/bin/env python3
+"""Run static checks for the V1.0 source and the packaged LuCI frontend."""
+from __future__ import annotations
+import re, subprocess, sys, tempfile
+from pathlib import Path
 
-p = r"C:\Users\Administrator\WorkBuddy\2026-10-22-23-23-11\athena-openwrt\frontend\luci-app-athena\htdocs\luci-static\resources\view\athena\index.html"
-h = open(p, encoding="utf-8").read()
-print("html bytes:", len(h))
-print("script open/close:", h.count("<script"), h.count("</script>"))
+def run(cmd):
+    p=subprocess.run(cmd,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    if p.returncode:
+        print(p.stdout)
+        raise SystemExit(p.returncode)
 
-# 提取内嵌 JS 做基本语法检查（用简单括号配对）
-scripts = re.findall(r"<script[^>]*>(.*?)</script>", h, re.S)
-print("inline scripts:", len(scripts))
-for i, s in enumerate(scripts):
-    if not s.strip():
-        continue
-    # 括号/引号粗检
-    for ch_open, ch_close, name in [("(", ")", "()"), ("{", "}", "{}"), ("[", "]", "[]")]:
-        if s.count(ch_open) != s.count(ch_close):
-            print(f"  script[{i}] unbalanced {name}: {s.count(ch_open)} vs {s.count(ch_close)}")
-    if s.count('"') % 2 != 0:
-        print(f"  script[{i}] odd double quotes")
-print("basic scan done")
+def main():
+    if len(sys.argv)!=6:
+        print("usage: check_frontend.py prototype.html index.html gateway.sh acl.json Makefile",file=sys.stderr)
+        return 2
+    prototype,index,gateway,acl,makefile=map(Path,sys.argv[1:])
+    run([sys.executable,str(Path(__file__).with_name("check_v1_menu.py")),str(prototype)])
+    html=index.read_text(encoding="utf-8")
+    scripts=re.findall(r"<script\b[^>]*>([\s\S]*?)</script>",html,re.I)
+    if not scripts:
+        raise SystemExit("FAIL: frontend contains no inline JavaScript")
+    with tempfile.TemporaryDirectory() as td:
+        for i,script in enumerate(scripts):
+            f=Path(td)/f"inline-{i}.js"
+            f.write_text(script,encoding="utf-8")
+            run(["node","--check",str(f)])
+    run(["sh","-n",str(gateway)])
+    run([sys.executable,str(Path(__file__).with_name("check_rpc_wiring.py")),str(index),str(gateway),str(acl),str(makefile)])
+    print(f"前端静态检查通过：{len(scripts)} 个内联 JS 块语法正确；网关 shell 语法正确；V1.0 菜单基准未变化。")
+    return 0
 
-# 检查新增函数是否都存在
-for fn in ["openNativeLuCI", "appAlias", "loadActiveApps", "renderActiveApps", "appIconFor", "svcRowHTML", "renderSvcBox"]:
-    print(fn, "->", "OK" if fn in h else "MISSING")
-for marker in ["svc-group-t", "appCard", "appBox", "appSub", "APP_ALIASES", "DNS 指纹", "ACTIVE_APPS"]:
-    print(marker, "->", "OK" if marker in h else "MISSING")
+if __name__=="__main__":
+    raise SystemExit(main())
