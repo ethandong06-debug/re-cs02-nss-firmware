@@ -4830,7 +4830,7 @@ function dashboard(){
     ${kpi('CPU 使用率', fmt(r.cpu,1), '%', `频率 ${r.freq} MHz`, '▥', "promptFeatureUnavailable('CPU 详细监控')")}
     ${kpi('内存使用', Math.round(r.mem), 'MB', `总计 ${state.device.ramTotal} MB`, '▤', "promptFeatureUnavailable('内存详细统计')")}
     ${kpi('SoC 温度', fmt(r.temp,1), '°C', '温度正常 · 实时监测', '♨', "promptFeatureUnavailable('SoC 温度监控')")}
-    ${kpi('在线终端', c.filter(x=>x.status==='在线').length, '台', `${${state.clients.filter(c=>c.status==='在线'&&c.link!=='有线').length} 台无线 · ${state.clients.filter(c=>c.status==='在线'&&c.link==='有线').length} 台有线`, '▦', "renderPage('终端列表')")}
+    ${kpi('在线终端', c.filter(x=>x.status==='在线').length, '台', `${state.clients.filter(c=>c.status==='在线'&&c.link!=='有线').length} 台无线 · ${state.clients.filter(c=>c.status==='在线'&&c.link==='有线').length} 台有线`, '▦', "renderPage('终端列表')")}
   </div>
 
   <!-- Row 1: 终端流量排行 (全宽展示) -->
