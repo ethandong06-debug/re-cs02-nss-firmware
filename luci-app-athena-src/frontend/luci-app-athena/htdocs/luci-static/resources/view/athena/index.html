@@ -4038,6 +4038,20 @@ class UbusProvider {
     this.state.resources.cpu=Number(cpu.total)||0;this.state.resources.temp=Number(cpu.temp)||0;this.state.resources.mem=Number(mem.used_mb)||0;this.state.resources.freq=0;this.state.device.ramTotal=Number(mem.total_mb)||0;this.state.resources.load=(sys.load||[0,0,0]).map(Number);
     this.state.traffic.down=Number(net.rx_rate_mbps)||0;this.state.traffic.up=Number(net.tx_rate_mbps)||0;
     this.state.clients=(d.clients||[]).map(c=>({name:c.hostname||c.ip,ip:c.ip||'',mac:c.mac||'',type:'未知设备',link:c.band||'有线',rssi:null,down:0,up:0,status:c.online?'在线':'离线',vendor:c.vendor||'未知'}));
+    try{
+      const p=await this.execScript('athena-parent.sh',['list']);
+      this.state.parentalRules=(p.rules||[]).map(rule=>{
+        const client=this.state.clients.find(x=>String(x.mac||'').toLowerCase()===String(rule.mac||'').toLowerCase());
+        const days=Array.isArray(rule.days)?rule.days.map(Number):[];
+        const dayNames=['周日','周一','周二','周三','周四','周五','周六'];
+        return {mac:rule.mac,ip:client?.ip||'',name:client?.name||rule.mac,timeStart:rule.start||'—',timeEnd:rule.end||'—',days:days.map(d=>dayNames[d]).join('、')||'未设置',status:'已生效'};
+      });
+    }catch(e){}
+    try{
+      const ws=await this.execScript('athena-wifi-schedule.sh',['status']);
+      this.state.wifiSched={enabled:!!ws.enabled,offTime:ws.off||'01:00',onTime:ws.on||'06:30',b24:!!ws.b24,b52:!!ws.b52,b58:!!ws.b58};
+    }catch(e){}
+
     this.state.interfaces=(d.ports||[]).map(p=>({name:p.name,type:'物理端口',state:p.state||'未知',ip:'—',rx:'—',tx:'—',speed:p.speed||0}));
     this.state.wan={...this.state.wan,type:String(wan.proto||'未知').toUpperCase(),status:wan.up?'已连接':'未连接',interface:wan.device||'—',vlan:wan.wan_vlan||'—',ipv4:wan.ip||'—',gateway:wan.peer||'—'};
     const disk=(d.storage||[]).find(x=>x.mount)||((d.storage||[])[0]||null);
@@ -4814,7 +4828,7 @@ function dashboard(){
     ${kpi('CPU 使用率', fmt(r.cpu,1), '%', `频率 ${r.freq} MHz`, '▥', "promptFeatureUnavailable('CPU 详细监控')")}
     ${kpi('内存使用', Math.round(r.mem), 'MB', `总计 ${state.device.ramTotal} MB`, '▤', "promptFeatureUnavailable('内存详细统计')")}
     ${kpi('SoC 温度', fmt(r.temp,1), '°C', '温度正常 · 实时监测', '♨', "promptFeatureUnavailable('SoC 温度监控')")}
-    ${kpi('在线终端', c.filter(x=>x.status==='在线').length, '台', `${state.wifi[0].clients+state.wifi[1].clients+state.wifi[2].clients} 台无线 · 2 台有线`, '▦', "renderPage('终端列表')")}
+    ${kpi('在线终端', c.filter(x=>x.status==='在线').length, '台', `${(state.wifi||[]).reduce((n,b)=>n+(Number(b.clients)||0),0)} 台无线`, '▦', "renderPage('终端列表')")}
   </div>
 
   <!-- Row 1: 终端流量排行 (全宽展示) -->
@@ -5103,7 +5117,7 @@ function renderWifi(kind) {
   return dashboard();
 }
 
-function __old_renderWifi(kind){const w=state.wifi; if(kind==='wifi')return `<div class="sim-kpi-grid">${kpi('2.4GHz 客户端',w[0].clients,'台',w[0].ssid)}${kpi('5GHz 客户端',w[1].clients,'台',w[1].ssid)}${kpi('总关联终端',w[0].clients+w[1].clients,'台','双频无线')}${kpi('安全协议','WPA2/3','','加密启用')}</div><div class="sim-content-grid two">${w.map(x=>panel(x.band+' 无线射频',x.ssid,`<div class="sim-wifi-hero"><div class="sim-wifi-large">⌁</div><div><b>${x.ssid}</b><small>${x.security}</small></div></div>${row('信道',x.channel)}${row('频宽',x.width)}${row('发射速率',x.tx+' Mbps')}${row('关联客户端',x.clients+' 台')}${row('噪声底',x.noise+' dBm')}`)).join('')}</div>${panel('无线客户端','当前关联设备',clientsTable(state.clients.filter(c=>c.link.includes('GHz'))))}`;
+function __old_renderWifi(kind){const w=state.wifi; if(kind==='wifi')return `<div class="sim-kpi-grid">${kpi('2.4GHz 客户端',w[0]?.clients||0,'台',w[0]?.ssid||'未采集')}${kpi('5GHz 客户端',w[1]?.clients||0,'台',w[1]?.ssid||'未采集')}${kpi('总关联终端',w[0].clients+w[1].clients,'台','双频无线')}${kpi('安全协议','WPA2/3','','加密启用')}</div><div class="sim-content-grid two">${w.map(x=>panel(x.band+' 无线射频',x.ssid,`<div class="sim-wifi-hero"><div class="sim-wifi-large">⌁</div><div><b>${x.ssid}</b><small>${x.security}</small></div></div>${row('信道',x.channel)}${row('频宽',x.width)}${row('发射速率',x.tx+' Mbps')}${row('关联客户端',x.clients+' 台')}${row('噪声底',x.noise+' dBm')}`)).join('')}</div>${panel('无线客户端','当前关联设备',clientsTable(state.clients.filter(c=>c.link.includes('GHz'))))}`;
 let band=kind==='wifi24'?w[0]:w[1];if(kind==='wifi24'||kind==='wifi5')return `<div class="sim-content-grid two">${panel('无线基础配置','模拟配置值',row('无线启用',badge('已启用','good'))+row('SSID',band.ssid)+row('隐藏 SSID','否')+row('国家代码','CN'))}${panel('无线安全',row('加密方式',band.security)+row('WPS',badge('已关闭','good'))+row('密钥策略','强密码（模拟）'))}</div>${panel('射频参数','当前运行参数',row('信道',band.channel)+row('频宽',band.width)+row('发射功率','23 dBm')+row('无线速率',band.tx+' Mbps')+row('关联客户端',band.clients+' 台'))}${configEditor(kind==='wifi24'?'2.4GHz 设置':'5GHz 设置',[['SSID','text',band.ssid],['信道','number',band.channel],['频宽','select',band.width],['加密方式','select',band.security]])}`;
 if(kind==='wirelessClients')return panel('无线关联终端','按射频统计信号与连接速率',clientsTable(state.clients.filter(c=>c.rssi!==null)));
 if(kind==='channels')return `<div class="sim-content-grid two">${panel('2.4GHz 信道环境','扫描结果模拟',bars([['信道 1',35,'35%'],['信道 6',72,'72%'],['信道 11',24,'24%']]))}${panel('5GHz 信道环境','扫描结果模拟',bars([['信道 36',22,'22%'],['信道 149',38,'38%'],['信道 157',17,'17%'],['DFS 频道',12,'12%']]))}</div>${panel('射频当前配置',row('2.4GHz',`信道 ${w[0].channel} / ${w[0].width}`)+row('5GHz',`信道 ${w[1].channel} / ${w[1].width}`)+row('建议','结合现场频谱与终端兼容性评估'))}`;
@@ -5351,6 +5365,7 @@ window.openClientDetailModal = function(ip) {
 
 function renderClients(kind){let clients=state.clients;let rows=kind==='clientsAll'?clients.concat([{...clients[4],name:'旧设备-Tablet',ip:'192.168.10.150',status:'离线',down:0,up:0}]) : clients;if(kind==='clientDetail'){
   let c=clients.find(x=>x.ip===selectedClient)||clients[0];
+  if(!c)return panel('终端详情','当前没有可用终端数据','请先等待路由器读取 DHCP 租约与无线关联列表。');
   const topNav = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
     <button class="sim-btn" onclick="renderPage('终端列表')">← 返回终端列表</button>
     <div style="font-size:11px;color:var(--sim-muted);">已选终端：<b>${esc(c.name)}</b> (${c.ip})</div>
@@ -5363,7 +5378,7 @@ function renderClients(kind){let clients=state.clients;let rows=kind==='clientsA
   </div>`;
   return `${topNav}<div class="sim-detail-head">${miniDevice(c.type,c.name,c.vendor+' · '+c.mac,c.status)}<select id="clientPicker">${clients.map(x=>`<option value="${x.ip}" ${x.ip===c.ip?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div><div class="sim-kpi-grid">${kpi('下载速率',fmtRate(c.down),'','实时模拟')}${kpi('上传速率',fmtRate(c.up),'','实时模拟')}${kpi('连接信号',c.rssi===null?'有线':c.rssi,'dBm','接入质量')}${kpi('在线时长','06:42:18','','本次会话')}</div><div class="sim-content-grid two">${panel('设备身份与快捷操作',row('设备名称',c.name)+row('IP 地址',c.ip)+row('MAC 地址',c.mac)+row('厂商识别',c.vendor)+row('设备类型',c.type)+actionRow)}${panel('连接信息',row('接入接口',c.link)+row('信号强度',c.rssi===null?'有线':c.rssi+' dBm')+row('连接状态',badge(c.status,'good'))+row('网关地址',state.lan.address))}</div>${panel('流量趋势监控','当前会话实时下行流量采样',chartSvg(history.map(x=>x.down)))}`;
 }
-if(kind==='access')return `${panel('访问控制策略','模拟 ACL 规则',table(['设备','MAC 地址','策略','状态'],[[clients[0].name,clients[0].mac,'允许',badge('生效中','good')],[clients[7].name,clients[7].mac,'允许',badge('生效中','good')],['访客设备','动态 MAC','默认限制',badge('待配置','warn')]]))}${configEditor('访问控制',[['MAC 地址','text',''],['控制策略','select','允许'],['生效时间','select','始终'],['备注','text','']])}`;
+if(kind==='access')return `${panel('访问控制策略','模拟 ACL 规则',table(['设备','MAC 地址','策略','状态'],[[clients[0]?.name||'暂无设备',clients[0]?.mac||'—','—',badge('未采集','warn')],[clients[7]?.name||'暂无设备',clients[7]?.mac||'—','—',badge('未采集','warn')],['访客设备','动态 MAC','默认限制',badge('待配置','warn')]]))}${configEditor('访问控制',[['MAC 地址','text',''],['控制策略','select','允许'],['生效时间','select','始终'],['备注','text','']])}`;
 if(kind==='deviceLabels')return `${panel('设备识别与备注','模拟设备档案',table(['设备','厂商','设备类型','自定义备注'],clients.slice(0,8).map(c=>[c.name,c.vendor,c.type,c.name.includes('NAS')?'家庭存储':c.type==='IoT'?'智能家居':'个人设备']),{action:'编辑备注'}))}${configEditor('设备识别与备注',[['设备名称','text',''],['设备类型','select','手机'],['自定义备注','text','']])}`;
 let allList = state.clients;
 const totalCount = allList.length;
@@ -7808,7 +7823,7 @@ $$('[data-theme-mode]').forEach(b=>b.onclick=()=>{themeMode=b.dataset.themeMode;
 $('[data-config-form]').forEach(f=>f.addEventListener('submit',e=>{e.preventDefault();if(window.UbusProvider&&window.UbusProvider.isLuCI){toast('此表单尚未接入经过验证的路由器写入接口，已阻止提交');return;}let data=Object.fromEntries(new FormData(f));localStorage.setItem('athena-draft:'+f.dataset.configForm,JSON.stringify(data));addLog('INFO','Config','保存模拟配置：'+f.dataset.configForm);toast('预览草稿已保存到浏览器，不会写入路由器');}));
 $('[data-command]').forEach(b=>b.onclick=()=>{if(b.dataset.command==='factory-reset'){openModal('操作已禁用','<p>恢复出厂设置属于高风险操作，本版本不提供页面直执行入口。</p>');return}commandHandler(b.dataset.command)});
 $('[data-tool]').forEach(b=>b.onclick=()=>{let t=b.dataset.tool;if(window.UbusProvider&&window.UbusProvider.isLuCI){openModal(t+' · 尚未接入',`<div class="sim-notice warning">该工具的参数表单尚未绑定经过验证的后端接口。设备模式下已禁用模拟执行。</div>`);return;}openModal(t+' · 预览工具',`<p>${t} 仅在本地预览模式下模拟，不会连接路由器。</p><input class="sim-modal-input" id="toolInput" value="192.168.10.1"><div class="sim-modal-actions"><button class="sim-btn primary" id="runTool">运行模拟检测</button></div><pre class="sim-terminal" id="toolResult">等待运行</pre>`);$('#runTool').onclick=()=>{$('#toolResult').textContent=`${t} 模拟执行完成\n目标：${$('#toolInput').value}\n结果：模拟数据`;}});
-$$('[data-row-action]').forEach(b=>b.onclick=()=>{let idx=Number(b.dataset.rowAction);if(kind==='interfaces')openModal('接口详情',`<p>${esc(state.interfaces[idx]?.name||'接口')} · 状态 UP · 模拟接口信息</p>`);else if(kind==='clients'||kind==='clientsAll'||kind==='lan'){selectedClient=state.clients[idx]?.ip||state.clients[0].ip;openClientDetailModal(selectedClient)}else openModal('详情',`<p>该条目为模拟数据，正式版本将显示设备返回的详细信息。</p>`)});
+$$('[data-row-action]').forEach(b=>b.onclick=()=>{let idx=Number(b.dataset.rowAction);if(kind==='interfaces')openModal('接口详情',`<p>${esc(state.interfaces[idx]?.name||'接口')} · 状态 UP · 模拟接口信息</p>`);else if(kind==='clients'||kind==='clientsAll'||kind==='lan'){selectedClient=state.clients[idx]?.ip||state.clients[0]?.ip||'';if(selectedClient)openClientDetailModal(selectedClient);else toast('当前没有可查看的终端记录')}else openModal('详情',`<p>该条目为模拟数据，正式版本将显示设备返回的详细信息。</p>`)});
 $$('[data-sim-page]').forEach(b=>b.onclick=()=>renderPage(b.dataset.simPage));
 }
 let currentClientChip = 'all';
