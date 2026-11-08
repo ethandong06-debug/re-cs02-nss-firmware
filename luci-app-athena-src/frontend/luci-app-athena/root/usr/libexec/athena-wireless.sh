@@ -114,11 +114,12 @@ emit_band() {
 	local ch=$(uci -q get "wireless.$radio.channel" 2>/dev/null); [ -z "$ch" ] && ch="auto"
 	local htmode=$(uci -q get "wireless.$radio.htmode" 2>/dev/null)
 	local iface=$(find_iface "$radio")
-	local ssid=""; enc=""; key=""
+	local ssid=""; enc=""; key=""; hidden="0"
 	if [ -n "$iface" ]; then
 		ssid=$(uci -q get "wireless.$iface.ssid" 2>/dev/null)
 		enc=$(uci -q get "wireless.$iface.encryption" 2>/dev/null)
 		key=$(uci -q get "wireless.$iface.key" 2>/dev/null)
+		hidden=$(uci -q get "wireless.$iface.hidden" 2>/dev/null); [ "$hidden" = "1" ] || hidden="0"
 	fi
 	local caps chs bws
 	caps=$(band_caps "$id")
@@ -133,11 +134,12 @@ emit_band() {
 	fi
 	local on=true
 	if [ "$disabled" = "1" ] || { [ "$real_check" = true ] && [ "$real_up" != "true" ]; }; then on=false; fi
-	printf '{"id":"%s","on":%s,"ssid":"%s","key":"%s","ch":"%s","bw":"%s","enc":"%s","chs":"%s","bws":"%s","uci_off":%s,"radio_up":%s}' \
+	printf '{"id":"%s","on":%s,"ssid":"%s","key":"%s","ch":"%s","bw":"%s","enc":"%s","chs":"%s","bws":"%s","uci_off":%s,"radio_up":%s,"hidden":%s}' \
 		"$id" "$on" \
 		"$(printf '%s' "$ssid" | json_str)" "$(printf '%s' "$key" | json_str)" "$ch" "$(htmode2bw "$htmode")" "$(uci2enc "$enc")" "$chs" "$bws" \
 		"$([ "$disabled" = "1" ] && echo true || echo false)" \
-		"$([ "$real_check" = true ] && [ "$real_up" != "true" ] && echo false || echo true)"
+		"$([ "$real_check" = true ] && [ "$real_up" != "true" ] && echo false || echo true)" \
+		"$([ "$hidden" = "1" ] && echo true || echo false)"
 }
 
 do_get() {
