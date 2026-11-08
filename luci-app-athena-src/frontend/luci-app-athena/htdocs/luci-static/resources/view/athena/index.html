@@ -5976,21 +5976,14 @@ function renderSystemLed() {
   </div>`;
 }
 
-window.setLedBright = function(v) {
-  matrixState.bright = parseInt(v, 10);
-  window.drawAthenaMatrix?.();
-  const label = document.getElementById('matrixBrightLabel');
-  if (label) {
-    label.textContent = `${matrixState.bright} 级 ${matrixState.bright===0?'(熄屏)':matrixState.bright===1?'(夜间微光)':matrixState.bright===7?'(日光极亮)':''}`;
-  }
-  const badge = document.getElementById('matrixStatusBadge');
-  if (badge && matrixState.power) {
-    badge.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:#00e676;box-shadow:0 0 6px #00e676;"></span> 点阵屏在线 (${matrixState.bright}级)`;
-  }
-  const kpiVals = document.querySelectorAll('.sim-kpi-value');
-  if (kpiVals && kpiVals[1]) {
-    kpiVals[1].textContent = 'LV.' + matrixState.bright;
-  }
+window.setLedBright = async function(v) {
+  const next=Math.max(0,Math.min(7,parseInt(v,10)||0));
+  try{
+    await window.UbusProvider.command('setLed',{bright:next});
+    matrixState.bright=next;window.drawAthenaMatrix?.();
+    const label=document.getElementById('matrixBrightLabel');if(label)label.textContent=next+' 级 '+(next===0?'(熄屏)':next===1?'(夜间微光)':next===7?'(日光极亮)':'');
+    toast('点阵屏亮度已由路由器确认：'+next+' 级');
+  }catch(e){toast('亮度设置未生效：'+(e.message||'后端错误'));}
 };
 
 function startMatrixLoop() {
@@ -6140,28 +6133,17 @@ window.setLedAmbientColor = function(col) {
   toast('已切换底部氛围灯颜色：' + name);
 };
 
-window.toggleLedPower = function() {
-  matrixState.power = !matrixState.power;
-  // 1. Update power button
-  const pBtn = document.getElementById('matrixPowerBtn');
-  if (pBtn) {
-    pBtn.className = `sim-btn ${matrixState.power ? 'danger' : 'primary'}`;
-    pBtn.textContent = matrixState.power ? '🌙 休眠点阵屏' : '☀️ 点亮点阵屏';
-  }
-  // 2. Update status badge
-  const badge = document.getElementById('matrixStatusBadge');
-  if (badge) {
-    badge.style.color = matrixState.power ? '#00e676' : '#94a3b8';
-    badge.innerHTML = `<span style="width:6px;height:6px;border-radius:50%;background:${matrixState.power ? '#00e676' : '#94a3b8'};box-shadow:${matrixState.power ? '0 0 6px #00e676' : 'none'};"></span> ${matrixState.power ? '点阵屏在线 (' + matrixState.bright + '级)' : '已休眠'}`;
-  }
-  // 3. Update KPI card
-  const kpiVals = document.querySelectorAll('.sim-kpi-value');
-  if (kpiVals && kpiVals[0]) {
-    kpiVals[0].textContent = matrixState.power ? '运行中' : '已休眠';
-  }
-  // 4. Redraw canvas
-  window.drawAthenaMatrix?.();
-  toast(matrixState.power ? '点阵屏已唤醒点亮' : '点阵屏已进入休眠熄屏状态');
+window.toggleLedPower = async function() {
+  const next=!matrixState.power;
+  try{
+    await window.UbusProvider.command('setLed',{power:next});
+    matrixState.power=next;
+    const pBtn=document.getElementById('matrixPowerBtn');
+    if(pBtn){pBtn.className='sim-btn '+(next?'danger':'primary');pBtn.textContent=next?'🌙 休眠点阵屏':'☀️ 点亮点阵屏';}
+    const badgeEl=document.getElementById('matrixStatusBadge');
+    if(badgeEl){badgeEl.style.color=next?'#00e676':'#94a3b8';badgeEl.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:'+(next?'#00e676':'#94a3b8')+';"></span> '+(next?'点阵屏在线 ('+matrixState.bright+'级)':'已休眠');}
+    window.drawAthenaMatrix?.();toast(next?'点阵屏已唤醒':'点阵屏已休眠');
+  }catch(e){toast('点阵屏电源操作未生效：'+(e.message||'后端错误'));}
 };
 
 function renderStorageNas() {
