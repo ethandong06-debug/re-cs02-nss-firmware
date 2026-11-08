@@ -5188,117 +5188,75 @@ window.saveClientLimit = function(ip) {
 };
 
 window.addClientToParental = function(ip) {
-  const c = state.clients.find(x => x.ip === ip) || state.clients[0];
-  if (!state.parentalRules) state.parentalRules = [];
-  const existing = state.parentalRules.find(r => r.ip === c.ip || r.mac === c.mac);
-  if (!existing) {
-    state.parentalRules.unshift({
-      name: c.name,
-      mac: c.mac,
-      ip: c.ip,
-      timeStart: '21:30',
-      timeEnd: '07:00',
-      days: '周一至周五',
-      status: '已生效'
-    });
-  }
-  closeModal();
-  renderPage('家长控制');
-  toast('已将 ' + c.name + ' 添加至家长控制受控名单并跳转生效');
+  const c=state.clients.find(x=>x.ip===ip);
+  if(!c||!c.mac){toast('未读取到终端 MAC 地址');return;}
+  openModal('添加家长控制规则','<p>为 <b>'+esc(c.name)+'</b> 添加默认时段规则：</p><div class="sim-notice">周一至周五 21:30–次日 07:00。保存后会更新 AthenaWrt 专属规则并重新加载防火墙。</div>'+
+    '<div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn primary" onclick="confirmAddParental(\''+esc(c.mac)+'\',\''+esc(c.ip)+'\')">确认添加</button></div>');
 };
 
-window.removeParentalRule = function(idx) {
-  if (state.parentalRules && state.parentalRules[idx]) {
-    const name = state.parentalRules[idx].name;
-    state.parentalRules.splice(idx, 1);
-    renderPage('家长控制');
-    toast('已解除 ' + name + ' 的家长控制规则');
-  }
+window.confirmAddParental = async function(mac,ip) {
+  const c=state.clients.find(x=>x.ip===ip);
+  if(!c||!mac){toast('终端信息已失效');return;}
+  try{
+    const r=await window.UbusProvider.execScript('athena-parent.sh',['set',mac,'1,2,3,4,5','21:30','07:00']);
+    if(!r||r.ok===false)throw new Error(r?.msg||'后端未确认家长控制规则');
+    closeModal();await window.UbusProvider.pollOnce();renderPage('家长控制');toast('已为 '+c.name+' 保存家长控制规则');
+  }catch(e){toast('家长控制规则未保存：'+(e.message||'后端错误'));}
 };
 
-window.confirmClearAllParentalRules = function() {
-  const count = (state.parentalRules || []).length;
-  if (count === 0) {
-    toast('当前暂无受控终端规则');
-    return;
-  }
-  openModal('一键解除所有家长控制', `
-    <div style="padding:4px;">
-      <p style="color:#d65d63;font-size:12px;font-weight:600;line-height:1.6;">确定要一键解除全部 ${count} 台设备的家长控制规则吗？</p>
-      <p style="font-size:10.5px;color:var(--sim-muted);line-height:1.6;margin-top:6px;">解除后，所有受控终端将立即恢复正常上网，不再受时间段阻断，规则清单将清空。</p>
-      <div class="sim-modal-actions" style="margin-top:16px;">
-        <button type="button" class="sim-btn secondary" onclick="closeModal()">取消</button>
-        <button type="button" class="sim-btn danger" onclick="clearAllParentalRules()">确认全部解除</button>
-      </div>
-    </div>
-  `);
+window.removeParentalRule = async function(idx) {
+  const rule=(state.parentalRules||[])[idx];if(rule?.ip)await window.removeParentalRuleByIp(rule.ip);
 };
 
-window.clearAllParentalRules = function() {
-  const count = (state.parentalRules || []).length;
-  state.parentalRules = [];
-  closeModal();
-  renderPage('家长控制');
-  toast('已一键解除全部 ' + count + ' 台设备的家长控制规则，全屋终端已恢复自由上网');
+window.removeParentalRuleByIp = async function(ip) {
+  const rule=(state.parentalRules||[]).find(r=>r.ip===ip);
+  const client=state.clients.find(c=>c.ip===ip);
+  const mac=rule?.mac||client?.mac;
+  if(!mac){toast('找不到该规则对应的 MAC 地址');return;}
+  try{
+    const r=await window.UbusProvider.execScript('athena-parent.sh',['clear',mac]);
+    if(!r||r.ok===false)throw new Error(r?.msg||'后端未确认规则删除');
+    closeModal();await window.UbusProvider.pollOnce();renderPage('家长控制');toast('家长控制规则已解除');
+  }catch(e){toast('解除规则失败：'+(e.message||'后端错误'));}
 };
 
-window.removeParentalRuleByIp = function(ip) {
-  if (state.parentalRules) {
-    const idx = state.parentalRules.findIndex(r => r.ip === ip);
-    if (idx !== -1) {
-      const name = state.parentalRules[idx].name;
-      state.parentalRules.splice(idx, 1);
-      closeModal();
-      renderPage(current);
-      toast('已解除 ' + name + ' 的家长控制规则');
-      return;
-    }
-  }
-  closeModal();
-  toast('该终端未在受控名单中');
+window.clearAllParentalRules = async function() {
+  const rules=[...(state.parentalRules||[])];
+  if(!rules.length){closeModal();toast('当前没有已读取的家长控制规则');return;}
+  try{
+    for(const rule of rules){if(!rule.mac)continue;const r=await window.UbusProvider.execScript('athena-parent.sh',['clear',rule.mac]);if(!r||r.ok===false)throw new Error(r?.msg||('删除规则失败：'+rule.mac));}
+    closeModal();await window.UbusProvider.pollOnce();renderPage('家长控制');toast('已解除 '+rules.length+' 条家长控制规则');
+  }catch(e){toast('部分规则可能未解除，请刷新核对：'+(e.message||'后端错误'));}
 };
 
-window.addManualParentalRule = function() {
-  const devSelect = document.getElementById('parental-device-select');
-  const selIp = devSelect ? devSelect.value : (state.clients[0]?.ip || '192.168.10.101');
-  const c = state.clients.find(x => x.ip === selIp) || state.clients[0];
-  const tStart = document.getElementById('parental-start-time')?.value || '21:30';
-  const tEnd = document.getElementById('parental-end-time')?.value || '07:00';
-  
-  if (!state.parentalRules) state.parentalRules = [];
-  state.parentalRules.unshift({
-    name: c.name,
-    mac: c.mac,
-    ip: c.ip,
-    timeStart: tStart,
-    timeEnd: tEnd,
-    days: '周一至周五',
-    status: '已生效'
-  });
-  renderPage('家长控制');
-  toast('已成功为 ' + c.name + ' 保存家长控制规则');
+window.addManualParentalRule = async function() {
+  const ip=document.getElementById('parental-device-select')?.value||'';
+  const c=state.clients.find(x=>x.ip===ip);
+  const start=document.getElementById('parental-start-time')?.value||'21:30';
+  const end=document.getElementById('parental-end-time')?.value||'07:00';
+  if(!c?.mac){toast('请选择已在线或已识别的终端');return;}
+  try{
+    const r=await window.UbusProvider.execScript('athena-parent.sh',['set',c.mac,'1,2,3,4,5',start,end]);
+    if(!r||r.ok===false)throw new Error(r?.msg||'后端未确认规则');
+    await window.UbusProvider.pollOnce();renderPage('家长控制');toast('家长控制规则已保存');
+  }catch(e){toast('保存失败：'+(e.message||'后端错误'));}
 };
 
 window.kickClientDevice = function(ip) {
-  const c = state.clients.find(x => x.ip === ip) || state.clients[0];
-  openModal('确认断开终端连接', `
-    <div style="padding:4px;">
-      <p style="color:#d65d63;font-size:11.5px;font-weight:600;line-height:1.6;">确定要断开并阻断终端 <b>${esc(c.name)}</b> (${c.ip}) 的网络连接吗？</p>
-      <p style="font-size:10px;color:var(--sim-muted);line-height:1.6;">断开后，该终端将在底层无线 AP (ath1/ath0) 或有线端口被踢下线，需重新连接。</p>
-      <div class="sim-modal-actions">
-        <button type="button" class="sim-btn" data-close-modal>取消</button>
-        <button type="button" class="sim-btn danger" onclick="confirmKickClient('${c.ip}')">立即踢下线</button>
-      </div>
-    </div>
-  `);
+  const c=state.clients.find(x=>x.ip===ip);
+  if(!c||!c.mac){toast('未读取到该终端的 MAC 地址，无法安全阻断');return;}
+  openModal('确认阻断终端', '<p style="line-height:1.6">将把 <b>'+esc(c.name)+'</b>（'+esc(c.ip)+' / '+esc(c.mac)+'）加入路由器黑名单，通过防火墙阻断其转发流量。此操作不是 802.11 deauthentication，不会伪称已踢出无线关联。</p>'+
+    '<div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn danger" onclick="confirmKickClient(\''+esc(c.ip)+'\')">确认阻断</button></div>');
 };
 
-window.confirmKickClient = function(ip) {
-  const c = state.clients.find(x => x.ip === ip) || state.clients[0];
-  c.status = '离线';
-  closeModal();
-  renderPage('终端列表');
-  toast('已成功踢出终端 ' + c.name + ' 并清除其 DHCP 租约');
+window.confirmKickClient = async function(ip) {
+  const c=state.clients.find(x=>x.ip===ip);
+  if(!c||!c.mac){toast('终端信息已失效，请刷新列表');return;}
+  try{
+    const r=await window.UbusProvider.execScript('athena-client.sh',['block',c.mac]);
+    if(!r||r.ok===false)throw new Error(r?.msg||'后端未确认黑名单规则');
+    c.status='已拉黑';closeModal();renderPage('终端列表');toast(r.msg||('已将 '+c.name+' 加入阻断名单'));
+  }catch(e){toast('阻断失败：'+(e.message||'后端错误'));}
 };
 
 window.openClientDetailModal = function(ip) {
