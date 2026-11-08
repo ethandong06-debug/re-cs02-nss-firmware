@@ -3976,8 +3976,7 @@ class UbusProvider {
         if(sub==='get')route=['wifi-get'];else if(sub==='set')route=['wifi-set',...raw.slice(1)];
         else if(sub==='enable'||sub==='disable')route=['wifi-'+sub,raw[1]||'all'];
         else if(sub==='guest'&&(raw[1]||'get')==='get')route=['wifi-guest-get'];
-        else if(sub==='guest'&&raw[1]==='enable')route=['wifi-guest-enable',raw[2]||'',raw[3]||''];
-        else if(sub==='guest'&&raw[1]==='disable')route=['wifi-guest-disable'];break;
+        else if(sub==='guest'&&(raw[1]==='enable'||raw[1]==='disable'))throw new Error('访客网络写入暂未开放，以保护现有 firewall 与 bridge 配置');break;
       }
       case 'athena-client.sh':{const m={list:'clients-list',known:'clients-known',notes:'clients-notes',block:'clients-block',unblock:'clients-unblock',know:'clients-know',unlearn:'clients-unlearn',note:'clients-note',rename:'clients-rename'};if(m[raw[0]||'list'])route=[m[raw[0]||'list'],...raw.slice(1)];break;}
       case 'athena-parent.sh':route=['parent-'+(raw[0]||'list'),...raw.slice(1)];break;
