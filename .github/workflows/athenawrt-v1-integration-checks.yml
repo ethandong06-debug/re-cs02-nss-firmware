@@ -1,0 +1,33 @@
+name: AthenaWrt V1.0 integration checks
+
+on:
+  push:
+    branches:
+      - athenawrt/v1-html-integration
+  pull_request:
+    branches:
+      - athenawrt/apk-fixed-signing
+      - athenawrt/v1-html-integration
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate V1.0 UI, menu, gateway and ACL
+        run: |
+          python3 luci-app-athena-src/tools/check_frontend.py \
+            luci-app-athena-src/design/AthenaWrt-V1.0-prototype-reference.html \
+            luci-app-athena-src/frontend/luci-app-athena/htdocs/luci-static/resources/view/athena/index.html \
+            luci-app-athena-src/frontend/luci-app-athena/root/usr/libexec/athena-v1.sh \
+            luci-app-athena-src/frontend/luci-app-athena/root/usr/share/rpcd/acl.d/luci-app-athena.json \
+            luci-app-athena-src/frontend/luci-app-athena/Makefile
