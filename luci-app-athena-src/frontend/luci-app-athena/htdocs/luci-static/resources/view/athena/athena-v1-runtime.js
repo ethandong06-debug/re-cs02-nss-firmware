@@ -24,10 +24,10 @@ const V=window.AthenaV1={
  },
  async loadExtra(){
   if(!P||P.mode!=='device')return;
-  const names=['parents','backups','logs','disks','wifiSchedule','rebootSchedule','backupSchedule','packages','availablePackages','apps','services','blocked'];
+  const names=['parents','backups','logs','disks','wifiSchedule','rebootSchedule','backupSchedule','packages','availablePackages','apps','services','blocked','guest'];
   const jobs=[()=>V.call('parent-list'),()=>V.call('backup-list'),()=>V.call('logs-read',['all']),()=>V.call('disk-list'),
    ()=>V.call('wifi-schedule-status'),()=>V.call('reboot-status'),()=>V.call('backup-schedule-get'),()=>V.call('packages-installed'),
-   ()=>V.call('packages-available'),()=>V.call('apps-list'),()=>V.call('services-list'),()=>V.call('clients-list')];
+   ()=>V.call('packages-available'),()=>V.call('apps-list'),()=>V.call('services-list'),()=>V.call('clients-list'),()=>V.call('wifi-guest-get')];
   const vals=await Promise.all(jobs.map(async f=>{try{return await f();}catch(e){return null;}})),d=Object.fromEntries(names.map((n,i)=>[n,vals[i]]));
   if(d.parents&&Array.isArray(d.parents.rules))P.state.parentalRules=d.parents.rules.map(r=>{
    const c=(P.state.clients||[]).find(x=>(x.mac||'').toLowerCase()===(r.mac||'').toLowerCase())||{};
@@ -43,6 +43,7 @@ const V=window.AthenaV1={
   if(d.availablePackages&&Array.isArray(d.availablePackages.packages)&&typeof opkgState!=='undefined')opkgState.available=d.availablePackages.packages;
   if(d.apps)P.state.activeApps=d.apps.apps||[];
   if(d.services)P.state.services=d.services.services||d.services;
+  if(d.guest)P.state.guest=d.guest;
   if(d.blocked&&Array.isArray(d.blocked.blocked)){const set=new Set(d.blocked.blocked.map(x=>String(x).toLowerCase()));(P.state.clients||[]).forEach(c=>{if(c.mac)c.status=set.has(c.mac.toLowerCase())?'已拉黑':(c.status==='已拉黑'?'在线':c.status);});}
   return d;
  },
