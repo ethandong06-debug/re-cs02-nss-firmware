@@ -67,7 +67,12 @@ case "$cmd" in
   logs-clear) need 1 "$#"; [ "$1" = CONFIRM_CLEAR_LOGS ] || fail "清空日志必须经过二次确认"; exec "$BASE/athena-log.sh" clear ;;
   backup-download) need 1 "$#"; exec "$BASE/athena-backup.sh" download "$1" ;;
   logs-clear) need 1 "$#"; [ "$1" = CONFIRM_CLEAR_LOGS ] || fail "清空日志必须经过二次确认"; exec "$BASE/athena-log.sh" clear ;;
+  reboot-status) exec "$BASE/athena-reboot.sh" status ;;
+  reboot-enable) need 2 "$#"; exec "$BASE/athena-reboot.sh" enable "$1" "$2" ;;
+  reboot-disable) exec "$BASE/athena-reboot.sh" disable ;;
+  reboot-now) need 1 "$#"; [ "$1" = CONFIRM_REBOOT ] || fail "立即重启必须经过二次确认"; exec "$BASE/athena-reboot.sh" now ;;
   logs-read) exec "$BASE/athena-log.sh" list "${1:-all}" "${2:-}" ;;
+  logs-export) exec "$BASE/athena-log.sh" export ;;
   packages-installed) exec "$BASE/athena-packages.sh" list installed ;;
   packages-available) exec "$BASE/athena-packages.sh" list available ;;
   packages-install) need 1 "$#"; exec "$BASE/athena-packages.sh" install "$1" ;;
