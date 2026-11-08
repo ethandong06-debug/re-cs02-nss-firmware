@@ -28,6 +28,8 @@ jobs:
           python3 luci-app-athena-src/tools/check_frontend.py \
             luci-app-athena-src/design/AthenaWrt-V1.0-prototype-reference.html \
             luci-app-athena-src/frontend/luci-app-athena/htdocs/luci-static/resources/view/athena/index.html \
+            luci-app-athena-src/frontend/luci-app-athena/htdocs/luci-static/resources/view/athena/athena-v1-runtime.js \
             luci-app-athena-src/frontend/luci-app-athena/root/usr/libexec/athena-v1.sh \
             luci-app-athena-src/frontend/luci-app-athena/root/usr/share/rpcd/acl.d/luci-app-athena.json \
-            luci-app-athena-src/frontend/luci-app-athena/Makefile
+            luci-app-athena-src/frontend/luci-app-athena/Makefile \
+            luci-app-athena-src/frontend/luci-app-athena/root/usr/libexec/athena-wifi-schedule.sh
