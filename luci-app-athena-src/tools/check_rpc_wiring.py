@@ -15,7 +15,7 @@ def main():
     errors=[]
     if "athena-v1-runtime.js" not in html: errors.append("index.html 未加载 V1 runtime")
     if "/usr/libexec/athena-v1.sh" not in js: errors.append("runtime 未调用唯一 RPC 网关")
-    if "athena-v1.sh" not in mk or "athena-wifi-schedule.sh" not in mk or "PKG_RELEASE:=8" not in mk:
+    if "athena-v1.sh" not in mk or "athena-wifi-schedule.sh" not in mk or "PKG_RELEASE:=9" not in mk:
         errors.append("Makefile 未安装 V1 网关/无线定时脚本或版本号错误")
     root=acl.get("luci-app-athena",{}).get("write",{})
     file_acl=root.get("file",{})
@@ -25,6 +25,15 @@ def main():
     if any(x in file_acl for x in ("athena-mode.sh","athena-upgrade.sh","athena-reset.sh")):
         errors.append("高风险脚本被直接暴露")
     if any(x in sh for x in ("eval ", "sh -c", "system(")): errors.append("网关包含动态命令执行")
+    if "backup-restore)" in sh or "backup-restore" in js:
+        errors.append("V1.0 不应开放整份系统配置恢复")
+    if "wifi-set) need 7" not in sh:
+        errors.append("无线设置网关必须校验隐藏 SSID 参数数量")
+    if "protected_pkg()" not in (gateway.parent / "athena-packages-legacy.sh").read_text(encoding="utf-8"):
+        errors.append("软件包后端缺少关键组件保护逻辑")
+    labels=__import__("re").findall(r"^\\s*([A-Za-z0-9_-]+)\\)", sh, __import__("re").M)
+    dup=sorted({x for x in labels if labels.count(x)>1})
+    if dup: errors.append("网关存在重复 case 分支："+", ".join(dup))
     for marker in ("status)","wifi-set)","disk-format)","nas-remove)","backup-create)","wifi-schedule-set)","reboot-now)"):
         if marker not in sh: errors.append("网关缺少分支 "+marker)
     if errors:
