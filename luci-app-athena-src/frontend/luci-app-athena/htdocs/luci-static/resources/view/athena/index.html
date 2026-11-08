@@ -7449,24 +7449,47 @@ window.closeModal = function() {
   document.getElementById('simModal')?.remove();
 };
 
-window.confirmUsbFormat = function() {
-  openModal('格式化确认', `
-    <p style="color:#d65d63;line-height:1.6;">确定要格式化外接 USB 分区 (/dev/sda1) 吗？该操作不可逆，将清空磁盘全部数据！</p>
-    <div class="sim-modal-actions">
-      <button class="sim-btn" data-close-modal>取消</button>
-      <button class="sim-btn danger" data-close-modal onclick="toast('USB 格式化已完成')">确认格式化</button>
-    </div>
-  `);
+window.confirmUsbFormat = async function() {
+  try{
+    if(!window.UbusProvider||window.UbusProvider.mode!=='device')throw new Error('请先登录路由器；离线预览不会执行磁盘操作');
+    const data=await window.UbusProvider.execScript('athena-disk.sh',['list']);
+    const parts=(data.disks||[]).flatMap(d=>(d.parts||[]).map(p=>({dev:'/dev/'+p.name,mount:p.mount||'',size:p.size_mb||0,disk:d.name}))).filter(p=>/^\\/dev\\/sd[a-z][0-9]+$/.test(p.dev));
+    const usable=parts.filter(p=>!p.mount);
+    const opts=parts.map(p=>'<option value="'+esc(p.dev)+'" '+(p.mount?'disabled':'')+'>'+esc(p.dev)+' · '+p.size+' MB '+(p.mount?'（已挂载，禁止格式化）':'（未挂载，仍需后端 USB 校验）')+'</option>').join('');
+    const html='<div class="sim-notice warning">仅允许真实 USB 分区。后端还会检查设备节点、USB 总线、挂载状态、swap、系统分区和分区类型；任何一项不符合都会拒绝执行。</div>'+
+      '<label style="display:block;margin:12px 0 5px">目标分区</label><select id="athenaFormatDevice" class="sim-field" style="width:100%">'+(opts||'<option value="">未检测到可选 USB 分区</option>')+'</select>'+
+      '<label style="display:block;margin:12px 0 5px">文件系统</label><select id="athenaFormatFs" class="sim-field" style="width:100%"><option value="ext4">ext4</option><option value="f2fs">F2FS</option><option value="exfat">exFAT</option><option value="vfat">FAT32</option></select>'+
+      '<p style="margin:12px 0 5px">输入 <b>FORMAT</b> 确认不可逆操作</p><input id="athenaFormatConfirm" class="sim-field" style="width:100%" autocomplete="off" placeholder="输入 FORMAT">'+
+      '<div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn danger" '+(usable.length?'':'disabled')+' onclick="executeUsbFormat()">确认格式化</button></div>';
+    openModal('USB 分区格式化 · 双重确认',html);
+  }catch(e){openModal('无法启动格式化','<div class="sim-notice warning">'+esc(e.message||'无法读取磁盘状态')+'</div><div class="sim-modal-actions"><button class="sim-btn" data-close-modal>关闭</button></div>');}
+};
+
+window.executeUsbFormat = async function() {
+  const dev=document.getElementById('athenaFormatDevice')?.value||'';
+  const fs=document.getElementById('athenaFormatFs')?.value||'ext4';
+  if(!dev||(document.getElementById('athenaFormatConfirm')?.value||'')!=='FORMAT'){toast('请选定未挂载 USB 分区，并输入 FORMAT');return;}
+  try{
+    const r=await window.UbusProvider.execScript('athena-disk.sh',['format',dev,fs,'CONFIRM_FORMAT']);
+    if(!r||r.ok===false)throw new Error(r?.msg||'后端未确认格式化');
+    closeModal();await window.UbusProvider.pollOnce();renderPage('存储与磁盘管理');toast(r.msg||'格式化命令已由后端确认');
+  }catch(e){toast('格式化已拒绝或失败：'+(e.message||'后端错误'));}
 };
 
 window.confirmReboot = function() {
-  openModal('确认重启', `
-    <p style="line-height:1.6;">重启路由器将耗时约 45 秒，确认立即重启系统吗？</p>
-    <div class="sim-modal-actions">
-      <button class="sim-btn" data-close-modal>取消</button>
-      <button class="sim-btn primary" data-close-modal onclick="toast('正在重启系统...')">确认重启</button>
-    </div>
-  `);
+  const html='<div class="sim-notice warning">重启会中断当前网络连接和管理会话。请确认当前没有重要配置写入、备份或升级任务正在执行。</div>'+
+    '<p style="margin:12px 0 5px">输入 <b>REBOOT</b> 确认</p><input id="athenaRebootConfirm" class="sim-field" style="width:100%" autocomplete="off" placeholder="输入 REBOOT">'+
+    '<div class="sim-modal-actions"><button class="sim-btn" data-close-modal>取消</button><button class="sim-btn danger" onclick="executeAthenaReboot()">确认重启</button></div>';
+  openModal('确认重启路由器',html);
+};
+
+window.executeAthenaReboot = async function() {
+  if((document.getElementById('athenaRebootConfirm')?.value||'')!=='REBOOT'){toast('请输入 REBOOT 确认');return;}
+  try{
+    const r=await window.UbusProvider.execScript('athena-reboot.sh',['now','CONFIRM_REBOOT']);
+    if(!r||r.ok===false)throw new Error(r?.msg||'后端未确认重启');
+    closeModal();toast(r.msg||'已收到重启指令，管理连接可能中断');
+  }catch(e){toast('重启指令未执行：'+(e.message||'后端错误'));}
 };
 
 window.confirmFactoryReset = function() {
